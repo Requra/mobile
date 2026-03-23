@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'login_screen.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.55, end: 1.25).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+    );
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+        );
+      }
+    });
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F7FB),
+      body: Center(
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: SvgPicture.asset(
+            'assets/images/logo.svg',
+            width: 140,
+            height: 140,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:requra/screens/verification_screen.dart';
 
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
@@ -32,7 +33,9 @@ class ForgotPasswordScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   CustomButton(
                     text: 'Send Code',
-                    onTap: () {},
+                    onTap: () => Navigator.push(context, MaterialPageRoute<void>(
+                      builder: (_) => const VerificationScreen(),
+                    ),),
                   ),
                   const SizedBox(height: 16),
                   Center(

@@ -19,6 +19,7 @@ class AppTextStyles {
     color: AppColors.grayDark,
   );
 
+
   static const body = TextStyle(
     fontSize: 14,
     color: AppColors.grayDark,

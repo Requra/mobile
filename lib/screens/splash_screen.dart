@@ -62,3 +62,11 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
+
+
+//////////////////////////////////////////////////
+/*
+fix requra.ai text and make photo animated well
+* */
+
+

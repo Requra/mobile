@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/theme/font_manager.dart';
+import 'package:requra/theme/style_manager.dart';
+
+import '../theme/color_manager.dart';
 
 class CustomButton extends StatelessWidget {
   const CustomButton({
@@ -15,14 +20,14 @@ class CustomButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         onTap: onTap,
         child: Ink(
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          padding: EdgeInsets.symmetric(vertical: 15.h),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14.r),
             gradient: const LinearGradient(
-              colors: [Color(0xFFA98EE6), Color(0xFF5A3D9A)],
+              colors: [AppColors.lightPrimary, AppColors.primary],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -30,11 +35,7 @@ class CustomButton extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+            style: boldStyle(fontSize: FontSize.font16, color: AppColors.white)
           ),
         ),
       ),

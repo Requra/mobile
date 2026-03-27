@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/theme/color_manager.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
@@ -38,7 +40,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   _obscureText
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  color: Colors.black54,
+                  color: AppColors.black,
                 ),
                 onPressed: () {
                   setState(() {
@@ -48,19 +50,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
               )
             : null,
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        fillColor: AppColors.white,
+        contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: AppColors.lightgrey),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: AppColors.lightgrey),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF5A3D9A), width: 1.4),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide:  BorderSide(color: AppColors.primary, width: 1.4.w),
         ),
       ),
     );

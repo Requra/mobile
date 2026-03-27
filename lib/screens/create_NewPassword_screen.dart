@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/screens/resetPasswordSuccessfully_Screen.dart';
+import 'package:requra/theme/color_manager.dart';
 
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
@@ -21,7 +23,7 @@ class _LoginScreenState extends State<CreateNewpasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -31,7 +33,7 @@ class _LoginScreenState extends State<CreateNewpasswordScreen> {
               subtitle: '',
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(vertical: 20.h,horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -40,19 +42,19 @@ class _LoginScreenState extends State<CreateNewpasswordScreen> {
                     icon: Icons.lock_outline,
                     isPassword: true,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   const CustomTextField(
                     hintText: 'Confirm Password',
                     icon: Icons.lock_outline,
                     isPassword: true,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   CustomButton(
                     text: 'Update Password',
                     onTap: () {
                       // controller then check new == confirm PSWD
-                      Navigator.push(context, MaterialPageRoute<void>(builder: (context) => ResetPasswordSuccessfullyScreen(),));
-                    },
+                      Navigator.pushNamed(context, "/resetPasswordSuccessfully");
+                          },
                   ),
                 ],
               ),

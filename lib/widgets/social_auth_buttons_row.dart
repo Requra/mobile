@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:requra/theme/font_manager.dart';
+import 'package:requra/theme/style_manager.dart';
+
+import '../theme/color_manager.dart';
 
 class SocialAuthButtonsRow extends StatelessWidget {
   const SocialAuthButtonsRow({super.key});
@@ -7,26 +12,26 @@ class SocialAuthButtonsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderStyle = OutlinedButton.styleFrom(
-      side: BorderSide(color: Colors.grey.shade300),
+      side: BorderSide(color: AppColors.lightgrey),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10.r),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: EdgeInsets.symmetric(vertical: 12.h),
     );
 
     return Column(
       children: [
-        const Row(
+        Row(
           children: [
-            Expanded(child: Divider()),
+            const Expanded(child: Divider()),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('or continue with'),
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              child: Text('or continue with' , style: boldStyle(fontSize: FontSize.font12, color: AppColors.black),),
             ),
-            Expanded(child: Divider()),
+            const Expanded(child: Divider()),
           ],
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14.h),
         Row(
           children: [
             Expanded(
@@ -45,23 +50,23 @@ class SocialAuthButtonsRow extends StatelessWidget {
                     ],
                     stops: [0.0, 0.28, 0.52, 0.78, 1.0],
                   ).createShader(bounds),
-                  child: const FaIcon(
+                  child: FaIcon(
                     FontAwesomeIcons.google,
-                    color: Colors.white,
-                    size: 20,
+                    color: AppColors.white,
+                    size: 20.sp,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(
               child: OutlinedButton(
                 style: borderStyle,
                 onPressed: () {},
-                child: const FaIcon(
+                child: FaIcon(
                   FontAwesomeIcons.github,
-                  color: Colors.black,
-                  size: 20,
+                  color: AppColors.black,
+                  size: 20.sp,
                 ),
               ),
             ),

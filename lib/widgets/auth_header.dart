@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/theme/color_manager.dart';
+import 'package:requra/theme/font_manager.dart';
+import 'package:requra/theme/style_manager.dart';
 class AuthHeader extends StatelessWidget {
   const AuthHeader({
     super.key,
@@ -17,23 +20,23 @@ class AuthHeader extends StatelessWidget {
         SafeArea(
           bottom: false,
           child: Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 18),
+            height: 50.h,
+            padding: EdgeInsets.symmetric(horizontal: 18.w),
             color: Colors.white,
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(6.r),
                   child: Image.asset(
                     'assets/images/logo.png',
-                    height: 26,
-                    width: 26,
+                    height: 26.h,
+                    width: 26.w,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
+                      return Icon(
                         Icons.smart_toy,
-                        color: Color(0xFF5A3D9A),
-                        size: 22,
+                        color: AppColors.primary,
+                        size: 22.sp,
                       );
                     },
                   ),
@@ -41,9 +44,9 @@ class AuthHeader extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  splashRadius: 20,
+                  splashRadius: 20.r,
                   onPressed: () {},
-                  icon: const Icon(Icons.menu, color: Colors.black54),
+                  icon: const Icon(Icons.menu, color: AppColors.black),
                 ),
               ],
             ),
@@ -53,10 +56,10 @@ class AuthHeader extends StatelessWidget {
           clipper: _HeaderCurveClipper(),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 46),
+            padding: EdgeInsets.fromLTRB(24.w, 22.h, 24.w, 46.h),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFA98EE6), Color(0xFF5A3D9A)],
+                colors: [AppColors.lightPrimary, AppColors.primary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -66,22 +69,13 @@ class AuthHeader extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                    height: 1.1,
-                  ),
+                  style: boldStyle(fontSize: FontSize.font22, color: AppColors.white),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10.h),
                 Text(
                   subtitle,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    height: 1.35,
-                  ),
+                  style: regularStyle(fontSize: FontSize.font14, color: AppColors.white),
                 ),
               ],
             ),

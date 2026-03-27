@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/screens/login_screen.dart';
+import 'package:requra/theme/color_manager.dart';
+import 'package:requra/theme/font_manager.dart';
+import 'package:requra/theme/style_manager.dart';
 
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
@@ -12,7 +16,7 @@ class ResetPasswordSuccessfullyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -22,40 +26,39 @@ class ResetPasswordSuccessfullyScreen extends StatelessWidget {
               subtitle: '',
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(vertical:  20.h , horizontal: 20.w),
               child: Container(
-                height: 500,
+                height: 500.h,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  borderRadius: BorderRadius.all(Radius.circular(16.r)),
                   border: Border.all(
-                    color: Color(0xFFD7CBF3),
-                    width: 1.5,
+                    color: AppColors.lightgrey,
+                    width: 1.5.w,
                   ),
-                  // color: Colors.red
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: EdgeInsets.symmetric(vertical:  12.h , horizontal: 12.w),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text("Password Reset Successfully"),
-                      SizedBox(height: 8,),
-                      Text("Your password has been updated. You can now sign in with your new password."),
-                      SizedBox(height: 8,),
+                      Text("Password Reset Successfully" , style: boldStyle(fontSize: FontSize.font20, color: AppColors.black),),
+                      SizedBox(height: 8.h,),
+                      Text("Your password has been updated. You can now sign in with your new password.", style: boldStyle(fontSize: FontSize.font16, color: AppColors.grey),),
+                      SizedBox(height: 8.h,),
                       Image.asset(
                         'assets/images/RequraAvatar.png',
-                        height: 300,
-                        width: 350,
-                        fit: BoxFit.cover,
+                        height: 250.h,
+                        width: 300.w,
+                        fit: BoxFit.contain,
 
                       ),
-                      SizedBox(height: 16,),
+                      SizedBox(height: 16.h,),
                       CustomButton(
                         text: 'Back to Sign in',
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute<void>(builder: (context) => LoginScreen(),));
-                        },
+                          Navigator.pushNamed(context, "/login");
+                              },
                       ),
                     ],
                   ),

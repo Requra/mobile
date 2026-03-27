@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:requra/theme/color_manager.dart';
 
 import 'login_screen.dart';
 
@@ -29,9 +31,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-        );
+        // Navigator.of(context).pushReplacement(
+        //   MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+        // );
+
+        Navigator.pushReplacementNamed(context, "/login");
       }
     });
 
@@ -47,14 +51,14 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: Center(
         child: ScaleTransition(
           scale: _scaleAnimation,
           child: SvgPicture.asset(
             'assets/images/logo.svg',
-            width: 140,
-            height: 140,
+            width: 140.w,
+            height: 140.h,
             fit: BoxFit.contain,
           ),
         ),

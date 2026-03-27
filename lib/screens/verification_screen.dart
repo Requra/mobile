@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/screens/create_NewPassword_screen.dart';
+import 'package:requra/theme/color_manager.dart';
+import 'package:requra/theme/font_manager.dart';
+import 'package:requra/theme/style_manager.dart';
 
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
@@ -34,27 +38,29 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const AuthHeader(
-              title: 'Welcome Back to Requra.ai',
-              subtitle: 'Sign in to access your AI-powered requirements workspace.',
+              title: 'Check Your Email',
+              subtitle: 'We sent a verification code to your email. Enter the code below to continue.',
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric( vertical: 20.h , horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
 
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: List.generate(6, (index) {
                       return SizedBox(
-                        width: 54,
+                        width: screenWidth/8,
                         child: TextFormField(
                           controller: _controllers[index],
                           focusNode: _focusNodes[index],
@@ -65,9 +71,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             FilteringTextInputFormatter.digitsOnly,
                           ],
 
-                          decoration: const InputDecoration(
-                            // counterText: '',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 22.h,
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15.r))),
                           ),
                           onChanged: (value) {
                             if (value.isNotEmpty && index < 5) {
@@ -81,7 +90,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     }),
                   ),
 
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   CustomButton(
                     text: 'Verify Code',
                     onTap: () {
@@ -96,13 +105,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6.h),
                   Row(
                     mainAxisAlignment:MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Didn’t receive the email?' , style: TextStyle(
-                        fontSize: 13,
-                      ),),
+                      Text('Didn’t receive the email?' , style: regularStyle(fontSize: FontSize.font14, color: AppColors.black)),
                       TextButton(
                         onPressed: () {
                           Navigator.push(
@@ -114,17 +121,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         },
                         child: Text(
                           'resend the reset link',
-                          // ' xx ',
-                          style: TextStyle(
-                            color: Color(0xFF6A4AB3),
-                            decoration: TextDecoration.underline,
-                            fontSize: 13,
-                          ),
+                            style: regularStyle(fontSize: FontSize.font14, color: AppColors.primaryText).copyWith(decoration: TextDecoration.underline),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                 ],
               ),
             ),

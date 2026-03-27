@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/theme/color_manager.dart';
+import 'package:requra/theme/font_manager.dart';
+import 'package:requra/theme/style_manager.dart';
 
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
@@ -11,7 +15,7 @@ class SignupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -21,7 +25,7 @@ class SignupScreen extends StatelessWidget {
               subtitle: 'Start generating requirements from meetings and documents using AI.',
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -29,40 +33,40 @@ class SignupScreen extends StatelessWidget {
                     hintText: 'Full Name',
                     icon: Icons.person_outline,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   const CustomTextField(
                     hintText: 'Email Address',
                     icon: Icons.mail_outline,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   const CustomTextField(
                     hintText: 'Password',
                     icon: Icons.lock_outline,
                     isPassword: true,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   const CustomTextField(
                     hintText: 'Confirm Password',
                     icon: Icons.lock_outline,
                     isPassword: true,
                   ),
-                  const SizedBox(height: 22),
+                  SizedBox(height: 22.h),
                   CustomButton(
                     text: 'Create Account',
                     onTap: () {},
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Already have an account? '),
+                      Text('Already have an account? ' , style: regularStyle(fontSize: FontSize.font12, color: AppColors.black)),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Back to Login'),
+                        child: Text('Back to Login' , style: regularStyle(fontSize: FontSize.font12, color: AppColors.primaryText)),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   const SocialAuthButtonsRow(),
                 ],
               ),

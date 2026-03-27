@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/screens/verification_screen.dart';
+import 'package:requra/theme/color_manager.dart';
 
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
@@ -11,7 +13,7 @@ class ForgotPasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -21,26 +23,26 @@ class ForgotPasswordScreen extends StatelessWidget {
               subtitle: 'Enter your email and we’ll send you a verification code to reset your password.',
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(vertical:20.h , horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   const CustomTextField(
                     hintText: 'Email Address',
                     icon: Icons.mail_outline,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   CustomButton(
                     text: 'Send Code',
                     onTap: () => Navigator.push(context, MaterialPageRoute<void>(
                       builder: (_) => const VerificationScreen(),
                     ),),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   Center(
                     child: TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pushNamed(context , "/login"),
                       child: const Text('Back to Login'),
                     ),
                   ),

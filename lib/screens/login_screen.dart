@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/theme/color_manager.dart';
+import 'package:requra/theme/style_manager.dart';
 
+import '../theme/font_manager.dart';
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 import '../widgets/auth_header.dart';
@@ -20,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -30,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
               subtitle: 'Sign in to access your AI-powered requirements workspace.',
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(vertical: 20.h , horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -38,19 +42,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     hintText: 'Email Address',
                     icon: Icons.mail_outline,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   const CustomTextField(
                     hintText: 'Password',
                     icon: Icons.lock_outline,
                     isPassword: true,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Row(
                     children: [
                       Checkbox(
                         value: rememberMe,
                         visualDensity: VisualDensity.compact,
-                        activeColor: const Color(0xFF6A4AB3),
+                        activeColor: AppColors.primaryText,
                         onChanged: (value) {
                           // Handle remember me toggle
                           setState(() {
@@ -58,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           });
                         },
                       ),
-                      const Text('Remember me'),
+                      Text('Remember me' , style: regularStyle(fontSize: FontSize.font16, color: AppColors.black),),
                       const Spacer(),
                       TextButton(
                         onPressed: () {
@@ -69,46 +73,35 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text(
+                        child: Text(
                           'Forgot your password?',
-                          style: TextStyle(
-                            color: Color(0xFF6A4AB3),
-                            decoration: TextDecoration.underline,
-                          ),
+                            style: regularStyle(fontSize: FontSize.font16, color: AppColors.primaryText).copyWith(decoration: TextDecoration.underline),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   CustomButton(
                     text: 'Login',
                     onTap: () {},
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('New here? '),
+                      Text('New here? ' , style: regularStyle(fontSize: FontSize.font14, color: AppColors.black)),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const SignupScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
+                          Navigator.pushNamed(context, "/signup");
+                              },
+                        child:  Text(
                           'Create an account',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            decoration: TextDecoration.underline,
-                          ),
+                            style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.primaryText).copyWith(decoration: TextDecoration.underline)
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   const SocialAuthButtonsRow(),
                 ],
               ),

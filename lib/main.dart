@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:requra/screens/create_NewPassword_screen.dart';
+import 'package:requra/screens/create_new_password_screen.dart';
 import 'package:requra/screens/forgot_password_screen.dart';
+import 'package:requra/screens/home_screen.dart';
 import 'package:requra/screens/login_screen.dart';
-import 'package:requra/screens/resetPasswordSuccessfully_Screen.dart';
+import 'package:requra/screens/reset_password_successfully_screen.dart';
 import 'package:requra/screens/signup_screen.dart';
 import 'package:requra/screens/verification_screen.dart';
 import 'screens/splash_screen.dart';
@@ -34,10 +35,11 @@ class RequraApp extends StatelessWidget {
             "/login": (_) => const LoginScreen(),
             "/signup": (_) => const SignupScreen(),
             "/forgetPassword": (_) => const ForgotPasswordScreen(),
-            "/createPassword": (_) => const CreateNewpasswordScreen(),
+            "/createPassword": (_) => const CreateNewPasswordScreen(),
             "/resetPasswordSuccessfully": (_) => const ResetPasswordSuccessfullyScreen(),
             "/splash": (_) => const SplashScreen(),
             "/verification" : (_) => const VerificationScreen(),
+            "/home": (_) => const HomeScreen(),
           },
           initialRoute: "/splash",
         );

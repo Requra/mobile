@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 
 import '../theme/font_manager.dart';
 import 'forgot_password_screen.dart';
-import 'signup_screen.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
@@ -20,6 +20,53 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool rememberMe = true;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = const AuthService();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_isLoading) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await _authService.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.message)),
+      );
+
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(response.firstError)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,15 +85,18 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: 'Email Address',
                     icon: Icons.mail_outline,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   SizedBox(height: 14.h),
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: 'Password',
                     icon: Icons.lock_outline,
                     isPassword: true,
+                    controller: _passwordController,
                   ),
                   SizedBox(height: 8.h),
                   Row(
@@ -82,8 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 8.h),
                   CustomButton(
-                    text: 'Login',
-                    onTap: () {},
+                    text: _isLoading ? 'Loading...' : 'Login',
+                    onTap: _handleLogin,
                   ),
                   SizedBox(height: 16.h),
                   Row(

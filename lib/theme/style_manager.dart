@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:requra/theme/font_manager.dart';
-import 'color_manager.dart';
 
 //=================How to use it==========================
 /*

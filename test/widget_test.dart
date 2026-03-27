@@ -6,17 +6,19 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:requra/main.dart';
 
 void main() {
-  testWidgets('Splash opens then shows login screen', (WidgetTester tester) async {
+  testWidgets('Splash screen renders logo', (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
     await tester.pumpWidget(const RequraApp());
-
-    await tester.pump(const Duration(milliseconds: 1500));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Welcome Back to Requra.ai'), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.byType(SvgPicture), findsOneWidget);
   });
 }

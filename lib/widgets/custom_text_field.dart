@@ -8,11 +8,15 @@ class CustomTextField extends StatefulWidget {
     required this.hintText,
     required this.icon,
     this.isPassword = false,
+    this.controller,
+    this.keyboardType,
   });
 
   final String hintText;
   final IconData icon;
   final bool isPassword;
+  final TextEditingController? controller;
+  final TextInputType? keyboardType;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -30,6 +34,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: widget.controller,
+      keyboardType: widget.keyboardType,
       obscureText: _obscureText,
       decoration: InputDecoration(
         hintText: widget.hintText,

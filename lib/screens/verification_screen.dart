@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:requra/screens/create_NewPassword_screen.dart';
+import 'package:requra/features/auth/data/services/auth_service.dart';
+import 'package:requra/screens/create_new_password_screen.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 
-import 'forgot_password_screen.dart';
-import 'signup_screen.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/social_auth_buttons_row.dart';
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
@@ -24,6 +21,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final AuthService _authService = const AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -36,10 +35,55 @@ class _VerificationScreenState extends State<VerificationScreen> {
     super.dispose();
   }
 
+  Future<void> _handleVerifyCode() async {
+    if (_isLoading) {
+      return;
+    }
+
+    final String code = _controllers.map((c) => c.text).join();
+    if (code.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the 6-digit code.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await _authService.verifyCode(code: code);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.message)),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (context) => const CreateNewPasswordScreen(),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(response.firstError)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SingleChildScrollView(
@@ -92,17 +136,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
                   SizedBox(height: 16.h),
                   CustomButton(
-                    text: 'Verify Code',
-                    onTap: () {
-                      String code = _controllers.map((c) => c.text).join();
-                      if(code.length == 6) {
-                        print("Verification code: $code");
-                        Navigator.push(context, MaterialPageRoute<void>(builder: (context) =>  CreateNewpasswordScreen(),));
-                      }
-                      else{
-                        /// phase 2
-                      }
-                    },
+                    text: _isLoading ? 'Verifying...' : 'Verify Code',
+                    onTap: _handleVerifyCode,
                   ),
 
                   SizedBox(height: 6.h),
@@ -112,15 +147,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       Text('Didn’t receive the email?' , style: regularStyle(fontSize: FontSize.font14, color: AppColors.black)),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const ForgotPasswordScreen(),
-                            ),
-                          );
+                          // Resend code logic here
                         },
                         child: Text(
-                          'resend the reset link',
+                          'resend code',
                             style: regularStyle(fontSize: FontSize.font14, color: AppColors.primaryText).copyWith(decoration: TextDecoration.underline),
                         ),
                       ),

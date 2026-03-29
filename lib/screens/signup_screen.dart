@@ -9,6 +9,7 @@ import 'verification_screen.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import '../widgets/password_rules_checklist.dart';
 import '../widgets/social_auth_buttons_row.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -24,7 +25,14 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final AuthService _authService = const AuthService();
+  final RegExp _emailRegex =
+      RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
   bool _isLoading = false;
+  bool _passwordTypingStarted = false;
+  String? _fullNameError;
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
 
   @override
   void dispose() {
@@ -35,8 +43,112 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  String? _validateFullName(String value) {
+    if (value.trim().isEmpty) {
+      return 'Full name is required';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String value) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'Email is required';
+    }
+
+    if (!_emailRegex.hasMatch(trimmed)) {
+      return 'Use format like: name@example.com';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String value) {
+    if (value.isEmpty) {
+      return 'Password is required';
+    }
+
+    if (!PasswordRules.isValid(value)) {
+      return 'Password must meet all requirements below';
+    }
+
+    return null;
+  }
+
+  String? _validateConfirmPassword(String confirmPassword, String password) {
+    if (confirmPassword.isEmpty) {
+      return 'Confirm password is required';
+    }
+
+    if (confirmPassword != password) {
+      return 'Passwords do not match';
+    }
+
+    return null;
+  }
+
+  void _onFullNameChanged(String value) {
+    setState(() {
+      _fullNameError = _validateFullName(value);
+    });
+  }
+
+  void _onEmailChanged(String value) {
+    setState(() {
+      _emailError = _validateEmail(value);
+    });
+  }
+
+  void _onPasswordChanged(String value) {
+    setState(() {
+      if (value.isNotEmpty) {
+        _passwordTypingStarted = true;
+      }
+
+      _passwordError = _validatePassword(value);
+      _confirmPasswordError = _validateConfirmPassword(
+        _confirmPasswordController.text,
+        value,
+      );
+    });
+  }
+
+  void _onConfirmPasswordChanged(String value) {
+    setState(() {
+      _confirmPasswordError = _validateConfirmPassword(
+        value,
+        _passwordController.text,
+      );
+    });
+  }
+
+  bool _validateForm() {
+    final String? fullNameError = _validateFullName(_fullNameController.text);
+    final String? emailError = _validateEmail(_emailController.text);
+    final String? passwordError = _validatePassword(_passwordController.text);
+    final String? confirmPasswordError = _validateConfirmPassword(
+      _confirmPasswordController.text,
+      _passwordController.text,
+    );
+
+    setState(() {
+      _fullNameError = fullNameError;
+      _emailError = emailError;
+      _passwordError = passwordError;
+      _confirmPasswordError = confirmPasswordError;
+    });
+
+    return fullNameError == null &&
+        emailError == null &&
+        passwordError == null &&
+        confirmPasswordError == null;
+  }
+
   Future<void> _handleSignup() async {
     if (_isLoading) {
+      return;
+    }
+
+    if (!_validateForm()) {
       return;
     }
 
@@ -67,7 +179,9 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (context) => const VerificationScreen(),
+          builder: (context) => const VerificationScreen(
+            source: VerificationSource.signup,
+          ),
         ),
       );
       return;
@@ -99,6 +213,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     hintText: 'Full Name',
                     icon: Icons.person_outline,
                     controller: _fullNameController,
+                    onChanged: _onFullNameChanged,
+                    errorText: _fullNameError,
                   ),
                   SizedBox(height: 14.h),
                   CustomTextField(
@@ -106,6 +222,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     icon: Icons.mail_outline,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    onChanged: _onEmailChanged,
+                    errorText: _emailError,
                   ),
                   SizedBox(height: 14.h),
                   CustomTextField(
@@ -113,13 +231,21 @@ class _SignupScreenState extends State<SignupScreen> {
                     icon: Icons.lock_outline,
                     isPassword: true,
                     controller: _passwordController,
+                    onChanged: _onPasswordChanged,
+                    errorText: _passwordTypingStarted ? _passwordError : null,
                   ),
+                  if (_passwordTypingStarted) ...[
+                    SizedBox(height: 8.h),
+                    PasswordRulesChecklist(password: _passwordController.text),
+                  ],
                   SizedBox(height: 14.h),
                   CustomTextField(
                     hintText: 'Confirm Password',
                     icon: Icons.lock_outline,
                     isPassword: true,
                     controller: _confirmPasswordController,
+                    onChanged: _onConfirmPasswordChanged,
+                    errorText: _confirmPasswordError,
                   ),
                   SizedBox(height: 22.h),
                   CustomButton(

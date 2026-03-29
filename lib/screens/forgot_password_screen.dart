@@ -18,7 +18,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
   final AuthService _authService = const AuthService();
+  final RegExp _emailRegex =
+      RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
   bool _isLoading = false;
+  String? _emailError;
 
   @override
   void dispose() {
@@ -26,8 +29,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String value) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'Email is required';
+    }
+
+    if (!_emailRegex.hasMatch(trimmed)) {
+      return 'Use format like: name@example.com';
+    }
+
+    return null;
+  }
+
+  void _onEmailChanged(String value) {
+    setState(() {
+      _emailError = _validateEmail(value);
+    });
+  }
+
+  bool _validateForm() {
+    final String? emailError = _validateEmail(_emailController.text);
+    setState(() {
+      _emailError = emailError;
+    });
+    return emailError == null;
+  }
+
   Future<void> _handleForgotPassword() async {
     if (_isLoading) {
+      return;
+    }
+
+    if (!_validateForm()) {
       return;
     }
 
@@ -59,7 +93,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => const VerificationScreen(),
+          builder: (_) => const VerificationScreen(
+            source: VerificationSource.forgotPassword,
+          ),
         ),
       );
       return;
@@ -93,6 +129,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     icon: Icons.mail_outline,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    onChanged: _onEmailChanged,
+                    errorText: _emailError,
                   ),
                   SizedBox(height: 24.h),
                   CustomButton(

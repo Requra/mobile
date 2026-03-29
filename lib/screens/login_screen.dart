@@ -23,7 +23,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = const AuthService();
+  final RegExp _emailRegex =
+      RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
   bool _isLoading = false;
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -32,8 +36,56 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String value) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'Email is required';
+    }
+
+    if (!_emailRegex.hasMatch(trimmed)) {
+      return 'Use format like: name@example.com';
+    }
+
+    return null;
+  }
+
+  String? _validatePassword(String value) {
+    if (value.isEmpty) {
+      return 'Password is required';
+    }
+    return null;
+  }
+
+  void _onEmailChanged(String value) {
+    setState(() {
+      _emailError = _validateEmail(value);
+    });
+  }
+
+  void _onPasswordChanged(String value) {
+    setState(() {
+      _passwordError = _validatePassword(value);
+    });
+  }
+
+  bool _validateForm() {
+    final String? emailError = _validateEmail(_emailController.text);
+    final String? passwordError = _validatePassword(_passwordController.text);
+
+    setState(() {
+      _emailError = emailError;
+      _passwordError = passwordError;
+    });
+
+    return emailError == null && passwordError == null;
+  }
+
   Future<void> _handleLogin() async {
     if (_isLoading) {
+      return;
+    }
+
+    if (!_validateForm()) {
       return;
     }
 
@@ -90,6 +142,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icons.mail_outline,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    onChanged: _onEmailChanged,
+                    errorText: _emailError,
                   ),
                   SizedBox(height: 14.h),
                   CustomTextField(
@@ -97,6 +151,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icons.lock_outline,
                     isPassword: true,
                     controller: _passwordController,
+                    onChanged: _onPasswordChanged,
+                    errorText: _passwordError,
                   ),
                   SizedBox(height: 8.h),
                   Row(

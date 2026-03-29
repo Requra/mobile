@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/features/auth/data/models/auth_response.dart';

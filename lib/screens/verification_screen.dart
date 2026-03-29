@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
-import 'package:requra/screens/create_new_password_screen.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
@@ -10,8 +9,18 @@ import 'package:requra/theme/style_manager.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_button.dart';
 
+enum VerificationSource {
+  signup,
+  forgotPassword,
+}
+
 class VerificationScreen extends StatefulWidget {
-  const VerificationScreen({super.key});
+  const VerificationScreen({
+    super.key,
+    this.source = VerificationSource.signup,
+  });
+
+  final VerificationSource source;
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -67,12 +76,15 @@ class _VerificationScreenState extends State<VerificationScreen> {
         SnackBar(content: Text(response.message)),
       );
 
-      Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (context) => const CreateNewPasswordScreen(),
-        ),
-      );
+      if (widget.source == VerificationSource.signup) {
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/resetPasswordSuccessfully',
+          (route) => false,
+        );
+      }
       return;
     }
 

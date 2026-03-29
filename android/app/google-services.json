@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "616587901782",
+    "project_id": "rqura-6e384",
+    "storage_bucket": "rqura-6e384.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616587901782:android:7b1c6a36ee06bf48d434f7",
+        "android_client_info": {
+          "package_name": "com.example.requra"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616587901782-1ol7v81ch330e94jau55l82okpeteovq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.requra",
+            "certificate_hash": "9a7c9db21daf2b65e766e0ab097456e395b8e2cc"
+          }
+        },
+        {
+          "client_id": "616587901782-5c8f88mps7a6ru88a89bdanpe52onk4n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA34GsMhhRXx8FkABMjfz3HusRylYkKUoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616587901782-5c8f88mps7a6ru88a89bdanpe52onk4n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

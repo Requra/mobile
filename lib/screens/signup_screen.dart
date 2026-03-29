@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
@@ -20,6 +22,9 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: <String>['email', 'profile'],
+  );
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -28,6 +33,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final RegExp _emailRegex =
       RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _passwordTypingStarted = false;
   String? _fullNameError;
   String? _emailError;
@@ -144,7 +150,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _handleSignup() async {
-    if (_isLoading) {
+    if (_isLoading || _isGoogleLoading) {
       return;
     }
 
@@ -190,6 +196,101 @@ class _SignupScreenState extends State<SignupScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(response.firstError)),
     );
+  }
+
+  Future<void> _handleGoogleSignup() async {
+    if (_isGoogleLoading || _isLoading) {
+      return;
+    }
+
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    try {
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+
+      // User canceled Google sign-in.
+      if (account == null) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isGoogleLoading = false;
+        });
+        return;
+      }
+
+      final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null || idToken.trim().isEmpty) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isGoogleLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to get Google id token.')),
+        );
+        return;
+      }
+
+      // Use the same endpoint as login for Google auth.
+      final response = await _authService.googleLogin(idToken: idToken);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isGoogleLoading = false;
+      });
+
+      if (response.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.firstError)),
+      );
+    } on PlatformException catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isGoogleLoading = false;
+      });
+
+      final String message = e.code == 'sign_in_failed'
+          ? 'Google Sign-In configuration error (ApiException 10). Check SHA-1 and OAuth client setup.'
+          : 'Google sign-in failed. Please try again.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isGoogleLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in failed. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -264,7 +365,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  const SocialAuthButtonsRow(),
+                  SocialAuthButtonsRow(
+                    onGoogleTap: _handleGoogleSignup,
+                    isGoogleLoading: _isGoogleLoading,
+                  ),
                 ],
               ),
             ),

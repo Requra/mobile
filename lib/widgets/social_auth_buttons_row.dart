@@ -7,7 +7,14 @@ import 'package:requra/theme/style_manager.dart';
 import '../theme/color_manager.dart';
 
 class SocialAuthButtonsRow extends StatelessWidget {
-  const SocialAuthButtonsRow({super.key});
+  const SocialAuthButtonsRow({
+    super.key,
+    this.onGoogleTap,
+    this.isGoogleLoading = false,
+  });
+
+  final VoidCallback? onGoogleTap;
+  final bool isGoogleLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -37,25 +44,35 @@ class SocialAuthButtonsRow extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 style: borderStyle,
-                onPressed: () {},
-                child: ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (bounds) => const SweepGradient(
-                    colors: [
-                      Color(0xFF4285F4),
-                      Color(0xFFEA4335),
-                      Color(0xFFFBBC05),
-                      Color(0xFF34A853),
-                      Color(0xFF4285F4),
-                    ],
-                    stops: [0.0, 0.28, 0.52, 0.78, 1.0],
-                  ).createShader(bounds),
-                  child: FaIcon(
-                    FontAwesomeIcons.google,
-                    color: AppColors.white,
-                    size: 20.sp,
-                  ),
-                ),
+                onPressed: isGoogleLoading ? null : onGoogleTap,
+                child: isGoogleLoading
+                    ? SizedBox(
+                        width: 18.sp,
+                        height: 18.sp,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        ),
+                      )
+                    : ShaderMask(
+                        blendMode: BlendMode.srcIn,
+                        shaderCallback: (bounds) => const SweepGradient(
+                          colors: [
+                            Color(0xFF4285F4),
+                            Color(0xFFEA4335),
+                            Color(0xFFFBBC05),
+                            Color(0xFF34A853),
+                            Color(0xFF4285F4),
+                          ],
+                          stops: [0.0, 0.28, 0.52, 0.78, 1.0],
+                        ).createShader(bounds),
+                        child: FaIcon(
+                          FontAwesomeIcons.google,
+                          color: AppColors.white,
+                          size: 20.sp,
+                        ),
+                      ),
               ),
             ),
             SizedBox(width: 12.w),

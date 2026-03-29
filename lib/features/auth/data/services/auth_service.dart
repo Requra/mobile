@@ -8,6 +8,17 @@ import 'package:requra/features/auth/data/models/auth_response.dart';
 class AuthService {
   const AuthService();
 
+  Future<AuthResponse> googleLogin({
+    required String idToken,
+  }) {
+    return _post(
+      endpoint: ApiConstants.googleLogin,
+      body: <String, dynamic>{
+        'idToken': idToken,
+      },
+    );
+  }
+
   Future<AuthResponse> login({
     required String email,
     required String password,

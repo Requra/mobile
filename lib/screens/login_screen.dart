@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/style_manager.dart';
@@ -19,6 +21,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: <String>['email', 'profile'],
+  );
   bool rememberMe = true;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -120,6 +125,100 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleGoogleLogin() async {
+    if (_isLoading) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+
+      // User canceled Google sign-in.
+      if (account == null) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null || idToken.trim().isEmpty) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to get Google id token.')),
+        );
+        return;
+      }
+
+      final response = await _authService.googleLogin(idToken: idToken);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (response.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.firstError)),
+      );
+    } on PlatformException catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      final String message = e.code == 'sign_in_failed'
+          ? 'Google Sign-In configuration error (ApiException 10). Check SHA-1 and OAuth client setup.'
+          : 'Google sign-in failed. Please try again.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in failed. Please try again.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -208,7 +307,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  const SocialAuthButtonsRow(),
+                  SocialAuthButtonsRow(
+                    onGoogleTap: _handleGoogleLogin,
+                    isGoogleLoading: _isLoading,
+                  ),
                 ],
               ),
             ),

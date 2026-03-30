@@ -5,6 +5,7 @@ import 'package:requra/screens/home_screen.dart';
 import 'package:requra/screens/login_screen.dart';
 import 'package:requra/screens/projectView_screen.dart';
 import 'package:requra/screens/reset_password_successfully_screen.dart';
+import 'package:requra/screens/resultView_screen.dart';
 import 'package:requra/screens/signup_screen.dart';
 import 'package:requra/screens/verification_screen.dart';
 import 'screens/splash_screen.dart';
@@ -42,6 +43,7 @@ class RequraApp extends StatelessWidget {
             "/verification" : (_) => const VerificationScreen(),
             "/home": (_) => const HomeScreen(),
             "/projectView": (_) => const ProjectviewScreen(),
+            "/resultView": (_) => const ResultviewScreen(),
           },
           initialRoute: "/splash",
         );

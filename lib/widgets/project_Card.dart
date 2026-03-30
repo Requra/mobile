@@ -190,7 +190,7 @@ class ProjectCard extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey[400]!),
+                      side: BorderSide(color: AppColors.lightgrey),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),

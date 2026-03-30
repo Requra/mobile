@@ -158,7 +158,7 @@ class _ProjectviewScreenState extends State<ProjectviewScreen> {
             SizedBox(height: 10.h),
 
             Container(
-              color: AppColors.white,
+              color: AppColors.backgroundHomeScreen,
               child: Builder(
                 builder: (context) {
                   final controller = DefaultTabController.of(context);

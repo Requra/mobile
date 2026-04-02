@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
-import 'package:requra/screens/create_new_password_screen.dart';
+import 'package:requra/screens/auth/create_new_password_screen.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 
-import '../widgets/auth_header.dart';
-import '../widgets/custom_button.dart';
+import '../../widgets/auth_header.dart';
+import '../../widgets/custom_button.dart';
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});

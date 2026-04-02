@@ -4,6 +4,7 @@ import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 import 'package:requra/widgets/project_Card.dart';
+import 'package:requra/widgets/userstories_tabView.dart';
 
 class ResultviewScreen extends StatefulWidget {
   const ResultviewScreen({super.key});
@@ -82,7 +83,18 @@ class _resultviewScreenState extends State<ResultviewScreen> {
                 children: [
                   ///make it card don't use users stories tab view
                   Center(child: Text("tab1")),
-                  Center(child: Text("tab2")),
+                  
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w , vertical: 10.h),
+                    child: ListView.builder(
+                      itemCount: 3,
+                      itemBuilder: (context, index) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 10.h),
+                        child: UserstoriesTabview(),
+                      );
+                    },),
+                  ),
                   Center(child: Text("tab3")),
                   Center(child: Text("tab4")),
                 ],

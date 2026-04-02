@@ -8,11 +8,12 @@ import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 
 import 'verification_screen.dart';
-import '../widgets/auth_header.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/password_rules_checklist.dart';
-import '../widgets/social_auth_buttons_row.dart';
+import '../../widgets/auth_header.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/social_auth_buttons_row.dart';
+import '../../widgets/password_rules_checklist.dart';
+import '../../widgets/social_auth_buttons_row.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

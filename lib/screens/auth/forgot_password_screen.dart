@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
-import 'package:requra/screens/verification_screen.dart';
+import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/theme/color_manager.dart';
 
-import '../widgets/auth_header.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
+import '../../widgets/auth_header.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

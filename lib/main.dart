@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:requra/screens/create_new_password_screen.dart';
-import 'package:requra/screens/forgot_password_screen.dart';
-import 'package:requra/screens/home_screen.dart';
-import 'package:requra/screens/login_screen.dart';
-import 'package:requra/screens/projectView_screen.dart';
-import 'package:requra/screens/reset_password_successfully_screen.dart';
-import 'package:requra/screens/resultView_screen.dart';
-import 'package:requra/screens/signup_screen.dart';
-import 'package:requra/screens/verification_screen.dart';
+import 'package:requra/screens/auth/create_new_password_screen.dart';
+import 'package:requra/screens/auth/forgot_password_screen.dart';
+import 'package:requra/screens/Home/home_screen.dart';
+import 'package:requra/screens/auth/login_screen.dart';
+import 'package:requra/screens/Home/projectView_screen.dart';
+import 'package:requra/screens/auth/reset_password_successfully_screen.dart';
+import 'package:requra/screens/Home/resultView_screen.dart';
+import 'package:requra/screens/auth/signup_screen.dart';
+import 'package:requra/screens/auth/verification_screen.dart';
+import 'package:requra/widgets/userstories_tabView.dart';
 import 'screens/splash_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -44,8 +45,10 @@ class RequraApp extends StatelessWidget {
             "/home": (_) => const HomeScreen(),
             "/projectView": (_) => const ProjectviewScreen(),
             "/resultView": (_) => const ResultviewScreen(),
+            "/users": (_) => const UserstoriesTabview(),
+
           },
-          initialRoute: "/splash",
+          initialRoute: "/resultView",
         );
       },
 

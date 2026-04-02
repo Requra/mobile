@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
-import 'package:requra/screens/reset_password_successfully_screen.dart';
+import 'package:requra/screens/auth/reset_password_successfully_screen.dart';
 import 'package:requra/theme/color_manager.dart';
 
-import '../widgets/auth_header.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/password_rules_checklist.dart';
+import '../../widgets/auth_header.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/password_rules_checklist.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   const CreateNewPasswordScreen({super.key});

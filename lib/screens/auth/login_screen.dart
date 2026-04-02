@@ -6,12 +6,12 @@ import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 
-import '../theme/font_manager.dart';
+import '../../theme/font_manager.dart';
 import 'forgot_password_screen.dart';
-import '../widgets/auth_header.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/social_auth_buttons_row.dart';
+import '../../widgets/auth_header.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/social_auth_buttons_row.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

@@ -4,8 +4,8 @@ import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 
-import '../widgets/auth_header.dart';
-import '../widgets/custom_button.dart';
+import '../../widgets/auth_header.dart';
+import '../../widgets/custom_button.dart';
 
 class ResetPasswordSuccessfullyScreen extends StatelessWidget {
   const ResetPasswordSuccessfullyScreen({super.key});

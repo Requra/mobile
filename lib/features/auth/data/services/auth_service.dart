@@ -1,13 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/features/auth/data/models/auth_response.dart';
 
 class AuthService {
   const AuthService();
+
+  Future<AuthResponse> googleLogin({
+    required String idToken,
+  }) {
+    return _post(
+      endpoint: ApiConstants.googleLogin,
+      body: <String, dynamic>{
+        'idToken': idToken,
+      },
+    );
+  }
 
   Future<AuthResponse> login({
     required String email,

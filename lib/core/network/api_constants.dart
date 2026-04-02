@@ -9,4 +9,5 @@ class ApiConstants {
       '/auth/forgot-password';
   static const String verifyCode = '/auth/verify-code';
   static const String resetPassword = '/auth/reset-password';
+  static const String googleLogin = '/auth/google';
 }

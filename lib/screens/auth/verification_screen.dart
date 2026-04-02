@@ -10,8 +10,18 @@ import 'package:requra/theme/style_manager.dart';
 import '../../widgets/auth_header.dart';
 import '../../widgets/custom_button.dart';
 
+enum VerificationSource {
+  signup,
+  forgotPassword,
+}
+
 class VerificationScreen extends StatefulWidget {
-  const VerificationScreen({super.key});
+  const VerificationScreen({
+    super.key,
+    this.source = VerificationSource.signup,
+  });
+
+  final VerificationSource source;
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -67,12 +77,15 @@ class _VerificationScreenState extends State<VerificationScreen> {
         SnackBar(content: Text(response.message)),
       );
 
-      Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (context) => const CreateNewPasswordScreen(),
-        ),
-      );
+      if (widget.source == VerificationSource.signup) {
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/resetPasswordSuccessfully',
+          (route) => false,
+        );
+      }
       return;
     }
 

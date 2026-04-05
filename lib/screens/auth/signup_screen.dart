@@ -13,7 +13,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/social_auth_buttons_row.dart';
 import '../../widgets/password_rules_checklist.dart';
-import '../../widgets/social_auth_buttons_row.dart';
+
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -186,8 +186,9 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (context) => const VerificationScreen(
+          builder: (context) => VerificationScreen(
             source: VerificationSource.signup,
+            email: _emailController.text.trim(),
           ),
         ),
       );
@@ -195,7 +196,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.firstError)),
+      SnackBar(content: Text(response.message)),
     );
   }
 
@@ -209,6 +210,9 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
+      // Force account picker on every tap by clearing the previous session.
+      await _googleSignIn.signOut();
+
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
 
       // User canceled Google sign-in.

@@ -1,3 +1,5 @@
+// ignore_for_file: camel_case_types, file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/theme/color_manager.dart';
@@ -83,6 +85,7 @@ class _userstoriesTabviewState extends State<UserstoriesTabview> {
             ),
             Container(
               decoration: BoxDecoration(
+                // ignore: deprecated_member_use
                 color: AppColors.lightPrimary.withOpacity(0.7),
                 border: Border.all(color: AppColors.lightPrimary, width: 1.w),
                 borderRadius: BorderRadius.all(Radius.circular(3.r)),
@@ -201,12 +204,13 @@ class _userstoriesTabviewState extends State<UserstoriesTabview> {
     );
   }
 
+  // ignore: non_constant_identifier_names
   Text RichText(String boldName, String regularName) {
     return Text.rich(
       TextSpan(
         children: [
           TextSpan(
-            text: boldName + " ",
+            text: "$boldName ",
             style: boldStyle(fontSize: FontSize.font12, color: Colors.black),
           ),
           TextSpan(

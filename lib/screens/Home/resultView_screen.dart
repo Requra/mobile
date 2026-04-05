@@ -1,9 +1,11 @@
+// ignore_for_file: camel_case_types, file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
-import 'package:requra/widgets/project_Card.dart';
+
 import 'package:requra/widgets/userstories_tabView.dart';
 
 class ResultviewScreen extends StatefulWidget {

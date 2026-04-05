@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.firstError)),
+      SnackBar(content: Text(response.message)),
     );
   }
 
@@ -135,6 +135,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      // Force account picker on every tap by clearing the previous session.
+      await _googleSignIn.signOut();
+
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
 
       // User canceled Google sign-in.

@@ -104,12 +104,16 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     }
 
     final String password = _passwordController.text;
+    final String confirmPassword = _confirmPasswordController.text;
 
     setState(() {
       _isLoading = true;
     });
 
-    final response = await _authService.resetPassword(password: password);
+    final response = await _authService.resetPassword(
+      newPassword: password,
+      confirmPassword: confirmPassword,
+    );
 
     if (!mounted) {
       return;

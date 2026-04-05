@@ -8,6 +8,32 @@ import 'package:requra/features/auth/data/models/auth_response.dart';
 class AuthService {
   const AuthService();
 
+  Future<AuthResponse> confirmAccount({
+    required String email,
+    required String otpCode,
+  }) {
+    return _post(
+      endpoint: ApiConstants.confirmAccount,
+      body: <String, dynamic>{
+        'email': email,
+        'otpCode': otpCode,
+      },
+    );
+  }
+
+  Future<AuthResponse> resendOtp({
+    required String email,
+    required int otpType,
+  }) {
+    return _post(
+      endpoint: ApiConstants.resendOtp,
+      body: <String, dynamic>{
+        'email': email,
+        'otpType': otpType,
+      },
+    );
+  }
+
   Future<AuthResponse> googleLogin({
     required String idToken,
   }) {
@@ -45,6 +71,7 @@ class AuthService {
         'email': email,
         'password': password,
         'confirmPassword': confirmPassword,
+        'role': 0,
       },
     );
   }
@@ -60,24 +87,26 @@ class AuthService {
     );
   }
 
-  Future<AuthResponse> verifyCode({
-    required String code,
+  Future<AuthResponse> verifyOtp({
+    required String otp,
   }) {
     return _post(
-      endpoint: ApiConstants.verifyCode,
+      endpoint: ApiConstants.verifyOtp,
       body: <String, dynamic>{
-        'code': code,
+        'otp': otp,
       },
     );
   }
 
   Future<AuthResponse> resetPassword({
-    required String password,
+    required String newPassword,
+    required String confirmPassword,
   }) {
     return _post(
       endpoint: ApiConstants.resetPassword,
       body: <String, dynamic>{
-        'password': password,
+        'newPassword': newPassword,
+        'confirmPassword': confirmPassword,
       },
     );
   }

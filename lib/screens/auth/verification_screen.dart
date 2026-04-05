@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/features/auth/data/models/auth_response.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
-import 'package:requra/screens/auth/create_new_password_screen.dart';
+
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
@@ -19,9 +22,11 @@ class VerificationScreen extends StatefulWidget {
   const VerificationScreen({
     super.key,
     this.source = VerificationSource.signup,
+    this.email,
   });
 
   final VerificationSource source;
+  final String? email;
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -33,9 +38,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   final AuthService _authService = const AuthService();
   bool _isLoading = false;
+  bool _isResending = false;
+  int _resendSecondsRemaining = 0;
+  Timer? _resendTimer;
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     for (var controller in _controllers) {
       controller.dispose();
     }
@@ -51,9 +60,19 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
 
     final String code = _controllers.map((c) => c.text).join();
-    if (code.length != 6) {
+    final bool isForgotPasswordFlow =
+        widget.source == VerificationSource.forgotPassword;
+    final bool isValidLength =
+        isForgotPasswordFlow ? code.length >= 5 : code.length == 6;
+    if (!isValidLength) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the 6-digit code.')),
+        SnackBar(
+          content: Text(
+            isForgotPasswordFlow
+                ? 'Please enter a valid OTP code.'
+                : 'Please enter the 6-digit code.',
+          ),
+        ),
       );
       return;
     }
@@ -62,7 +81,27 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _isLoading = true;
     });
 
-    final response = await _authService.verifyCode(code: code);
+    late final AuthResponse response;
+    if (widget.source == VerificationSource.signup) {
+      final String email = (widget.email ?? '').trim();
+      if (email.isEmpty) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email is missing. Please register again.')),
+        );
+        return;
+      }
+
+      response = await _authService.confirmAccount(
+        email: email,
+        otpCode: code,
+      );
+    } else {
+      response = await _authService.verifyOtp(otp: code);
+    }
 
     if (!mounted) {
       return;
@@ -80,18 +119,94 @@ class _VerificationScreenState extends State<VerificationScreen> {
       if (widget.source == VerificationSource.signup) {
         Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       } else {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/resetPasswordSuccessfully',
-          (route) => false,
-        );
+        Navigator.pushReplacementNamed(context, '/createPassword');
       }
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.firstError)),
+      SnackBar(content: Text(response.message)),
     );
+  }
+
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+
+    setState(() {
+      _resendSecondsRemaining = 60;
+    });
+
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_resendSecondsRemaining <= 1) {
+        timer.cancel();
+        setState(() {
+          _resendSecondsRemaining = 0;
+        });
+      } else {
+        setState(() {
+          _resendSecondsRemaining--;
+        });
+      }
+    });
+  }
+
+  Future<void> _handleResendCode() async {
+    if (_resendSecondsRemaining > 0 || _isResending) {
+      return;
+    }
+
+    final String email = (widget.email ?? '').trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email is missing. Please go back and try again.')),
+      );
+      return;
+    }
+
+    _startResendCooldown();
+
+    setState(() {
+      _isResending = true;
+    });
+
+    try {
+      final int otpType =
+          widget.source == VerificationSource.signup ? 0 : 1;
+
+      final response = await _authService.resendOtp(
+        email: email,
+        otpType: otpType,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.message)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to resend code right now. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResending = false;
+        });
+      }
+    }
   }
 
   @override
@@ -158,14 +273,49 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     mainAxisAlignment:MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Didn’t receive the email?' , style: regularStyle(fontSize: FontSize.font14, color: AppColors.black)),
-                      TextButton(
-                        onPressed: () {
-                          // Resend code logic here
+                      Builder(
+                        builder: (context) {
+                          final bool canResend =
+                              _resendSecondsRemaining == 0 && !_isResending;
+                          final Color resendColor =
+                              canResend ? AppColors.primaryText : AppColors.lightgrey;
+
+                          return TextButton(
+                            onPressed: canResend ? _handleResendCode : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'resend code',
+                                  style: regularStyle(
+                                    fontSize: FontSize.font14,
+                                    color: resendColor,
+                                  ).copyWith(
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                if (_isResending || _resendSecondsRemaining > 0)
+                                  SizedBox(width: 6.w),
+                                if (_isResending)
+                                  Text(
+                                    '...',
+                                    style: regularStyle(
+                                      fontSize: FontSize.font14,
+                                      color: AppColors.lightgrey,
+                                    ),
+                                  )
+                                else if (_resendSecondsRemaining > 0)
+                                  Text(
+                                    '${_resendSecondsRemaining}s',
+                                    style: regularStyle(
+                                      fontSize: FontSize.font14,
+                                      color: AppColors.lightgrey,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
                         },
-                        child: Text(
-                          'resend code',
-                            style: regularStyle(fontSize: FontSize.font14, color: AppColors.primaryText).copyWith(decoration: TextDecoration.underline),
-                        ),
                       ),
                     ],
                   ),

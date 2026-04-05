@@ -17,6 +17,7 @@ class AppColors {
   static const statusInProgress  = Color(0xFF1890FF);
   static const statusFinishedLight   = Color(0xFF6AA93D);
   static const statusFinished = Color(0xFF45940C);
+  // ignore: constant_identifier_names
   static const IndicatorBG = Color(0xFFC9C9CC);
 
 }

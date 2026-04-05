@@ -1,13 +1,21 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'https://mock.apidog.com/m1/1240855-1237660-default';
+  static const String baseUrl = 'https://mock.apidog.com/m1/1212435-1208182-default';
 
-  static const String login = '/auth/login';
-  static const String signup = '/auth/signup';
+  static const String login =
+      '/api/Auth/login';
+  static const String signup =
+      '/api/Auth/register';
   static const String forgotPassword =
-      '/auth/forgot-password';
-  static const String verifyCode = '/auth/verify-code';
-  static const String resetPassword = '/auth/reset-password';
-  static const String googleLogin = '/auth/google';
+      '/api/Auth/password/forgot';
+  static const String verifyOtp =
+      '/api/Auth/password/verifyotp';
+  static const String resetPassword =
+      '/api/Auth/password/reset';
+  static const String googleLogin = 'https://mock.apidog.com/m1/1240855-1237660-default/auth/google';
+  static const String confirmAccount =
+      '/api/Auth/confirm-account';
+  static const String resendOtp =
+      '/api/Auth/otp/resend';
 }

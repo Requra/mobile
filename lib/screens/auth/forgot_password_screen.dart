@@ -93,8 +93,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => const VerificationScreen(
+          builder: (_) => VerificationScreen(
             source: VerificationSource.forgotPassword,
+            email: _emailController.text.trim(),
           ),
         ),
       );

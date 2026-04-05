@@ -48,7 +48,7 @@ class RequraApp extends StatelessWidget {
             "/users": (_) => const UserstoriesTabview(),
 
           },
-          initialRoute: "/resultView",
+          initialRoute: "/splash",
         );
       },
 

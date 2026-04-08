@@ -3,10 +3,13 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:requra/core/network/api_constants.dart';
+import 'package:requra/core/storage/secure_token_storage.dart';
 import 'package:requra/features/auth/data/models/auth_response.dart';
 
 class AuthService {
   const AuthService();
+
+  static const SecureTokenStorage _tokenStorage = SecureTokenStorage();
 
   Future<AuthResponse> confirmAccount({
     required String email,
@@ -18,6 +21,7 @@ class AuthService {
         'email': email,
         'otpCode': otpCode,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -31,6 +35,7 @@ class AuthService {
         'email': email,
         'otpType': otpType,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -42,6 +47,7 @@ class AuthService {
       body: <String, dynamic>{
         'idToken': idToken,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -55,6 +61,7 @@ class AuthService {
         'email': email,
         'password': password,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -73,6 +80,7 @@ class AuthService {
         'confirmPassword': confirmPassword,
         'role': 0,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -84,6 +92,7 @@ class AuthService {
       body: <String, dynamic>{
         'email': email,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -95,6 +104,7 @@ class AuthService {
       body: <String, dynamic>{
         'otp': otp,
       },
+      includeAuthHeader: false,
     );
   }
 
@@ -108,54 +118,92 @@ class AuthService {
         'newPassword': newPassword,
         'confirmPassword': confirmPassword,
       },
+      includeAuthHeader: false,
     );
+  }
+
+  Future<AuthResponse> refreshAuthToken() async {
+    final String? storedRefreshToken = await _tokenStorage.readRefreshToken();
+    if (!_hasValue(storedRefreshToken)) {
+      return const AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Refresh token not found. Please sign in again.',
+        statusCode: 401,
+        errors: <dynamic>['Refresh token not found'],
+      );
+    }
+
+    return _post(
+      endpoint: ApiConstants.refreshToken,
+      body: <String, dynamic>{
+        'refreshToken': storedRefreshToken!.trim(),
+      },
+      includeAuthHeader: false,
+      allowRefreshRetry: false,
+    );
+  }
+
+  Future<AuthResponse> postAuthorized({
+    required String endpoint,
+    required Map<String, dynamic> body,
+  }) {
+    return _post(endpoint: endpoint, body: body);
+  }
+
+  Future<AuthResponse> getAuthorized({
+    required String endpoint,
+  }) {
+    return _get(endpoint: endpoint);
+  }
+
+  Future<String?> readAccessToken() {
+    return _tokenStorage.readAccessToken();
+  }
+
+  Future<String?> readRefreshToken() {
+    return _tokenStorage.readRefreshToken();
+  }
+
+  Future<void> clearSessionTokens() {
+    return _tokenStorage.clearTokens();
   }
 
   Future<AuthResponse> _post({
     required String endpoint,
     required Map<String, dynamic> body,
+    bool includeAuthHeader = true,
+    bool allowRefreshRetry = true,
   }) async {
-    final Uri uri = endpoint.startsWith('http')
-        ? Uri.parse(endpoint)
-        : Uri.parse('${ApiConstants.baseUrl}$endpoint');
+    final Uri uri = _resolveUri(endpoint);
 
     try {
-      final http.Response response = await http
-          .post(
-            uri,
-            headers: <String, String>{
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode(body),
-          )
-          .timeout(const Duration(seconds: 20));
-
-      final Map<String, dynamic> decoded = _decodeBody(response.body);
-
-      final int resolvedStatusCode = _resolveStatusCode(
-        decoded['statusCode'],
-        response.statusCode,
+      http.Response response = await _sendPostRequest(
+        uri: uri,
+        body: body,
+        includeAuthHeader: includeAuthHeader,
       );
-      final List<dynamic> resolvedErrors = _resolveErrors(decoded['errors']);
-      final bool resolvedIsSuccess = _resolveIsSuccess(
-        decoded,
-        statusCode: resolvedStatusCode,
-        errors: resolvedErrors,
-      );
+      AuthResponse parsedResponse = _buildResponse(response);
 
-      // Keep API-level error handling centralized for UI screens.
-      return AuthResponse.fromJson(<String, dynamic>{
-        'isSuccess': resolvedIsSuccess,
-        'data': decoded['data'],
-        'message': _resolveMessage(
-          decoded['message'],
-          statusCode: resolvedStatusCode,
-          isSuccess: resolvedIsSuccess,
-        ),
-        'statusCode': resolvedStatusCode,
-        'errors': resolvedErrors,
-      });
+      final bool shouldRefreshAndRetry =
+          includeAuthHeader &&
+          allowRefreshRetry &&
+          _isUnauthorized(response.statusCode, parsedResponse.statusCode);
+
+      if (shouldRefreshAndRetry) {
+        final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
+        if (refreshSucceeded) {
+          response = await _sendPostRequest(
+            uri: uri,
+            body: body,
+            includeAuthHeader: true,
+          );
+          parsedResponse = _buildResponse(response);
+        }
+      }
+
+      await _saveTokensFromData(parsedResponse.data);
+      return parsedResponse;
     } on TimeoutException {
       return const AuthResponse(
         isSuccess: false,
@@ -173,6 +221,196 @@ class AuthService {
         errors: <dynamic>[e.toString()],
       );
     }
+  }
+
+  Future<AuthResponse> _get({
+    required String endpoint,
+    bool includeAuthHeader = true,
+    bool allowRefreshRetry = true,
+  }) async {
+    final Uri uri = _resolveUri(endpoint);
+
+    try {
+      http.Response response = await _sendGetRequest(
+        uri: uri,
+        includeAuthHeader: includeAuthHeader,
+      );
+      AuthResponse parsedResponse = _buildResponse(response);
+
+      final bool shouldRefreshAndRetry =
+          includeAuthHeader &&
+          allowRefreshRetry &&
+          _isUnauthorized(response.statusCode, parsedResponse.statusCode);
+
+      if (shouldRefreshAndRetry) {
+        final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
+        if (refreshSucceeded) {
+          response = await _sendGetRequest(
+            uri: uri,
+            includeAuthHeader: true,
+          );
+          parsedResponse = _buildResponse(response);
+        }
+      }
+
+      await _saveTokensFromData(parsedResponse.data);
+      return parsedResponse;
+    } on TimeoutException {
+      return const AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Request timed out. Please try again.',
+        statusCode: 408,
+        errors: <dynamic>['Request timed out'],
+      );
+    } catch (e) {
+      return AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Something went wrong. Please try again.',
+        statusCode: 500,
+        errors: <dynamic>[e.toString()],
+      );
+    }
+  }
+
+  Uri _resolveUri(String endpoint) {
+    if (endpoint.startsWith('http')) {
+      return Uri.parse(endpoint);
+    }
+
+    return Uri.parse('${ApiConstants.baseUrl}$endpoint');
+  }
+
+  Future<http.Response> _sendPostRequest({
+    required Uri uri,
+    required Map<String, dynamic> body,
+    required bool includeAuthHeader,
+  }) async {
+    final Map<String, String> headers =
+        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+
+    return http
+        .post(
+          uri,
+          headers: headers,
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  Future<http.Response> _sendGetRequest({
+    required Uri uri,
+    required bool includeAuthHeader,
+  }) async {
+    final Map<String, String> headers =
+        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+
+    return http
+        .get(
+          uri,
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  Future<Map<String, String>> _buildHeaders({
+    required bool includeAuthHeader,
+  }) async {
+    final Map<String, String> headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (includeAuthHeader) {
+      final String? accessToken = await _tokenStorage.readAccessToken();
+      if (_hasValue(accessToken)) {
+        headers['Authorization'] = 'Bearer ${accessToken!.trim()}';
+      }
+    }
+
+    return headers;
+  }
+
+  Future<bool> _tryRefreshAndPersistTokens() async {
+    final AuthResponse refreshResponse = await refreshAuthToken();
+    if (!refreshResponse.isSuccess) {
+      await _tokenStorage.clearTokens();
+      return false;
+    }
+
+    final bool hasTokens = _hasTokensInData(refreshResponse.data);
+    if (!hasTokens) {
+      await _tokenStorage.clearTokens();
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _hasTokensInData(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      return false;
+    }
+
+    final String accessToken = (data['token'] ?? '').toString().trim();
+    final String refreshToken = (data['refreshToken'] ?? '').toString().trim();
+    return accessToken.isNotEmpty && refreshToken.isNotEmpty;
+  }
+
+  Future<bool> _saveTokensFromData(dynamic data) async {
+    if (data is! Map<String, dynamic>) {
+      return false;
+    }
+
+    final String accessToken = (data['token'] ?? '').toString().trim();
+    final String refreshToken = (data['refreshToken'] ?? '').toString().trim();
+
+    if (accessToken.isEmpty || refreshToken.isEmpty) {
+      return false;
+    }
+
+    await _tokenStorage.saveTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+
+    return true;
+  }
+
+  bool _hasValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+
+  bool _isUnauthorized(int httpStatusCode, int apiStatusCode) {
+    return httpStatusCode == 401 || apiStatusCode == 401;
+  }
+
+  AuthResponse _buildResponse(http.Response response) {
+    final Map<String, dynamic> decoded = _decodeBody(response.body);
+
+    final int resolvedStatusCode = _resolveStatusCode(
+      decoded['statusCode'],
+      response.statusCode,
+    );
+    final List<dynamic> resolvedErrors = _resolveErrors(decoded['errors']);
+    final bool resolvedIsSuccess = _resolveIsSuccess(
+      decoded,
+      statusCode: resolvedStatusCode,
+      errors: resolvedErrors,
+    );
+
+    return AuthResponse.fromJson(<String, dynamic>{
+      'isSuccess': resolvedIsSuccess,
+      'data': decoded['data'],
+      'message': _resolveMessage(
+        decoded['message'],
+        statusCode: resolvedStatusCode,
+        isSuccess: resolvedIsSuccess,
+      ),
+      'statusCode': resolvedStatusCode,
+      'errors': resolvedErrors,
+    });
   }
 
   Map<String, dynamic> _decodeBody(String body) {

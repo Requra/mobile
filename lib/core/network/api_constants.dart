@@ -13,6 +13,8 @@ class ApiConstants {
       '/api/Auth/password/verifyotp';
   static const String resetPassword =
       '/api/Auth/password/reset';
+  static const String refreshToken =
+      '/api/Auth/refresh-token';
   static const String googleLogin = 'https://mock.apidog.com/m1/1240855-1237660-default/auth/google';
   static const String confirmAccount =
       '/api/Auth/confirm-account';

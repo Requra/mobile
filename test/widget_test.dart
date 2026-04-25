@@ -7,18 +7,19 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:requra/main.dart';
 
 void main() {
-  testWidgets('Splash screen renders logo', (WidgetTester tester) async {
+  testWidgets('Profile screen renders settings title', (WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(430, 932));
     addTearDown(() async {
       await tester.binding.setSurfaceSize(null);
     });
 
     await tester.pumpWidget(const RequraApp());
-    expect(find.byType(SvgPicture), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Profile Settings'), findsOneWidget);
   });
 }

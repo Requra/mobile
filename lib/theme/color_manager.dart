@@ -19,5 +19,9 @@ class AppColors {
   static const statusFinished = Color(0xFF45940C);
   // ignore: constant_identifier_names
   static const IndicatorBG = Color(0xFFC9C9CC);
+  static const lightButton = Color(0xFFF2EEFB);
+  static const borderButton = Color(0xFF51525C);
+  static const lightPrimaryBorder = Color(0xFFF2EEFB);
+
 
 }

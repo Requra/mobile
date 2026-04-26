@@ -159,11 +159,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconColor: Color(0xFF7B5DD4),
                       iconBackground: Color(0xFFEDE7FF),
                     ),
-                    const _SettingsTile(
+                    _SettingsTile(
                       title: 'Change Password',
                       icon: Icons.lock_outline,
-                      iconColor: Color(0xFF7B5DD4),
-                      iconBackground: Color(0xFFEDE7FF),
+                      iconColor: const Color(0xFF7B5DD4),
+                      iconBackground: const Color(0xFFEDE7FF),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/resetPassword');
+                      },
                     ),
                     const _SettingsTile(
                       title: 'Role',

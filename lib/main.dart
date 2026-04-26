@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:requra/screens/Home/profile/setNewPassword_screen.dart';
+import 'package:requra/screens/Home/profile/updatePassword_screen.dart';
 import 'package:requra/screens/auth/create_new_password_screen.dart';
 import 'package:requra/screens/auth/forgot_password_screen.dart';
 import 'package:requra/screens/Home/home_screen.dart';
@@ -48,6 +50,8 @@ class RequraApp extends StatelessWidget {
             "/projectView": (_) => const ProjectviewScreen(),
             "/resultView": (_) => const ResultviewScreen(),
             "/users": (_) => const UserstoriesTabview(),
+            "/resetPassword": (_) => const setNewPasswordScreen(),
+            "/passwordUpdated": (_) => const UpdatepasswordScreen(),
 
           },
           initialRoute: "/profile",

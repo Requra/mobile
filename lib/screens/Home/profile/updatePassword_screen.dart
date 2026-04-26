@@ -50,7 +50,7 @@ class UpdatepasswordScreen extends StatelessWidget {
                         CustomButton(
                           text: "Back to Profile",
                           onTap: () {
-                            Navigator.pushReplacementNamed(context, "/passwordUpdated");
+                            Navigator.pushReplacementNamed(context, "/profile");
                           },
                           color1: AppColors.primaryText,
                           color2: AppColors.primaryText,

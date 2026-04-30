@@ -12,52 +12,48 @@ import 'package:requra/screens/Home/resultView_screen.dart';
 import 'package:requra/screens/auth/signup_screen.dart';
 import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
+import 'package:requra/screens/main_navigation.dart' hide HomeScreen, ProfileScreen, ProjectviewScreen;
 import 'screens/splash_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
 void main() {
-  runApp(const RequraApp());
+  runApp(const MyApp());
 }
 
-class RequraApp extends StatelessWidget {
-  const RequraApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
-      splitScreenMode: true, //IN FUTURE may make app not allow split
-      builder: (context,child){
+      splitScreenMode: true,
+      builder: (context, child) {
         return MaterialApp(
-          title: 'Requra Auth',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5A3D9A)),
+            scaffoldBackgroundColor: Colors.white,
             useMaterial3: true,
           ),
           routes: {
+            "/": (_) => const SplashScreen(),
             "/login": (_) => const LoginScreen(),
             "/signup": (_) => const SignupScreen(),
-            "/forgetPassword": (_) => const ForgotPasswordScreen(),
-            "/createPassword": (_) => const CreateNewPasswordScreen(),
-            "/resetPasswordSuccessfully": (_) => const ResetPasswordSuccessfullyScreen(),
-            "/splash": (_) => const SplashScreen(),
-            "/verification" : (_) => const VerificationScreen(),
+            "/forgotPassword": (_) => const ForgotPasswordScreen(),
+            "/verification": (_) => const VerificationScreen(),
             "/home": (_) => const HomeScreen(),
+            "/main": (_) => const MainNavigation(),
             "/profile": (_) => const ProfileScreen(),
             "/projectView": (_) => const ProjectviewScreen(),
             "/resultView": (_) => const ResultviewScreen(),
             "/users": (_) => const UserstoriesTabview(),
             "/resetPassword": (_) => const setNewPasswordScreen(),
             "/passwordUpdated": (_) => const UpdatepasswordScreen(),
-
           },
-          initialRoute: "/profile",
+          initialRoute: "/main",
         );
       },
-
     );
   }
 }

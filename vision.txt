@@ -1,0 +1,204 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  REQURA – STATE MANAGEMENT VISION                          ║
+║                  Comparing options & choosing the right one                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1. setState (built-in Flutter)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Pros:
+    - Zero dependencies, built into Flutter
+    - Simple to understand for beginners
+    - Fast for small local UI changes
+
+  ❌ Cons:
+    - State is locked inside a single widget
+    - Passing state down requires "prop drilling" (passing through many widgets)
+    - Cannot easily share state between distant screens (e.g. Dashboard ↔ Home)
+    - Hard to test business logic separately from the UI
+    - Does NOT scale for a multi-screen app like Requra
+
+  🏷️ Verdict: Good for simple, isolated UI toggles (e.g. _isEditing on Profile).
+              NOT suitable as the primary state solution for Requra.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  2. InheritedWidget / Provider
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Pros:
+    - Official Flutter recommended approach (flutter.dev)
+    - Lightweight, no large dependencies
+    - ChangeNotifier is easy to understand
+    - Good community support & many tutorials
+
+  ❌ Cons:
+    - ChangeNotifier rebuilds ALL listeners on notifyListeners() — not surgical
+    - Becomes messy when many Providers are nested (Provider hell)
+    - No built-in async state handling (loading / error / data)
+    - Not strongly opinionated about architecture
+
+  🏷️ Verdict: Solid baseline. Works fine for small-to-medium apps.
+              Can be used in Requra for simple shared state (auth token, user info).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  3. Riverpod
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Pros:
+    - Compile-safe (errors caught at compile time, not runtime)
+    - Providers are global & accessible from anywhere – no context needed
+    - Supports async out-of-the-box with AsyncValue (loading / error / data)
+    - Code generation via riverpod_generator reduces boilerplate
+    - Testable with no widget tree required
+    - Granular rebuilds – only widgets watching specific provider rebuild
+
+  ❌ Cons:
+    - Learning curve is steeper than Provider
+    - Code generation setup is extra step
+    - Slightly more boilerplate for simple cases vs setState
+
+  🏷️ Verdict: Excellent for production apps. Covers async API calls perfectly
+              (which Requra needs heavily). Strong choice but still needs
+              architecture decision (where to put business logic).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  4. BLoC (Business Logic Component) — flutter_bloc package
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Pros:
+    - Very strong separation of concerns (Event → BLoC → State)
+    - Excellent for complex, event-driven business logic
+    - Highly testable (pure unit tests on BLoC, no Flutter needed)
+    - BlocObserver for global debugging / logging
+    - Scales to enterprise-level applications
+    - Clear, predictable data flow
+
+  ❌ Cons:
+    - Heavy boilerplate: for each feature you write Events, States, BLoC class
+    - Over-engineering for small features (e.g. toggle a switch)
+    - Steeper learning curve than Provider/Riverpod
+    - Overkill if the team is small or junior
+
+  🏷️ Verdict: Industry gold standard for large teams. Powerful but may be
+              overkill for Requra's current team size.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  5. GetX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Pros:
+    - Minimal boilerplate – very fast to write
+    - Built-in routing, DI, and state all in one package
+    - Reactive Obx() and GetBuilder() are flexible
+    - No BuildContext needed in many places
+
+  ❌ Cons:
+    - Anti-pattern: mixes routing, DI, and state – violates Single Responsibility
+    - Not officially supported by the Flutter team
+    - Community considered it "magic" – harder to debug
+    - Bad testability: tightly couples everything
+    - Many breaking changes between versions
+    - Not recommended for serious production codebases
+
+  🏷️ Verdict: Fast prototyping only. NOT recommended for Requra – too risky
+              for a GP project that needs to be maintainable and testable.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  6. MobX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Pros:
+    - Reactive – observables update UI automatically
+    - Familiar to developers coming from React MobX
+    - Less boilerplate than BLoC
+
+  ❌ Cons:
+    - Requires code generation (build_runner)
+    - Smaller Flutter community compared to Riverpod/BLoC
+    - Harder to reason about in large apps
+
+  🏷️ Verdict: Not ideal for Requra – limited community & async support is weaker.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  COMPARISON TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌──────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Criterion    │ setState │ Provider │ Riverpod │   BLoC   │  GetX    │
+  ├──────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ Simplicity   │ ★★★★★   │ ★★★★☆   │ ★★★☆☆   │ ★★☆☆☆   │ ★★★★☆   │
+  │ Scalability  │ ★☆☆☆☆   │ ★★★☆☆   │ ★★★★☆   │ ★★★★★   │ ★★☆☆☆   │
+  │ Testability  │ ★☆☆☆☆   │ ★★★☆☆   │ ★★★★☆   │ ★★★★★   │ ★★☆☆☆   │
+  │ Async API    │ ★☆☆☆☆   │ ★★☆☆☆   │ ★★★★★   │ ★★★★☆   │ ★★★☆☆   │
+  │ Boilerplate  │ ★★★★★   │ ★★★★☆   │ ★★★☆☆   │ ★★☆☆☆   │ ★★★★★   │
+  │ Community    │ ★★★★★   │ ★★★★★   │ ★★★★★   │ ★★★★★   │ ★★★☆☆   │
+  │ Reliability  │ ★★★★★   │ ★★★★☆   │ ★★★★★   │ ★★★★★   │ ★★☆☆☆   │
+  └──────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ★ RECOMMENDATION FOR REQURA: Riverpod + MVVM Architecture
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  We recommend: flutter_riverpod + riverpod_generator
+
+  WHY RIVERPOD?
+
+  1. ASYNC-FIRST: Requra heavily relies on API calls (fetch projects, upload
+     files, generate requirements). Riverpod's AsyncValue automatically
+     handles loading / error / data states without boilerplate.
+
+     Example:
+       final projectsProvider = FutureProvider((ref) => api.fetchProjects());
+       // In widget: AsyncValue<List<Project>> projects = ref.watch(projectsProvider);
+
+  2. SHARED STATE ACROSS SCREENS: The Dashboard, Projects, and Home screens
+     all need access to the same projects list. With Riverpod, one provider
+     gives every screen access to the same data — no prop drilling.
+
+  3. TESTABLE: Providers can be overridden in tests without a widget tree.
+
+  4. COMPILE-SAFE: Misusing a provider causes a compile error, not a
+     runtime crash.
+
+  5. REACTIVE REFRESH: When a project is added via AddProjectScreen,
+     refreshing the projectsProvider automatically updates the Dashboard
+     and Projects tab.
+
+  6. TEAM SIZE: Riverpod is slightly simpler than BLoC for a 2-4 person team,
+     while still being production-grade.
+
+  ARCHITECTURE PROPOSAL:
+  ─────────────────────
+    lib/
+    ├── features/
+    │   ├── projects/
+    │   │   ├── data/
+    │   │   │   ├── repositories/project_repository.dart   ← API calls
+    │   │   │   └── models/project_model.dart
+    │   │   ├── providers/
+    │   │   │   └── projects_provider.dart                 ← Riverpod providers
+    │   │   └── screens/
+    │   │       ├── projects_screen.dart
+    │   │       └── add_project_screen.dart
+    │   ├── dashboard/
+    │   │   ├── providers/dashboard_provider.dart
+    │   │   └── screens/dashboard_screen.dart
+    │   └── auth/
+    │       ├── providers/auth_provider.dart
+    │       └── screens/login_screen.dart
+    └── core/
+        ├── network/api_client.dart
+        └── providers/app_providers.dart
+
+  INSTALL:
+  ─────────
+    flutter pub add flutter_riverpod riverpod_annotation
+    flutter pub add --dev riverpod_generator build_runner
+
+  WRAP APP:
+  ─────────
+    void main() {
+      runApp(const ProviderScope(child: RequraApp()));
+    }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SECOND CHOICE: BLoC — if you want a strict, enterprise-level architecture
+                  and are comfortable writing Events + States boilerplate.
+
+  AVOID: GetX (unreliable), MobX (small community), pure setState (no scale).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

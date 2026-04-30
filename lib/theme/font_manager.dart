@@ -2,23 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class FontConstants {
-  static const String fontFamily = "Product Sans";
+  static const String fontFamily = "Inter"; // Assuming Inter based on common premium designs
 }
 
 class FontWeightManager {
-  static const FontWeight regular = FontWeight.normal;
-  static const FontWeight bold = FontWeight.w900;
-  static const FontWeight semiBold = FontWeight.w700;
-
+  static const FontWeight light = FontWeight.w300;
+  static const FontWeight regular = FontWeight.w400;
+  static const FontWeight medium = FontWeight.w500;
+  static const FontWeight semiBold = FontWeight.w600;
+  static const FontWeight bold = FontWeight.w700;
 }
 
 class FontSize {
-  static double font10 = 10.sp;
-  static double font12 = 12.sp;
-  static double font14 = 14.sp;
-  static double font16 = 16.sp;
-  static double font18 = 18.sp;
-  static double font20 = 20.sp;
-  static double font22 = 22.sp;
-  static double font24 = 24.sp;
+  static double font10 = 10.0.sp;
+  static double font11 = 11.0.sp;
+  static double font12 = 12.0.sp;
+  static double font13 = 13.0.sp;
+  static double font14 = 14.0.sp;
+  static double font16 = 16.0.sp;
+  static double font17 = 17.0.sp;
+  static double font18 = 18.0.sp;
+  static double font20 = 20.0.sp;
+  static double font22 = 22.0.sp;
+  static double font24 = 24.0.sp;
 }

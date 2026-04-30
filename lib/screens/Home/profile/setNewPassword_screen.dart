@@ -1,6 +1,9 @@
+// ignore_for_file: camel_case_types, file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
@@ -22,8 +25,9 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
   final TextEditingController _currentpasswordController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  final RegExp _emailRegex =
-  RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+  final AuthService _authService = const AuthService();
+  bool _isLoading = false;
+  String? _currentPasswordError;
   bool _passwordTypingStarted = false;
   String? _passwordError;
   String? _confirmPasswordError;
@@ -45,6 +49,13 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
       return 'Password must meet all requirements below';
     }
 
+    return null;
+  }
+
+  String? _validateCurrentPassword(String value) {
+    if (value.trim().isEmpty) {
+      return 'Current password is required';
+    }
     return null;
   }
 
@@ -82,6 +93,67 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
         _passwordController.text,
       );
     });
+  }
+
+  void _onCurrentPasswordChanged(String value) {
+    setState(() {
+      _currentPasswordError = _validateCurrentPassword(value);
+    });
+  }
+
+  bool _validateForm() {
+    final String? currentPasswordError =
+        _validateCurrentPassword(_currentpasswordController.text);
+    final String? passwordError = _validatePassword(_passwordController.text);
+    final String? confirmPasswordError = _validateConfirmPassword(
+      _confirmPasswordController.text,
+      _passwordController.text,
+    );
+
+    setState(() {
+      _currentPasswordError = currentPasswordError;
+      _passwordError = passwordError;
+      _confirmPasswordError = confirmPasswordError;
+    });
+
+    return currentPasswordError == null &&
+        passwordError == null &&
+        confirmPasswordError == null;
+  }
+
+  Future<void> _handleUpdatePassword() async {
+    if (_isLoading) {
+      return;
+    }
+
+    if (!_validateForm()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await _authService.changePassword(
+      currentPassword: _currentpasswordController.text,
+      newPassword: _passwordController.text,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(response.message)),
+    );
+
+    if (response.isSuccess) {
+      Navigator.pushReplacementNamed(context, '/passwordUpdated');
+    }
   }
 
 
@@ -125,8 +197,8 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
                           icon: Icons.lock_outline,
                           isPassword: true,
                           controller: _currentpasswordController,
-                          // onChanged: _onPasswordChanged,
-                          // errorText: _passwordError,
+                          onChanged: _onCurrentPasswordChanged,
+                          errorText: _currentPasswordError,
                         ),
                         SizedBox(height: 16.h,),
                         Padding(
@@ -165,7 +237,9 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
                             Expanded(
                               child: CustomButton(
                                 text: "Cancel",
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.pushReplacementNamed(context, "/profile");
+                                },
                                 color1: AppColors.lightButton,
                                 color2: AppColors.lightButton,
                                 borderColor: AppColors.borderButton,
@@ -175,10 +249,8 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
                             SizedBox(width: 10.w),
                             Expanded(
                               child: CustomButton(
-                                text: "Update",
-                                onTap: () {
-                                  Navigator.pushReplacementNamed(context, "/passwordUpdated");
-                                },
+                                text: _isLoading ? 'Updating...' : 'Update',
+                                onTap: _handleUpdatePassword,
                                 color1: AppColors.primaryText,
                                 color2: AppColors.primaryText,
                               ),

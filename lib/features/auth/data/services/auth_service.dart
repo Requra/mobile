@@ -122,6 +122,19 @@ class AuthService {
     );
   }
 
+  Future<AuthResponse> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) {
+    return _put(
+      endpoint: ApiConstants.changePassword,
+      body: <String, dynamic>{
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      },
+    );
+  }
+
   Future<AuthResponse> refreshAuthToken() async {
     final String? storedRefreshToken = await _tokenStorage.readRefreshToken();
     if (!_hasValue(storedRefreshToken)) {
@@ -155,6 +168,13 @@ class AuthService {
     required String endpoint,
   }) {
     return _get(endpoint: endpoint);
+  }
+
+  Future<AuthResponse> putAuthorized({
+    required String endpoint,
+    required Map<String, dynamic> body,
+  }) {
+    return _put(endpoint: endpoint, body: body);
   }
 
   Future<String?> readAccessToken() {
@@ -274,6 +294,60 @@ class AuthService {
     }
   }
 
+  Future<AuthResponse> _put({
+    required String endpoint,
+    required Map<String, dynamic> body,
+    bool includeAuthHeader = true,
+    bool allowRefreshRetry = true,
+  }) async {
+    final Uri uri = _resolveUri(endpoint);
+
+    try {
+      http.Response response = await _sendPutRequest(
+        uri: uri,
+        body: body,
+        includeAuthHeader: includeAuthHeader,
+      );
+      AuthResponse parsedResponse = _buildResponse(response);
+
+      final bool shouldRefreshAndRetry =
+          includeAuthHeader &&
+          allowRefreshRetry &&
+          _isUnauthorized(response.statusCode, parsedResponse.statusCode);
+
+      if (shouldRefreshAndRetry) {
+        final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
+        if (refreshSucceeded) {
+          response = await _sendPutRequest(
+            uri: uri,
+            body: body,
+            includeAuthHeader: true,
+          );
+          parsedResponse = _buildResponse(response);
+        }
+      }
+
+      await _saveTokensFromData(parsedResponse.data);
+      return parsedResponse;
+    } on TimeoutException {
+      return const AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Request timed out. Please try again.',
+        statusCode: 408,
+        errors: <dynamic>['Request timed out'],
+      );
+    } catch (e) {
+      return AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Something went wrong. Please try again.',
+        statusCode: 500,
+        errors: <dynamic>[e.toString()],
+      );
+    }
+  }
+
   Uri _resolveUri(String endpoint) {
     if (endpoint.startsWith('http')) {
       return Uri.parse(endpoint);
@@ -310,6 +384,23 @@ class AuthService {
         .get(
           uri,
           headers: headers,
+        )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  Future<http.Response> _sendPutRequest({
+    required Uri uri,
+    required Map<String, dynamic> body,
+    required bool includeAuthHeader,
+  }) async {
+    final Map<String, String> headers =
+        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+
+    return http
+        .put(
+          uri,
+          headers: headers,
+          body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: 20));
   }

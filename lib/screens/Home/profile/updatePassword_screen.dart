@@ -1,14 +1,12 @@
-import 'package:flutter/cupertino.dart';
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
 import 'package:requra/widgets/circular_icon.dart';
 import 'package:requra/widgets/custom_button.dart';
-import 'package:requra/widgets/custom_text_field.dart';
-import 'package:requra/widgets/password_rules_checklist.dart';
 
 
 class UpdatepasswordScreen extends StatelessWidget {
@@ -50,7 +48,7 @@ class UpdatepasswordScreen extends StatelessWidget {
                         CustomButton(
                           text: "Back to Profile",
                           onTap: () {
-                            Navigator.pushReplacementNamed(context, "/passwordUpdated");
+                            Navigator.pushReplacementNamed(context, "/profile");
                           },
                           color1: AppColors.primaryText,
                           color2: AppColors.primaryText,

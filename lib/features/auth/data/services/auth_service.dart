@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:requra/core/network/api_constants.dart';
@@ -133,6 +134,81 @@ class AuthService {
         'newPassword': newPassword,
       },
     );
+  }
+
+  Future<AuthResponse> updateProfile({
+    required String name,
+  }) {
+    return _put(
+      endpoint: ApiConstants.updateProfile,
+      body: <String, dynamic>{
+        'name': name,
+      },
+    );
+  }
+
+  Future<AuthResponse> getProfile() {
+    return _get(endpoint: ApiConstants.updateProfile);
+  }
+
+  Future<AuthResponse> deleteAccount() {
+    return _deleteAccountWithFallback();
+  }
+
+  Future<AuthResponse> _deleteAccountWithFallback() async {
+    AuthResponse response = await _delete(endpoint: ApiConstants.deleteAccount);
+    if (response.statusCode == 404 || response.statusCode == 405) {
+      response = await _post(
+        endpoint: ApiConstants.deleteAccount,
+        body: <String, dynamic>{},
+      );
+    }
+    return response;
+  }
+
+  Future<AuthResponse> uploadAvatar({
+    required File file,
+  }) async {
+    try {
+      http.Response response = await _sendAvatarRequest(
+        file: file,
+        includeAuthHeader: true,
+      );
+      AuthResponse parsedResponse = _buildResponse(response);
+
+      final bool shouldRefreshAndRetry =
+          _isUnauthorized(response.statusCode, parsedResponse.statusCode);
+
+      if (shouldRefreshAndRetry) {
+        final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
+        if (refreshSucceeded) {
+          response = await _sendAvatarRequest(
+            file: file,
+            includeAuthHeader: true,
+          );
+          parsedResponse = _buildResponse(response);
+        }
+      }
+
+      await _saveTokensFromData(parsedResponse.data);
+      return parsedResponse;
+    } on TimeoutException {
+      return const AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Request timed out. Please try again.',
+        statusCode: 408,
+        errors: <dynamic>['Request timed out'],
+      );
+    } catch (e) {
+      return AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Something went wrong. Please try again.',
+        statusCode: 500,
+        errors: <dynamic>[e.toString()],
+      );
+    }
   }
 
   Future<AuthResponse> refreshAuthToken() async {
@@ -348,6 +424,57 @@ class AuthService {
     }
   }
 
+  Future<AuthResponse> _delete({
+    required String endpoint,
+    bool includeAuthHeader = true,
+    bool allowRefreshRetry = true,
+  }) async {
+    final Uri uri = _resolveUri(endpoint);
+
+    try {
+      http.Response response = await _sendDeleteRequest(
+        uri: uri,
+        includeAuthHeader: includeAuthHeader,
+      );
+      AuthResponse parsedResponse = _buildResponse(response);
+
+      final bool shouldRefreshAndRetry =
+          includeAuthHeader &&
+          allowRefreshRetry &&
+          _isUnauthorized(response.statusCode, parsedResponse.statusCode);
+
+      if (shouldRefreshAndRetry) {
+        final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
+        if (refreshSucceeded) {
+          response = await _sendDeleteRequest(
+            uri: uri,
+            includeAuthHeader: true,
+          );
+          parsedResponse = _buildResponse(response);
+        }
+      }
+
+      await _saveTokensFromData(parsedResponse.data);
+      return parsedResponse;
+    } on TimeoutException {
+      return const AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Request timed out. Please try again.',
+        statusCode: 408,
+        errors: <dynamic>['Request timed out'],
+      );
+    } catch (e) {
+      return AuthResponse(
+        isSuccess: false,
+        data: null,
+        message: 'Something went wrong. Please try again.',
+        statusCode: 500,
+        errors: <dynamic>[e.toString()],
+      );
+    }
+  }
+
   Uri _resolveUri(String endpoint) {
     if (endpoint.startsWith('http')) {
       return Uri.parse(endpoint);
@@ -405,11 +532,64 @@ class AuthService {
         .timeout(const Duration(seconds: 20));
   }
 
+  Future<http.Response> _sendDeleteRequest({
+    required Uri uri,
+    required bool includeAuthHeader,
+  }) async {
+    final Map<String, String> headers =
+        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+
+    return http
+        .delete(
+          uri,
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  Future<http.Response> _sendAvatarRequest({
+    required File file,
+    required bool includeAuthHeader,
+  }) async {
+    final Uri uri = _resolveUri(ApiConstants.uploadAvatar);
+    final Map<String, String> headers =
+        await _buildMultipartHeaders(includeAuthHeader: includeAuthHeader);
+
+    final http.MultipartRequest request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(headers)
+      ..files.add(
+        await http.MultipartFile.fromPath(
+          'avatar',
+          file.path,
+        ),
+      );
+
+    final http.StreamedResponse streamedResponse = await request.send();
+    return http.Response.fromStream(streamedResponse);
+  }
+
   Future<Map<String, String>> _buildHeaders({
     required bool includeAuthHeader,
   }) async {
     final Map<String, String> headers = <String, String>{
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (includeAuthHeader) {
+      final String? accessToken = await _tokenStorage.readAccessToken();
+      if (_hasValue(accessToken)) {
+        headers['Authorization'] = 'Bearer ${accessToken!.trim()}';
+      }
+    }
+
+    return headers;
+  }
+
+  Future<Map<String, String>> _buildMultipartHeaders({
+    required bool includeAuthHeader,
+  }) async {
+    final Map<String, String> headers = <String, String>{
       'Accept': 'application/json',
     };
 
@@ -478,13 +658,26 @@ class AuthService {
   }
 
   AuthResponse _buildResponse(http.Response response) {
-    final Map<String, dynamic> decoded = _decodeBody(response.body);
+    final String rawBody = response.body;
+    final Map<String, dynamic> decoded = _decodeBody(rawBody);
 
     final int resolvedStatusCode = _resolveStatusCode(
       decoded['statusCode'],
       response.statusCode,
     );
-    final List<dynamic> resolvedErrors = _resolveErrors(decoded['errors']);
+    List<dynamic> resolvedErrors = _resolveErrors(decoded['errors']);
+
+    if (_hasFormatError(resolvedErrors) &&
+        response.statusCode >= 200 &&
+        response.statusCode < 300) {
+      resolvedErrors = <dynamic>[];
+      if (decoded['message'] == null ||
+          decoded['message'].toString().trim().isEmpty) {
+        decoded['message'] =
+            rawBody.trim().isNotEmpty ? rawBody.trim() : 'Request completed';
+      }
+    }
+
     final bool resolvedIsSuccess = _resolveIsSuccess(
       decoded,
       statusCode: resolvedStatusCode,
@@ -504,20 +697,38 @@ class AuthService {
     });
   }
 
+  bool _hasFormatError(List<dynamic> errors) {
+    for (final dynamic error in errors) {
+      final String text = error.toString();
+      if (text.contains('Response is not a JSON object') ||
+          text.contains('Response is not valid JSON')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Map<String, dynamic> _decodeBody(String body) {
     if (body.trim().isEmpty) {
       return <String, dynamic>{};
     }
 
-    final dynamic parsed = jsonDecode(body);
-    if (parsed is Map<String, dynamic>) {
-      return parsed;
-    }
+    try {
+      final dynamic parsed = jsonDecode(body);
+      if (parsed is Map<String, dynamic>) {
+        return parsed;
+      }
 
-    return <String, dynamic>{
-      'message': 'Unexpected response format',
-      'errors': <dynamic>['Response is not a JSON object'],
-    };
+      return <String, dynamic>{
+        'message': 'Unexpected response format',
+        'errors': <dynamic>['Response is not a JSON object'],
+      };
+    } catch (_) {
+      return <String, dynamic>{
+        'message': 'Unexpected response format',
+        'errors': <dynamic>['Response is not valid JSON'],
+      };
+    }
   }
 
   int _resolveStatusCode(dynamic rawStatusCode, int fallback) {

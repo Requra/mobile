@@ -15,6 +15,12 @@ class ApiConstants {
       '/api/Auth/password/reset';
   static const String changePassword =
       'https://mock.apidog.com/m1/1212435-1208182-default/api/profile/change-password';
+  static const String uploadAvatar =
+      'https://mock.apidog.com/m1/1212435-1208182-default/api/profile/avatar';
+  static const String updateProfile =
+      'https://mock.apidog.com/m1/1212435-1208182-default/api/profile';
+  static const String deleteAccount =
+      'https://mock.apidog.com/m1/1212435-1208182-default/api/account';
   static const String refreshToken =
       '/api/Auth/refresh-token';
   static const String googleLogin = 'https://mock.apidog.com/m1/1240855-1237660-default/auth/google';

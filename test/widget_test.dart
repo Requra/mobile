@@ -17,7 +17,7 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
-    await tester.pumpWidget(const RequraApp());
+    await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Profile Settings'), findsOneWidget);

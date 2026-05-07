@@ -85,7 +85,7 @@ class _DashboardAppBar extends StatelessWidget {
           Image.asset(
             'assets/images/logo.png',
             height: 28.h,
-            errorBuilder: (_, __, ___) => Icon(
+            errorBuilder: (_, _, _) => Icon(
               Icons.smart_toy,
               color: AppColors.primary,
               size: 24.sp,

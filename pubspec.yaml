@@ -42,6 +42,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   persistent_bottom_nav_bar: ^6.2.1
   animated_bottom_navigation_bar: ^1.4.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

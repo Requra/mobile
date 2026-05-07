@@ -238,7 +238,7 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
                               child: CustomButton(
                                 text: "Cancel",
                                 onTap: () {
-                                  Navigator.pushReplacementNamed(context, "/profile");
+                                  Navigator.of(context, rootNavigator: true).pop();
                                 },
                                 color1: AppColors.lightButton,
                                 color2: AppColors.lightButton,

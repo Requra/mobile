@@ -147,7 +147,7 @@ class _HeroSection extends StatelessWidget {
                   child: Image.asset(
                     'assets/images/logo.png',
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.smart_toy,
                       color: Colors.white,
                       size: 16.sp,
@@ -698,7 +698,7 @@ class _FooterSection extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/logo.png',
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Icon(
+                  errorBuilder: (_, _, _) => Icon(
                     Icons.smart_toy,
                     color: Colors.white,
                     size: 14.sp,

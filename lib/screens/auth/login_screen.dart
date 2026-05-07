@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(response.message)),
       );
 
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
       return;
     }
 
@@ -184,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response.message)),
         );
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
         return;
       }
 

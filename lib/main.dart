@@ -7,12 +7,11 @@ import 'package:requra/screens/Home/home_screen.dart';
 import 'package:requra/screens/Home/profile_screen.dart';
 import 'package:requra/screens/auth/login_screen.dart';
 import 'package:requra/screens/Home/projectView_screen.dart';
-import 'package:requra/screens/auth/reset_password_successfully_screen.dart';
 import 'package:requra/screens/Home/resultView_screen.dart';
 import 'package:requra/screens/auth/signup_screen.dart';
 import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
-import 'package:requra/screens/main_navigation.dart' hide HomeScreen, ProfileScreen, ProjectviewScreen;
+import 'package:requra/screens/main_navigation.dart' ;
 import 'screens/splash_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -42,6 +41,7 @@ class MyApp extends StatelessWidget {
             "/signup": (_) => const SignupScreen(),
             "/forgotPassword": (_) => const ForgotPasswordScreen(),
             "/verification": (_) => const VerificationScreen(),
+            "/createPassword": (_) => const CreateNewPasswordScreen(),
             "/home": (_) => const HomeScreen(),
             "/main": (_) => const MainNavigation(),
             "/profile": (_) => const ProfileScreen(),
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
             "/resetPassword": (_) => const setNewPasswordScreen(),
             "/passwordUpdated": (_) => const UpdatepasswordScreen(),
           },
-          initialRoute: "/main",
+          initialRoute: "/",
         );
       },
     );

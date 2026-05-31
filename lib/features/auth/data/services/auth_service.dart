@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/core/storage/secure_token_storage.dart';
@@ -43,12 +43,32 @@ class AuthService {
   Future<AuthResponse> googleLogin({
     required String idToken,
   }) {
-    return _post(
-      endpoint: ApiConstants.googleLogin,
-      body: <String, dynamic>{
+    final String platform = _resolvePlatformParam();
+    final Uri uri = _resolveUri(
+      ApiConstants.googleLogin,
+      queryParameters: <String, String>{
         'idToken': idToken,
+        'platform': platform,
       },
+    );
+
+    if (kDebugMode) {
+      final Uri safeUri = uri.replace(
+        queryParameters: <String, String>{
+          'idToken': '***',
+          'platform': platform,
+        },
+      );
+      debugPrint(
+        'Google login request: $safeUri (idTokenLength=${idToken.length})',
+      );
+    }
+
+    return _get(
+      endpoint: uri.toString(),
       includeAuthHeader: false,
+      allowRefreshRetry: false,
+      debugLabel: 'googleLogin',
     );
   }
 
@@ -79,7 +99,7 @@ class AuthService {
         'email': email,
         'password': password,
         'confirmPassword': confirmPassword,
-        'role': 0,
+        'role': 1,
       },
       includeAuthHeader: false,
     );
@@ -323,14 +343,20 @@ class AuthService {
     required String endpoint,
     bool includeAuthHeader = true,
     bool allowRefreshRetry = true,
+    Map<String, String>? queryParameters,
+    String? debugLabel,
   }) async {
-    final Uri uri = _resolveUri(endpoint);
+    final Uri uri = _resolveUri(endpoint, queryParameters: queryParameters);
 
     try {
       http.Response response = await _sendGetRequest(
         uri: uri,
         includeAuthHeader: includeAuthHeader,
       );
+      if (kDebugMode && debugLabel != null) {
+        debugPrint('[$debugLabel] status=${response.statusCode}');
+        debugPrint('[$debugLabel] body=${response.body}');
+      }
       AuthResponse parsedResponse = _buildResponse(response);
 
       final bool shouldRefreshAndRetry =
@@ -475,12 +501,44 @@ class AuthService {
     }
   }
 
-  Uri _resolveUri(String endpoint) {
-    if (endpoint.startsWith('http')) {
-      return Uri.parse(endpoint);
+  Uri _resolveUri(
+    String endpoint, {
+    Map<String, String>? queryParameters,
+  }) {
+    return _resolveUriWithQuery(
+      endpoint,
+      queryParameters: queryParameters,
+    );
+  }
+
+  Uri _resolveUriWithQuery(
+    String endpoint, {
+    Map<String, String>? queryParameters,
+  }) {
+    final Uri baseUri = endpoint.startsWith('http')
+        ? Uri.parse(endpoint)
+        : Uri.parse('${ApiConstants.baseUrl}$endpoint');
+    if (kDebugMode) {
+      final Uri logUri = baseUri.queryParameters.containsKey('idToken')
+          ? baseUri.replace(
+              queryParameters: <String, String>{
+                ...baseUri.queryParameters,
+                'idToken': '***',
+              },
+            )
+          : baseUri;
+      debugPrint('REQUEST URL: $logUri');
+    }
+    if (queryParameters == null || queryParameters.isEmpty) {
+      return baseUri;
     }
 
-    return Uri.parse('${ApiConstants.baseUrl}$endpoint');
+    return baseUri.replace(
+      queryParameters: <String, String>{
+        ...baseUri.queryParameters,
+        ...queryParameters,
+      },
+    );
   }
 
   Future<http.Response> _sendPostRequest({
@@ -651,6 +709,21 @@ class AuthService {
 
   bool _hasValue(String? value) {
     return value != null && value.trim().isNotEmpty;
+  }
+
+  String _resolvePlatformParam() {
+    if (kIsWeb) {
+      return 'web';
+    }
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return 'ios';
+      case TargetPlatform.android:
+        return 'android';
+      default:
+        return 'android';
+    }
   }
 
   bool _isUnauthorized(int httpStatusCode, int apiStatusCode) {

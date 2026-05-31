@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -150,6 +153,44 @@ class _SignupScreenState extends State<SignupScreen> {
         confirmPasswordError == null;
   }
 
+  Map<String, dynamic>? _decodeJwtPayload(String token) {
+    final List<String> parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      final String payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      final dynamic decoded = jsonDecode(payload);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
+  }
+
+  void _logJwtClaims(String token) {
+    if (!kDebugMode) {
+      return;
+    }
+
+    final Map<String, dynamic>? payload = _decodeJwtPayload(token);
+    if (payload == null) {
+      debugPrint('Google idToken claims: <unreadable>');
+      return;
+    }
+
+    debugPrint(
+      'Google idToken claims: email=${payload['email']} '
+      'sub=${payload['sub']} aud=${payload['aud']} azp=${payload['azp']}',
+    );
+  }
+
   Future<void> _handleSignup() async {
     if (_isLoading || _isGoogleLoading) {
       return;
@@ -211,12 +252,18 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       // Force account picker on every tap by clearing the previous session.
+      try {
+        await _googleSignIn.disconnect();
+      } catch (_) {}
       await _googleSignIn.signOut();
 
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
 
+      debugPrint('Google account selected: ${account?.email ?? 'null'}');
+
       // User canceled Google sign-in.
       if (account == null) {
+        debugPrint('Google sign-in canceled by user.');
         if (!mounted) {
           return;
         }
@@ -229,8 +276,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
       final GoogleSignInAuthentication auth = await account.authentication;
       final String? idToken = auth.idToken;
+      // debugPrint('Google idToken : ${idToken}');
+      // debugPrint('Google idToken length: ${idToken?.length ?? 0}');
 
       if (idToken == null || idToken.trim().isEmpty) {
+        debugPrint('Google sign-in failed: idToken is null or empty.');
         if (!mounted) {
           return;
         }
@@ -240,13 +290,21 @@ class _SignupScreenState extends State<SignupScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to get Google id token.')),
+          const SnackBar(content: Text('Google sign-in failed. Please try again.')),
         );
         return;
       }
 
+      _logJwtClaims(idToken);
+
       // Use the same endpoint as login for Google auth.
       final response = await _authService.googleLogin(idToken: idToken);
+
+      debugPrint(
+        'Google login response: isSuccess=${response.isSuccess}, '
+        'statusCode=${response.statusCode}, message=${response.message}, '
+        'data=${response.data}',
+      );
 
       if (!mounted) {
         return;
@@ -264,10 +322,12 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
+      debugPrint('Google login failed: ${response.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.firstError)),
+        const SnackBar(content: Text('Google sign-in failed. Please try again.')),
       );
     } on PlatformException catch (e) {
+      debugPrint('Google sign-in PlatformException: ${e.code} ${e.message}');
       if (!mounted) {
         return;
       }
@@ -276,14 +336,11 @@ class _SignupScreenState extends State<SignupScreen> {
         _isGoogleLoading = false;
       });
 
-      final String message = e.code == 'sign_in_failed'
-          ? 'Google Sign-In configuration error (ApiException 10). Check SHA-1 and OAuth client setup.'
-          : 'Google sign-in failed. Please try again.';
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text('Google sign-in failed. Please try again.')),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Google sign-in error: $e');
       if (!mounted) {
         return;
       }

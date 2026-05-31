@@ -1,6 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
+//   static const String baseUrl = 'https://requra-ai.runasp.net';
   static const String baseUrl = 'https://mock.apidog.com/m1/1212435-1208182-default';
 
   static const String login =
@@ -14,16 +15,17 @@ class ApiConstants {
   static const String resetPassword =
       '/api/Auth/password/reset';
   static const String changePassword =
-      'https://mock.apidog.com/m1/1212435-1208182-default/api/profile/change-password';
+      '/api/profile/change-password';
   static const String uploadAvatar =
-      'https://mock.apidog.com/m1/1212435-1208182-default/api/profile/avatar';
+      '/api/profile/avatar';
   static const String updateProfile =
-      'https://mock.apidog.com/m1/1212435-1208182-default/api/profile';
+      '/api/profile';
   static const String deleteAccount =
-      'https://mock.apidog.com/m1/1212435-1208182-default/api/account';
+      '/api/account';
   static const String refreshToken =
       '/api/Auth/refresh-token';
-  static const String googleLogin = 'https://mock.apidog.com/m1/1240855-1237660-default/auth/google';
+    static const String googleLogin =
+            '/api/Auth/google-login';
   static const String confirmAccount =
       '/api/Auth/confirm-account';
   static const String resendOtp =

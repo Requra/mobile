@@ -23,5 +23,16 @@ class AppColors {
   static const borderButton = Color(0xFF51525C);
   static const lightPrimaryBorder = Color(0xFFF2EEFB);
 
-
+  // ── Live Meeting Dark Theme ──
+  static const meetingBg = Color(0xFF0D0F1A);
+  static const meetingCard = Color(0xFF161929);
+  static const meetingCardBorder = Color(0xFF232740);
+  static const liveRed = Color(0xFFE53935);
+  static const recordingRed = Color(0xFFFF1744);
+  static const timerGreen = Color(0xFF4CAF50);
+  static const consentAmber = Color(0xFFFFB300);
+  static const roleHost = Color(0xFF4CAF50);
+  static const roleMember = Color(0xFF42A5F5);
+  static const roleStakeholder = Color(0xFFAB47BC);
+  static const roleGuest = Color(0xFFFFB300);
 }

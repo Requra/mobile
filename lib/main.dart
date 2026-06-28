@@ -11,6 +11,7 @@ import 'package:requra/screens/Home/resultView_screen.dart';
 import 'package:requra/screens/auth/signup_screen.dart';
 import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/screens/meeting/live_meeting_screen.dart';
+import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
 import 'package:requra/screens/main_navigation.dart';
 import 'screens/splash_screen.dart';
@@ -52,8 +53,9 @@ class MyApp extends StatelessWidget {
             "/resetPassword": (_) => const setNewPasswordScreen(),
             "/passwordUpdated": (_) => const UpdatepasswordScreen(),
             "/liveMeeting": (_) => const LiveMeetingScreen(),
+            "/addProject": (_) => const AddProjectScreen(),
           },
-          initialRoute: "/liveMeeting",
+          initialRoute: "/",
         );
       },
     );

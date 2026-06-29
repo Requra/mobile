@@ -9,7 +9,7 @@ class CustomButton extends StatelessWidget {
   const CustomButton({
     super.key,
     required this.text,
-    required this.onTap,
+    this.onTap,
     this.borderColor,
     this.textColor = AppColors.white,
     this.color1 = AppColors.lightPrimary,
@@ -17,7 +17,7 @@ class CustomButton extends StatelessWidget {
   });
 
   final String text;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color color1;
   final Color color2;
   final Color textColor;

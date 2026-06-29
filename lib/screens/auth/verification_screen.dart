@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:requra/features/auth/data/models/auth_response.dart';
-import 'package:requra/features/auth/data/services/auth_service.dart';
-
+import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:requra/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:requra/theme/color_manager.dart';
 import 'package:requra/theme/font_manager.dart';
 import 'package:requra/theme/style_manager.dart';
@@ -13,19 +13,31 @@ import 'package:requra/theme/style_manager.dart';
 import '../../widgets/auth_header.dart';
 import '../../widgets/custom_button.dart';
 
-enum VerificationSource {
+// ---------------------------------------------------------------------------
+// Mode enum — replaces the old VerificationSource so naming is consistent
+// with the cubit vocabulary.
+// ---------------------------------------------------------------------------
+
+enum VerificationMode {
+  /// Confirming a newly registered account.
   signup,
-  forgotPassword,
+
+  /// Verifying an OTP as part of the password-reset flow.
+  passwordReset,
 }
+
+/// Backwards-compatible alias so existing callers that use `VerificationSource`
+/// still compile without change.
+typedef VerificationSource = VerificationMode;
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({
     super.key,
-    this.source = VerificationSource.signup,
+    this.mode = VerificationMode.signup,
     this.email,
   });
 
-  final VerificationSource source;
+  final VerificationMode mode;
   final String? email;
 
   @override
@@ -33,11 +45,14 @@ class VerificationScreen extends StatefulWidget {
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
+  final List<TextEditingController> _controllers =
+      List<TextEditingController>.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes =
+      List<FocusNode>.generate(6, (_) => FocusNode());
 
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
-  final AuthService _authService = const AuthService();
-  bool _isLoading = false;
+  // ── Local-only UI state ────────────────────────────────────────────────────
+  // The 60-second resend countdown is purely a presentation concern — it must
+  // NOT be moved into a cubit.
   bool _isResending = false;
   int _resendSecondsRemaining = 0;
   Timer? _resendTimer;
@@ -45,30 +60,54 @@ class _VerificationScreenState extends State<VerificationScreen> {
   @override
   void dispose() {
     _resendTimer?.cancel();
-    for (var controller in _controllers) {
-      controller.dispose();
+    for (final TextEditingController c in _controllers) {
+      c.dispose();
     }
-    for (var node in _focusNodes) {
-      node.dispose();
+    for (final FocusNode n in _focusNodes) {
+      n.dispose();
     }
     super.dispose();
   }
 
-  Future<void> _handleVerifyCode() async {
-    if (_isLoading) {
-      return;
-    }
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-    final String code = _controllers.map((c) => c.text).join();
-    final bool isForgotPasswordFlow =
-        widget.source == VerificationSource.forgotPassword;
+  String get _otp => _controllers.map((c) => c.text).join();
+
+  bool get _isPasswordResetMode =>
+      widget.mode == VerificationMode.passwordReset;
+
+  // ── Timer cooldown (pure UI) ───────────────────────────────────────────────
+
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _resendSecondsRemaining = 60);
+
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_resendSecondsRemaining <= 1) {
+        timer.cancel();
+        setState(() => _resendSecondsRemaining = 0);
+      } else {
+        setState(() => _resendSecondsRemaining--);
+      }
+    });
+  }
+
+  // ── Submit — dispatches to the correct cubit based on mode ─────────────────
+
+  void _handleVerifyCode(BuildContext context) {
+    final String code = _otp;
     final bool isValidLength =
-        isForgotPasswordFlow ? code.length >= 5 : code.length == 6;
+        _isPasswordResetMode ? code.length >= 5 : code.length == 6;
+
     if (!isValidLength) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isForgotPasswordFlow
+            _isPasswordResetMode
                 ? 'Please enter a valid OTP code.'
                 : 'Please enter the 6-digit code.',
           ),
@@ -77,254 +116,279 @@ class _VerificationScreenState extends State<VerificationScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    late final AuthResponse response;
-    if (widget.source == VerificationSource.signup) {
+    if (_isPasswordResetMode) {
+      context.read<ForgotPasswordCubit>().verifyResetOtp(otp: code);
+    } else {
       final String email = (widget.email ?? '').trim();
       if (email.isEmpty) {
-        setState(() {
-          _isLoading = false;
-        });
-
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email is missing. Please register again.')),
+          const SnackBar(
+            content: Text('Email is missing. Please register again.'),
+          ),
         );
         return;
       }
-
-      response = await _authService.confirmAccount(
-        email: email,
-        otpCode: code,
-      );
-    } else {
-      response = await _authService.verifyOtp(otp: code);
+      context.read<AuthCubit>().confirmAccount(
+            email: email,
+            otpCode: code,
+          );
     }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.message)),
-      );
-
-      if (widget.source == VerificationSource.signup) {
-        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-      } else {
-        Navigator.pushReplacementNamed(context, '/createPassword');
-      }
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.message)),
-    );
   }
 
-  void _startResendCooldown() {
-    _resendTimer?.cancel();
-
-    setState(() {
-      _resendSecondsRemaining = 60;
-    });
-
-    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      if (_resendSecondsRemaining <= 1) {
-        timer.cancel();
-        setState(() {
-          _resendSecondsRemaining = 0;
-        });
-      } else {
-        setState(() {
-          _resendSecondsRemaining--;
-        });
-      }
-    });
-  }
+  // ── Resend — delegates to the appropriate cubit helper ────────────────────
 
   Future<void> _handleResendCode() async {
-    if (_resendSecondsRemaining > 0 || _isResending) {
-      return;
-    }
+    if (_resendSecondsRemaining > 0 || _isResending) return;
 
     final String email = (widget.email ?? '').trim();
     if (email.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email is missing. Please go back and try again.')),
+        const SnackBar(
+          content: Text('Email is missing. Please go back and try again.'),
+        ),
       );
       return;
     }
 
+    // Start the 60-second UI countdown immediately (pure presentation).
     _startResendCooldown();
-
-    setState(() {
-      _isResending = true;
-    });
+    setState(() => _isResending = true);
 
     try {
-      final int otpType =
-          widget.source == VerificationSource.signup ? 0 : 1;
+      // Capture cubit references before the async gap.
+      final ForgotPasswordCubit forgotCubit =
+          context.read<ForgotPasswordCubit>();
+      final AuthCubit authCubit = context.read<AuthCubit>();
 
-      final response = await _authService.resendOtp(
-        email: email,
-        otpType: otpType,
-      );
+      final String message = _isPasswordResetMode
+          ? await forgotCubit.resendResetOtp(email: email)
+          : await authCubit.resendConfirmationOtp(email: email);
 
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.message)),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Unable to resend code right now. Please try again.'),
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isResending = false;
-        });
-      }
+      if (mounted) setState(() => _isResending = false);
     }
   }
 
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const AuthHeader(
-              title: 'Check Your Email',
-              subtitle: 'We sent a verification code to your email. Enter the code below to continue.',
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric( vertical: 20.h , horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+    final double screenWidth = MediaQuery.of(context).size.width;
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(6, (index) {
-                      return SizedBox(
-                        width: screenWidth/8,
-                        child: TextFormField(
-                          controller: _controllers[index],
-                          focusNode: _focusNodes[index],
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(1),
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
+    return MultiBlocListener(
+      listeners: <BlocListener<dynamic, dynamic>>[
+        // ── Signup OTP confirmed ───────────────────────────────────────────
+        BlocListener<AuthCubit, AuthState>(
+          listenWhen: (AuthState previous, AuthState current) =>
+              widget.mode == VerificationMode.signup &&
+              (current is AuthUnauthenticated || current is AuthError),
+          listener: (BuildContext context, AuthState state) {
+            if (state is AuthUnauthenticated) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Account confirmed! Please sign in.'),
+                ),
+              );
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (Route<dynamic> route) => false,
+              );
+            } else if (state is AuthError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
 
-                          decoration: InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              vertical: 22.h,
-                            ),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15.r))),
-                          ),
-                          onChanged: (value) {
-                            if (value.isNotEmpty && index < 5) {
-                              _focusNodes[index + 1].requestFocus();
-                            } else if (value.isEmpty && index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            }
-                          },
+        // ── Password-reset OTP verified ───────────────────────────────────
+        BlocListener<ForgotPasswordCubit, ForgotPasswordState>(
+          listenWhen: (ForgotPasswordState previous,
+                  ForgotPasswordState current) =>
+              widget.mode == VerificationMode.passwordReset &&
+              (current is ForgotPasswordOtpVerified ||
+                  current is ForgotPasswordError),
+          listener: (BuildContext context, ForgotPasswordState state) {
+            if (state is ForgotPasswordOtpVerified) {
+              Navigator.pushReplacementNamed(context, '/createPassword');
+            } else if (state is ForgotPasswordError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+      ],
+
+      child: BlocBuilder<AuthCubit, AuthState>(
+        builder: (BuildContext context, AuthState authState) {
+          return BlocBuilder<ForgotPasswordCubit, ForgotPasswordState>(
+            builder:
+                (BuildContext context, ForgotPasswordState forgotState) {
+              final bool isLoading =
+                  (widget.mode == VerificationMode.signup &&
+                          authState is AuthLoading) ||
+                      (widget.mode == VerificationMode.passwordReset &&
+                          forgotState is ForgotPasswordLoading);
+
+              return Scaffold(
+                backgroundColor: AppColors.white,
+                body: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const AuthHeader(
+                        title: 'Check Your Email',
+                        subtitle:
+                            'We sent a verification code to your email. Enter the code below to continue.',
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 20.h,
+                          horizontal: 20.w,
                         ),
-                      );
-                    }),
-                  ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            // ── OTP digit boxes ─────────────────────────
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
+                              children:
+                                  List<Widget>.generate(6, (int index) {
+                                return SizedBox(
+                                  width: screenWidth / 8,
+                                  child: TextFormField(
+                                    controller: _controllers[index],
+                                    focusNode: _focusNodes[index],
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.center,
+                                    inputFormatters: <TextInputFormatter>[
+                                      LengthLimitingTextInputFormatter(1),
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          vertical: 22.h),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(15.r),
+                                        ),
+                                      ),
+                                    ),
+                                    onChanged: (String value) {
+                                      if (value.isNotEmpty && index < 5) {
+                                        _focusNodes[index + 1].requestFocus();
+                                      } else if (value.isEmpty && index > 0) {
+                                        _focusNodes[index - 1].requestFocus();
+                                      }
+                                    },
+                                  ),
+                                );
+                              }),
+                            ),
 
-                  SizedBox(height: 16.h),
-                  CustomButton(
-                    text: _isLoading ? 'Verifying...' : 'Verify Code',
-                    onTap: _handleVerifyCode,
-                  ),
+                            SizedBox(height: 16.h),
 
-                  SizedBox(height: 6.h),
-                  Row(
-                    mainAxisAlignment:MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Didn’t receive the email?' , style: regularStyle(fontSize: FontSize.font14, color: AppColors.black)),
-                      Builder(
-                        builder: (context) {
-                          final bool canResend =
-                              _resendSecondsRemaining == 0 && !_isResending;
-                          final Color resendColor =
-                              canResend ? AppColors.primaryText : AppColors.lightgrey;
+                            // ── Submit button ───────────────────────────
+                            CustomButton(
+                              text:
+                                  isLoading ? 'Verifying...' : 'Verify Code',
+                              onTap: isLoading
+                                  ? null
+                                  : () => _handleVerifyCode(context),
+                            ),
 
-                          return TextButton(
-                            onPressed: canResend ? _handleResendCode : null,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
+                            SizedBox(height: 6.h),
+
+                            // ── Resend row ──────────────────────────────
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
                                 Text(
-                                  'resend code',
+                                  'Didn\'t receive the email?',
                                   style: regularStyle(
                                     fontSize: FontSize.font14,
-                                    color: resendColor,
-                                  ).copyWith(
-                                    decoration: TextDecoration.underline,
+                                    color: AppColors.black,
                                   ),
                                 ),
-                                if (_isResending || _resendSecondsRemaining > 0)
-                                  SizedBox(width: 6.w),
-                                if (_isResending)
-                                  Text(
-                                    '...',
-                                    style: regularStyle(
-                                      fontSize: FontSize.font14,
-                                      color: AppColors.lightgrey,
-                                    ),
-                                  )
-                                else if (_resendSecondsRemaining > 0)
-                                  Text(
-                                    '${_resendSecondsRemaining}s',
-                                    style: regularStyle(
-                                      fontSize: FontSize.font14,
-                                      color: AppColors.lightgrey,
-                                    ),
-                                  ),
+                                Builder(
+                                  builder: (BuildContext ctx) {
+                                    final bool canResend =
+                                        _resendSecondsRemaining == 0 &&
+                                            !_isResending;
+                                    final Color resendColor = canResend
+                                        ? AppColors.primaryText
+                                        : AppColors.lightgrey;
+
+                                    return TextButton(
+                                      onPressed: canResend
+                                          ? _handleResendCode
+                                          : null,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          Text(
+                                            'resend code',
+                                            style: regularStyle(
+                                              fontSize: FontSize.font14,
+                                              color: resendColor,
+                                            ).copyWith(
+                                              decoration:
+                                                  TextDecoration.underline,
+                                            ),
+                                          ),
+                                          if (_isResending ||
+                                              _resendSecondsRemaining > 0)
+                                            SizedBox(width: 6.w),
+                                          if (_isResending)
+                                            Text(
+                                              '...',
+                                              style: regularStyle(
+                                                fontSize: FontSize.font14,
+                                                color: AppColors.lightgrey,
+                                              ),
+                                            )
+                                          else if (_resendSecondsRemaining > 0)
+                                            Text(
+                                              '${_resendSecondsRemaining}s',
+                                              style: regularStyle(
+                                                fontSize: FontSize.font14,
+                                                color: AppColors.lightgrey,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
                               ],
                             ),
-                          );
-                        },
+                            SizedBox(height: 16.h),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16.h),
-                ],
-              ),
-            ),
-          ],
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

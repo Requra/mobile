@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:requra/theme/color_manager.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -27,13 +29,10 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
 
-    _controller.addStatusListener((status) {
+    // Trigger the token check after the animation completes.
+    _controller.addStatusListener((AnimationStatus status) {
       if (status == AnimationStatus.completed && mounted) {
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-        // );
-
-        Navigator.pushReplacementNamed(context, "/login");
+        context.read<AuthCubit>().appStarted();
       }
     });
 
@@ -48,27 +47,28 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Center(
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: SvgPicture.asset(
-            'assets/images/logo.svg',
-            width: 140.w,
-            height: 140.h,
-            fit: BoxFit.contain,
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (BuildContext context, AuthState state) {
+        if (state is AuthAuthenticated) {
+          Navigator.pushReplacementNamed(context, '/main');
+        } else if (state is AuthUnauthenticated) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: Center(
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: SvgPicture.asset(
+              'assets/images/logo.svg',
+              width: 140.w,
+              height: 140.h,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-
-//////////////////////////////////////////////////
-/*
-fix requra.ai text and make photo animated well
-* */
-
-

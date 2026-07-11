@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:requra/features/auth/data/services/auth_service.dart';
-import 'package:requra/theme/color_manager.dart';
-import 'package:requra/theme/font_manager.dart';
-import 'package:requra/theme/style_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/widgets/circular_icon.dart';
 import 'package:requra/widgets/custom_button.dart';
 import 'package:requra/widgets/custom_text_field.dart';
@@ -182,7 +182,8 @@ class _setNewPasswordScreenState extends State<setNewPasswordScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        CircularIcon(icon: FontAwesomeIcons.key),
+                        // CircularIcon(icon: FontAwesomeIcons.key),
+                        CircularIcon(icon: Icons.key),
                         SizedBox(height: 16.h,),
                         Text("Set New Password" , style: boldStyle(fontSize: FontSize.font20, color: AppColors.black),textAlign: TextAlign.center,),
                         SizedBox(height: 16.h,),

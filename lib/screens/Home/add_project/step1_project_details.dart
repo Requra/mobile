@@ -3,9 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/features/project/data/models/project_enums.dart';
 import 'package:requra/screens/Home/add_project/widgets/team_member_input.dart';
-import 'package:requra/theme/color_manager.dart';
-import 'package:requra/theme/font_manager.dart';
-import 'package:requra/theme/style_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 
 /// Step 1 of the Add Project wizard — "Create New Project".
 ///

@@ -1,14 +1,12 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 
 import 'package:requra/screens/Home/add_project_screen.dart';
-import 'package:requra/screens/Home/dashboard_screen.dart';
-import 'package:requra/screens/Home/home_screen.dart';
+import 'package:requra/features/Dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:requra/screens/Home/profile_screen.dart';
 import 'package:requra/screens/Home/projectView_screen.dart';
-import 'package:requra/theme/color_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/screens/Home/resultView_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -28,10 +26,10 @@ class _MainNavigationState extends State<MainNavigation> {
 
   List<Widget> _buildScreens() {
     return [
-      const HomeScreen(),
-      const ProjectviewScreen(),
-      AddProjectScreen(),
       const DashboardScreen(),
+      const ProjectviewScreen(),
+      const AddProjectScreen(),
+      const ResultviewScreen(),
       const ProfileScreen(),
     ];
   }
@@ -52,12 +50,14 @@ class _MainNavigationState extends State<MainNavigation> {
         inactiveColorPrimary: const Color(0xFFB0B7C3),
         iconSize: 26,
       ),
+
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         activeColorPrimary: AppColors.primary,
         inactiveColorPrimary: AppColors.primary,
         iconSize: 32,
       ),
+
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.bar_chart_rounded),
         inactiveIcon: const Icon(Icons.bar_chart_outlined),
@@ -84,25 +84,23 @@ class _MainNavigationState extends State<MainNavigation> {
       items: _navBarsItems(),
       confineToSafeArea: true,
       backgroundColor: Colors.white,
-      handleAndroidBackButtonPress: true,
       resizeToAvoidBottomInset: true,
-      stateManagement: true,
       hideNavigationBarWhenKeyboardAppears: true,
       decoration: NavBarDecoration(
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32),
-          topRight: Radius.circular(32),
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
         ),
         colorBehindNavBar: Colors.white,
         boxShadow: [
           BoxShadow(
-            offset: const Offset(0, -2),
+            offset: const Offset(0, -0.5),
             blurRadius: 15,
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey
           ),
         ],
       ),
-      navBarStyle: NavBarStyle.style15, // This is the exact upward wave style
+      navBarStyle: NavBarStyle.style15,
     );
   }
 }

@@ -19,7 +19,7 @@ import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/screens/meeting/live_meeting_screen.dart';
 import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
-import 'package:requra/screens/main_navigation.dart';
+import 'package:requra/features/main_layout/presentation/pages/main_navigation.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
@@ -80,7 +80,7 @@ class MyApp extends StatelessWidget {
               '/liveMeeting': (_) => const LiveMeetingScreen(),
               '/addProject': (_) => const AddProjectScreen(),
             },
-            initialRoute: '/',
+            initialRoute: '/main',
           ),
         );
       },

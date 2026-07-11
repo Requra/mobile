@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/utils/validators.dart';
 import 'package:requra/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:requra/screens/auth/reset_password_successfully_screen.dart';
-import 'package:requra/theme/color_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
 
 import '../../widgets/auth_header.dart';
 import '../../widgets/custom_button.dart';

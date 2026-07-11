@@ -3,9 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/meeting/data/models/meeting_models.dart';
 import 'package:requra/features/meeting/data/services/meeting_service.dart';
 import 'package:requra/screens/meeting/widgets/confirmation_sheet.dart';
-import 'package:requra/theme/color_manager.dart';
-import 'package:requra/theme/font_manager.dart';
-import 'package:requra/theme/style_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 
 /// Bottom sheet listing pending invitations with Resend / Revoke actions.
 class PendingInvitationsSheet extends StatefulWidget {

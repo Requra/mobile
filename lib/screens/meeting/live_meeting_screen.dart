@@ -10,9 +10,9 @@ import 'package:requra/screens/meeting/widgets/invite_sheet.dart';
 import 'package:requra/screens/meeting/widgets/meeting_bottom_action_bar.dart';
 import 'package:requra/screens/meeting/widgets/pending_invitations_sheet.dart';
 import 'package:requra/screens/meeting/widgets/remove_participant_sheet.dart';
-import 'package:requra/theme/color_manager.dart';
-import 'package:requra/theme/font_manager.dart';
-import 'package:requra/theme/style_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 
 /// The live meeting screen shown when a meeting has status LIVE or RECORDING.
 ///

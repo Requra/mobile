@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:requra/theme/color_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

@@ -1,9 +1,9 @@
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:requra/theme/color_manager.dart';
-import 'package:requra/theme/font_manager.dart';
-import 'package:requra/theme/style_manager.dart';
+import 'package:requra/core/global_widgets/customAppBar.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,22 +19,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundHomeScreen,
+      appBar: CustomAppBar(
+        onNotificationTap: () {
+          setState(() => _showNotifications = !_showNotifications); // Toggle notification panel
+        },
+      ),
       body: SafeArea(
         child: Stack(
           children: [
-            // Main scrollable content
             SingleChildScrollView(
               padding: EdgeInsets.only(bottom: 20.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── App Bar ────────────────────────────────────────────
-                  _DashboardAppBar(
-                    onNotificationTap: () {
-                      setState(() => _showNotifications = !_showNotifications);
-                    },
-                  ),
-
                   // ── Purple header ─────────────────────────────────────
                   _HeaderStats(),
 

@@ -6,9 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:requra/features/auth/presentation/cubit/forgot_password_cubit.dart';
-import 'package:requra/theme/color_manager.dart';
-import 'package:requra/theme/font_manager.dart';
-import 'package:requra/theme/style_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 
 import '../../widgets/auth_header.dart';
 import '../../widgets/custom_button.dart';

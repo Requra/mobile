@@ -3,7 +3,7 @@ import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/screens/Home/add_project/step1_project_details.dart';
 import 'package:requra/screens/Home/add_project/step2_add_sources.dart';
 import 'package:requra/screens/Home/add_project/widgets/project_stepper.dart';
-import 'package:requra/theme/color_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
 
 /// Multi-step "Add Project" wizard.
 ///

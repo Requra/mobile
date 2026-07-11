@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:requra/theme/color_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({

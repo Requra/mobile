@@ -11,6 +11,8 @@ class CustomButton extends StatelessWidget {
     required this.text,
     this.onTap,
     this.borderColor,
+    this.isRegularStyle = false,
+    this.transparent = false,
     this.textColor = AppColors.white,
     this.color1 = AppColors.lightPrimary,
     this.color2 = AppColors.primary,
@@ -19,6 +21,8 @@ class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onTap;
   final Color color1;
+  final bool transparent;
+  final bool isRegularStyle;
   final Color color2;
   final Color textColor;
   final Color? borderColor;
@@ -29,16 +33,16 @@ class CustomButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14.r),
+        borderRadius: BorderRadius.circular(8.r),
         onTap: onTap,
         child: Ink(
-          padding: EdgeInsets.symmetric(vertical: 15.h),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
             border: borderColor != null
                 ? Border.all(color: borderColor!) : null,
-            borderRadius: BorderRadius.circular(14.r),
+            borderRadius: BorderRadius.circular(8.r),
             gradient: LinearGradient(
-              colors: [color1, color2],
+              colors: transparent ? [Colors.transparent, Colors.transparent] :[color1, color2],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -46,7 +50,8 @@ class CustomButton extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: boldStyle(fontSize: FontSize.font16, color: textColor)
+            style: isRegularStyle ? regularStyle(fontSize: FontSize.font14, color: textColor) :
+            boldStyle(fontSize: FontSize.font16, color: textColor)
           ),
         ),
       ),

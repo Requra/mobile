@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/core/theme/font_manager.dart';
+import 'package:requra/core/theme/style_manager.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
@@ -12,6 +14,9 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType,
     this.onChanged,
     this.errorText,
+    this.searchStyle = false,
+    this.borderColor =AppColors.lightgrey,
+    this.borderRadius = 12.0,
   });
 
   final String hintText;
@@ -21,6 +26,9 @@ class CustomTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
   final String? errorText;
+  final bool searchStyle;
+  final Color borderColor;
+  final double borderRadius;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -44,6 +52,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: _obscureText,
       decoration: InputDecoration(
         hintText: widget.hintText,
+        hintStyle: widget.searchStyle? regularStyle(fontSize: FontSize.font12, color: AppColors.grey): null,
         errorText: widget.errorText,
         errorStyle: TextStyle(
           color: Colors.red,
@@ -70,16 +79,16 @@ class _CustomTextFieldState extends State<CustomTextField> {
         fillColor: AppColors.white,
         contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.lightgrey),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: widget.borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.lightgrey),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: widget.borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide:  BorderSide(color: AppColors.primary, width: 1.4.w),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide:  BorderSide(color: widget.borderColor, width: 1.4.w),
         ),
       ),
     );

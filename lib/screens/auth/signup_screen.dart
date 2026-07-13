@@ -9,8 +9,8 @@ import 'package:requra/core/theme/style_manager.dart';
 
 import 'verification_screen.dart';
 import '../../widgets/auth_header.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
+import '../../core/global_widgets/custom_button.dart';
+import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/password_rules_checklist.dart';
 import '../../widgets/social_auth_buttons_row.dart';
 

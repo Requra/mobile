@@ -22,4 +22,7 @@ class ApiConstants {
   // ── Meeting (v1 API) ──
   static const String meetingsBase =
       'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
+
+  // ── Projects ──
+  static const String projects = '/api/projects';
 }

@@ -7,8 +7,8 @@ import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/core/theme/color_manager.dart';
 
 import '../../widgets/auth_header.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
+import '../../core/global_widgets/custom_button.dart';
+import '../../core/global_widgets/custom_text_field.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

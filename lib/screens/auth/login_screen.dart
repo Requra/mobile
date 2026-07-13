@@ -9,8 +9,8 @@ import 'package:requra/core/theme/style_manager.dart';
 
 import 'forgot_password_screen.dart';
 import '../../widgets/auth_header.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
+import '../../core/global_widgets/custom_button.dart';
+import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/social_auth_buttons_row.dart';
 
 class LoginScreen extends StatefulWidget {

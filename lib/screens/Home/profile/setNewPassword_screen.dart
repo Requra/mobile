@@ -8,8 +8,8 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/widgets/circular_icon.dart';
-import 'package:requra/widgets/custom_button.dart';
-import 'package:requra/widgets/custom_text_field.dart';
+import 'package:requra/core/global_widgets/custom_button.dart';
+import 'package:requra/core/global_widgets/custom_text_field.dart';
 import 'package:requra/widgets/password_rules_checklist.dart';
 
 

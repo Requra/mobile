@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/screens/Home/add_project/step1_project_details.dart';
 import 'package:requra/screens/Home/add_project/step2_add_sources.dart';
+import 'package:requra/screens/Home/add_project/step3_ai_generate.dart';
 import 'package:requra/screens/Home/add_project/widgets/project_stepper.dart';
 import 'package:requra/core/theme/color_manager.dart';
 
 /// Multi-step "Add Project" wizard.
 ///
-/// Manages two steps:
+/// Manages three steps:
 ///   0 → Project Details (form)
 ///   1 → Add Sources (Meeting / Documents / Transcript)
-///
-/// Step 3 ("AI Generate") is a future placeholder.
+///   2 → AI Generate (Loading & Success)
 class AddProjectScreen extends StatefulWidget {
-  const AddProjectScreen({super.key});
+  final VoidCallback? onViewResults;
+
+  const AddProjectScreen({super.key, this.onViewResults});
 
   @override
   State<AddProjectScreen> createState() => _AddProjectScreenState();
@@ -46,16 +48,14 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     }
   }
 
+  void _backToStep2() {
+    setState(() => _currentStep = 1);
+  }
+
   void _onStep2Continue() {
-    // Step 3 (AI Generate) is not yet implemented — show a snackbar.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('AI Generate step — Coming soon!'),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    setState(() {
+      _currentStep = 2;
+    });
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -86,14 +86,22 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                         onContinue: _goToStep2,
                         onBack: _exitWizard,
                       )
-                    : Step2AddSources(
-                        key: const ValueKey('step2'),
-                        sources: _sources,
-                        onSourcesChanged: (updated) =>
-                            setState(() => _sources = updated),
-                        onContinue: _onStep2Continue,
-                        onBack: _backToStep1,
-                      ),
+                    : _currentStep == 1
+                        ? Step2AddSources(
+                            key: const ValueKey('step2'),
+                            sources: _sources,
+                            onSourcesChanged: (updated) =>
+                                setState(() => _sources = updated),
+                            onContinue: _onStep2Continue,
+                            onBack: _backToStep1,
+                          )
+                        : Step3AiGenerate(
+                            key: const ValueKey('step3'),
+                            projectDetails: _projectDetails,
+                            sources: _sources,
+                            onBack: _backToStep2,
+                            onViewResults: widget.onViewResults ?? () {},
+                          ),
               ),
             ),
           ],

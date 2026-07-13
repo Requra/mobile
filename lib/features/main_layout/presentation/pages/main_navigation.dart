@@ -4,7 +4,7 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/features/Dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:requra/screens/Home/profile_screen.dart';
-import 'package:requra/screens/Home/projectView_screen.dart';
+import 'package:requra/features/project_view/presentation/pages/project_view_screen.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/screens/Home/resultView_screen.dart';
 
@@ -27,7 +27,11 @@ class _MainNavigationState extends State<MainNavigation> {
   List<Widget> _buildScreens() {
     return [
       const DashboardScreen(),
-      const ProjectviewScreen(),
+      ProjectViewScreen(
+        onAddProject: () {
+          _controller.jumpToTab(2);
+        },
+      ),
       const AddProjectScreen(),
       const ResultviewScreen(),
       const ProfileScreen(),

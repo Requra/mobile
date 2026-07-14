@@ -1,7 +1,8 @@
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/features/add_project/presentation/cubit/add_project_cubit.dart';
 import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/features/project/data/models/project_enums.dart';
 import 'package:requra/screens/Home/add_project/widgets/source_item_card.dart';
@@ -16,23 +17,7 @@ import 'package:requra/core/theme/style_manager.dart';
 class Step2AddSources extends StatefulWidget {
   const Step2AddSources({
     super.key,
-    required this.sources,
-    required this.onSourcesChanged,
-    required this.onContinue,
-    required this.onBack,
   });
-
-  /// Current list of collected sources.
-  final List<SourceItem> sources;
-
-  /// Notify parent whenever the source list changes.
-  final ValueChanged<List<SourceItem>> onSourcesChanged;
-
-  /// Called when the user taps "Continue" to move to Step 3.
-  final VoidCallback onContinue;
-
-  /// Called when the user taps "Back" to return to Step 1.
-  final VoidCallback onBack;
 
   @override
   State<Step2AddSources> createState() => _Step2AddSourcesState();
@@ -62,13 +47,11 @@ class _Step2AddSourcesState extends State<Step2AddSources>
   // ── Source management ────────────────────────────────────────────────────
 
   void _addSource(SourceItem source) {
-    final updated = List<SourceItem>.from(widget.sources)..add(source);
-    widget.onSourcesChanged(updated);
+    context.read<AddProjectCubit>().addSource(source);
   }
 
   void _removeSource(int index) {
-    final updated = List<SourceItem>.from(widget.sources)..removeAt(index);
-    widget.onSourcesChanged(updated);
+    context.read<AddProjectCubit>().removeSource(index);
   }
 
   // ── Meetings ─────────────────────────────────────────────────────────────
@@ -154,6 +137,10 @@ class _Step2AddSourcesState extends State<Step2AddSources>
 
   @override
   Widget build(BuildContext context) {
+    // Read the sources from the state
+    final cubitState = context.watch<AddProjectCubit>().state;
+    final List<SourceItem> sources = (cubitState is AddProjectStep2) ? cubitState.sources : [];
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
@@ -284,7 +271,7 @@ class _Step2AddSourcesState extends State<Step2AddSources>
             ),
           ),
           SizedBox(height: 12.h),
-          if (widget.sources.isEmpty)
+          if (sources.isEmpty)
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 24.h),
@@ -308,10 +295,10 @@ class _Step2AddSourcesState extends State<Step2AddSources>
               height: 72.h,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: widget.sources.length,
+                itemCount: sources.length,
                 separatorBuilder: (_, _) => SizedBox(width: 10.w),
                 itemBuilder: (_, i) => SourceItemCard(
-                  source: widget.sources[i],
+                  source: sources[i],
                   onRemove: () => _removeSource(i),
                 ),
               ),
@@ -324,7 +311,7 @@ class _Step2AddSourcesState extends State<Step2AddSources>
               // Back
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.onBack,
+                  onPressed: () => context.read<AddProjectCubit>().goBackToStep1(),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                     side: BorderSide(color: AppColors.borderButton),
@@ -357,7 +344,7 @@ class _Step2AddSourcesState extends State<Step2AddSources>
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: widget.onContinue,
+                      onTap: () => context.read<AddProjectCubit>().createProject(),
                       borderRadius: BorderRadius.circular(14.r),
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -645,3 +632,4 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

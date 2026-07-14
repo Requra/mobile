@@ -1,13 +1,18 @@
-import 'dart:async';
 import 'package:requra/core/api/api_client.dart';
 import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/features/project/data/models/project_creation_result.dart';
 
-class ProjectCreationService {
+abstract class AddProjectRemoteDataSource {
+  Future<ProjectCreationResult> createProject(
+      ProjectDetails details, List<SourceItem> sources);
+}
+
+class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
   final ApiClient apiClient;
 
-  ProjectCreationService({required this.apiClient});
+  AddProjectRemoteDataSourceImpl({required this.apiClient});
 
+  @override
   Future<ProjectCreationResult> createProject(
       ProjectDetails details, List<SourceItem> sources) async {
     // Here we would typically use apiClient.dio.post(...) to send multipart form data

@@ -18,10 +18,7 @@ class AuthService {
   }) {
     return _post(
       endpoint: ApiConstants.confirmAccount,
-      body: <String, dynamic>{
-        'email': email,
-        'otpCode': otpCode,
-      },
+      body: <String, dynamic>{'email': email, 'otpCode': otpCode},
       includeAuthHeader: false,
     );
   }
@@ -32,17 +29,12 @@ class AuthService {
   }) {
     return _post(
       endpoint: ApiConstants.resendOtp,
-      body: <String, dynamic>{
-        'email': email,
-        'otpType': otpType,
-      },
+      body: <String, dynamic>{'email': email, 'otpType': otpType},
       includeAuthHeader: false,
     );
   }
 
-  Future<AuthResponse> googleLogin({
-    required String idToken,
-  }) {
+  Future<AuthResponse> googleLogin({required String idToken}) {
     final String platform = _resolvePlatformParam();
     final Uri uri = _resolveUri(
       ApiConstants.googleLogin,
@@ -78,10 +70,7 @@ class AuthService {
   }) {
     return _post(
       endpoint: ApiConstants.login,
-      body: <String, dynamic>{
-        'email': email,
-        'password': password,
-      },
+      body: <String, dynamic>{'email': email, 'password': password},
       includeAuthHeader: false,
     );
   }
@@ -105,26 +94,18 @@ class AuthService {
     );
   }
 
-  Future<AuthResponse> forgotPassword({
-    required String email,
-  }) {
+  Future<AuthResponse> forgotPassword({required String email}) {
     return _post(
       endpoint: ApiConstants.forgotPassword,
-      body: <String, dynamic>{
-        'email': email,
-      },
+      body: <String, dynamic>{'email': email},
       includeAuthHeader: false,
     );
   }
 
-  Future<AuthResponse> verifyOtp({
-    required String otp,
-  }) {
+  Future<AuthResponse> verifyOtp({required String otp}) {
     return _post(
       endpoint: ApiConstants.verifyOtp,
-      body: <String, dynamic>{
-        'otp': otp,
-      },
+      body: <String, dynamic>{'otp': otp},
       includeAuthHeader: false,
     );
   }
@@ -156,14 +137,10 @@ class AuthService {
     );
   }
 
-  Future<AuthResponse> updateProfile({
-    required String name,
-  }) {
+  Future<AuthResponse> updateProfile({required String name}) {
     return _put(
       endpoint: ApiConstants.updateProfile,
-      body: <String, dynamic>{
-        'name': name,
-      },
+      body: <String, dynamic>{'name': name},
     );
   }
 
@@ -186,9 +163,7 @@ class AuthService {
     return response;
   }
 
-  Future<AuthResponse> uploadAvatar({
-    required File file,
-  }) async {
+  Future<AuthResponse> uploadAvatar({required File file}) async {
     try {
       http.Response response = await _sendAvatarRequest(
         file: file,
@@ -196,8 +171,10 @@ class AuthService {
       );
       AuthResponse parsedResponse = _buildResponse(response);
 
-      final bool shouldRefreshAndRetry =
-          _isUnauthorized(response.statusCode, parsedResponse.statusCode);
+      final bool shouldRefreshAndRetry = _isUnauthorized(
+        response.statusCode,
+        parsedResponse.statusCode,
+      );
 
       if (shouldRefreshAndRetry) {
         final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
@@ -245,9 +222,7 @@ class AuthService {
 
     return _post(
       endpoint: ApiConstants.refreshToken,
-      body: <String, dynamic>{
-        'refreshToken': storedRefreshToken!.trim(),
-      },
+      body: <String, dynamic>{'refreshToken': storedRefreshToken!.trim()},
       includeAuthHeader: false,
       allowRefreshRetry: false,
     );
@@ -260,9 +235,7 @@ class AuthService {
     return _post(endpoint: endpoint, body: body);
   }
 
-  Future<AuthResponse> getAuthorized({
-    required String endpoint,
-  }) {
+  Future<AuthResponse> getAuthorized({required String endpoint}) {
     return _get(endpoint: endpoint);
   }
 
@@ -367,10 +340,7 @@ class AuthService {
       if (shouldRefreshAndRetry) {
         final bool refreshSucceeded = await _tryRefreshAndPersistTokens();
         if (refreshSucceeded) {
-          response = await _sendGetRequest(
-            uri: uri,
-            includeAuthHeader: true,
-          );
+          response = await _sendGetRequest(uri: uri, includeAuthHeader: true);
           parsedResponse = _buildResponse(response);
         }
       }
@@ -501,14 +471,8 @@ class AuthService {
     }
   }
 
-  Uri _resolveUri(
-    String endpoint, {
-    Map<String, String>? queryParameters,
-  }) {
-    return _resolveUriWithQuery(
-      endpoint,
-      queryParameters: queryParameters,
-    );
+  Uri _resolveUri(String endpoint, {Map<String, String>? queryParameters}) {
+    return _resolveUriWithQuery(endpoint, queryParameters: queryParameters);
   }
 
   Uri _resolveUriWithQuery(
@@ -546,15 +510,12 @@ class AuthService {
     required Map<String, dynamic> body,
     required bool includeAuthHeader,
   }) async {
-    final Map<String, String> headers =
-        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+    final Map<String, String> headers = await _buildHeaders(
+      includeAuthHeader: includeAuthHeader,
+    );
 
     return http
-        .post(
-          uri,
-          headers: headers,
-          body: jsonEncode(body),
-        )
+        .post(uri, headers: headers, body: jsonEncode(body))
         .timeout(const Duration(seconds: 20));
   }
 
@@ -562,15 +523,11 @@ class AuthService {
     required Uri uri,
     required bool includeAuthHeader,
   }) async {
-    final Map<String, String> headers =
-        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+    final Map<String, String> headers = await _buildHeaders(
+      includeAuthHeader: includeAuthHeader,
+    );
 
-    return http
-        .get(
-          uri,
-          headers: headers,
-        )
-        .timeout(const Duration(seconds: 20));
+    return http.get(uri, headers: headers).timeout(const Duration(seconds: 20));
   }
 
   Future<http.Response> _sendPutRequest({
@@ -578,15 +535,12 @@ class AuthService {
     required Map<String, dynamic> body,
     required bool includeAuthHeader,
   }) async {
-    final Map<String, String> headers =
-        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+    final Map<String, String> headers = await _buildHeaders(
+      includeAuthHeader: includeAuthHeader,
+    );
 
     return http
-        .put(
-          uri,
-          headers: headers,
-          body: jsonEncode(body),
-        )
+        .put(uri, headers: headers, body: jsonEncode(body))
         .timeout(const Duration(seconds: 20));
   }
 
@@ -594,14 +548,12 @@ class AuthService {
     required Uri uri,
     required bool includeAuthHeader,
   }) async {
-    final Map<String, String> headers =
-        await _buildHeaders(includeAuthHeader: includeAuthHeader);
+    final Map<String, String> headers = await _buildHeaders(
+      includeAuthHeader: includeAuthHeader,
+    );
 
     return http
-        .delete(
-          uri,
-          headers: headers,
-        )
+        .delete(uri, headers: headers)
         .timeout(const Duration(seconds: 20));
   }
 
@@ -610,17 +562,13 @@ class AuthService {
     required bool includeAuthHeader,
   }) async {
     final Uri uri = _resolveUri(ApiConstants.uploadAvatar);
-    final Map<String, String> headers =
-        await _buildMultipartHeaders(includeAuthHeader: includeAuthHeader);
+    final Map<String, String> headers = await _buildMultipartHeaders(
+      includeAuthHeader: includeAuthHeader,
+    );
 
     final http.MultipartRequest request = http.MultipartRequest('POST', uri)
       ..headers.addAll(headers)
-      ..files.add(
-        await http.MultipartFile.fromPath(
-          'avatar',
-          file.path,
-        ),
-      );
+      ..files.add(await http.MultipartFile.fromPath('avatar', file.path));
 
     final http.StreamedResponse streamedResponse = await request.send();
     return http.Response.fromStream(streamedResponse);
@@ -635,7 +583,10 @@ class AuthService {
     };
 
     if (includeAuthHeader) {
-      final String? accessToken = await _tokenStorage.readAccessToken();
+      final String? accessToken = await _tokenStorage.readAccessToken().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => null,
+      );
       if (_hasValue(accessToken)) {
         headers['Authorization'] = 'Bearer ${accessToken!.trim()}';
       }
@@ -746,8 +697,9 @@ class AuthService {
       resolvedErrors = <dynamic>[];
       if (decoded['message'] == null ||
           decoded['message'].toString().trim().isEmpty) {
-        decoded['message'] =
-            rawBody.trim().isNotEmpty ? rawBody.trim() : 'Request completed';
+        decoded['message'] = rawBody.trim().isNotEmpty
+            ? rawBody.trim()
+            : 'Request completed';
       }
     }
 

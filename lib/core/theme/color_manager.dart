@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 /*
  Add here any new color
 * */
@@ -13,10 +14,11 @@ class AppColors {
   static const grey = Color(0xFF51525C);
   static const darkgrey = Color(0xFF323232);
   static const black = Color(0xFF000000);
-  static const statusInProgressLight  = Color(0xFFDBEAFE);
-  static const statusInProgress  = Color(0xFF1890FF);
-  static const statusFinishedLight   = Color(0xFF6AA93D);
+  static const statusInProgressLight = Color(0xFFDBEAFE);
+  static const statusInProgress = Color(0xFF1890FF);
+  static const statusFinishedLight = Color(0xFF6AA93D);
   static const statusFinished = Color(0xFF45940C);
+  static const error = Color(0xFFDC2626);
   // ignore: constant_identifier_names
   static const IndicatorBG = Color(0xFFC9C9CC);
   static const lightButton = Color(0xFFF2EEFB);

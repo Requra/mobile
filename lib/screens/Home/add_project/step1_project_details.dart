@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/features/add_project/presentation/cubit/add_project_cubit.dart';
 import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/features/project/data/models/project_enums.dart';
 import 'package:requra/screens/Home/add_project/widgets/team_member_input.dart';
@@ -13,16 +15,8 @@ import 'package:requra/core/theme/style_manager.dart';
 class Step1ProjectDetails extends StatefulWidget {
   const Step1ProjectDetails({
     super.key,
-    required this.onContinue,
-    required this.onBack,
     this.initialData,
   });
-
-  /// Called when the form is valid and the user taps "Continue".
-  final ValueChanged<ProjectDetails> onContinue;
-
-  /// Called when the user taps "Back" (exits the wizard).
-  final VoidCallback onBack;
 
   /// Pre-fill the form when navigating back from Step 2.
   final ProjectDetails? initialData;
@@ -69,13 +63,21 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    widget.onContinue(ProjectDetails(
+    final details = ProjectDetails(
       projectName: _nameCtrl.text.trim(),
       clientEmail: _clientCtrl.text.trim(),
       projectType: _selectedType.value,
       description: _descCtrl.text.trim(),
       teamMembers: _teamEmails,
-    ));
+    );
+    
+    context.read<AddProjectCubit>().setProjectDetails(details);
+  }
+
+  void _onBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   // ── Shared input decoration ──────────────────────────────────────────────
@@ -236,7 +238,7 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
                 // Back button
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: widget.onBack,
+                    onPressed: _onBack,
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14.h),
                       side: BorderSide(color: AppColors.borderButton),

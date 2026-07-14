@@ -1,46 +1,45 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/di/di_project.dart';
+import 'package:requra/features/profile/presentation/cubit/profile_cubit.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider<ProfileCubit>(
+      create: (_) => sl<ProfileCubit>()..loadProfile(),
+      child: const _ProfileView(),
+    );
+  }
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  static const int _maxAvatarBytes = 5 * 1024 * 1024;
-
-  final TextEditingController _nameController = TextEditingController(text: 'ziad');
-  final AuthService _authService = const AuthService();
-  final ImagePicker _imagePicker = ImagePicker();
-
-  bool _isEditing = false;
-  bool _isUpdatingProfile = false;
-  bool _isLoadingProfile = false;
-  bool _pushNotificationsEnabled = true;
-  bool _emailDigestsEnabled = false;
-  bool _isUploadingAvatar = false;
-  String _selectedLanguage = 'English';
-  String _avatarUrl = '';
-  File? _avatarFile;
-
-  String _savedName = 'ziad';
-  String _email = 'ziad@gmail.com';
-  String _jobTitle = 'Project Manager';
+class _ProfileView extends StatefulWidget {
+  const _ProfileView();
 
   @override
-  void initState() {
-    super.initState();
-    _loadProfile();
-  }
+  State<_ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<_ProfileView> {
+  static const int _maxAvatarBytes = 5 * 1024 * 1024;
+
+  final TextEditingController _nameController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+
+  bool _pushNotificationsEnabled = true;
+  bool _emailDigestsEnabled = false;
+  String _selectedLanguage = 'English';
 
   @override
   void dispose() {
@@ -48,142 +47,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  void _startEditing() {
-    setState(() {
-      _isEditing = true;
-    });
+  void _syncControllerWithState(ProfileState state) {
+    if (state is ProfileLoaded && !state.isEditing) {
+      if (_nameController.text != state.profile.name) {
+        _nameController.text = state.profile.name;
+      }
+    }
   }
 
-  void _cancelEditing() {
-    _nameController.text = _savedName;
-
-    setState(() {
-      _isEditing = false;
-    });
-  }
-
-  Future<void> _loadProfile() async {
-    if (_isLoadingProfile) {
-      return;
-    }
-
-    setState(() {
-      _isLoadingProfile = true;
-    });
-
-    final response = await _authService.getProfile();
-
-    if (!mounted) {
-      return;
-    }
-
-    if (response.isSuccess && response.data is Map<String, dynamic>) {
-      final Map<String, dynamic> data = response.data as Map<String, dynamic>;
-      final String loadedName = (data['name'] ?? _savedName).toString().trim();
-      final String loadedEmail = (data['email'] ?? _email).toString().trim();
-      final String loadedJobTitle =
-          (data['jobTitle'] ?? _jobTitle).toString().trim();
-      final String loadedAvatar =
-          (data['avatarUrl'] ?? _avatarUrl).toString().trim();
-
-      setState(() {
-        _savedName = loadedName.isEmpty ? _savedName : loadedName;
-        _email = loadedEmail.isEmpty ? _email : loadedEmail;
-        _jobTitle = loadedJobTitle.isEmpty ? _jobTitle : loadedJobTitle;
-        if (loadedAvatar.isNotEmpty) {
-          _avatarUrl = loadedAvatar;
-          _avatarFile = null;
-        }
-        _nameController.text = _savedName;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.message)),
-      );
-    }
-
-    setState(() {
-      _isLoadingProfile = false;
-    });
-  }
-
-  Future<void> _updateProfile() async {
-    if (_isUpdatingProfile) {
-      return;
-    }
-
-    final String newName = _nameController.text.trim();
-    if (newName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name is required.')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isUpdatingProfile = true;
-    });
-
-    final response = await _authService.updateProfile(name: newName);
-
-    if (!mounted) {
-      return;
-    }
-
-    if (response.isSuccess && response.data is Map<String, dynamic>) {
-      final Map<String, dynamic> data = response.data as Map<String, dynamic>;
-      final String updatedName = (data['name'] ?? newName).toString().trim();
-      final String updatedEmail = (data['email'] ?? _email).toString().trim();
-      final String updatedJobTitle =
-          (data['jobTitle'] ?? _jobTitle).toString().trim();
-      final String updatedAvatar =
-          (data['avatarUrl'] ?? _avatarUrl).toString().trim();
-
-      setState(() {
-        _savedName = updatedName.isEmpty ? _savedName : updatedName;
-        _email = updatedEmail.isEmpty ? _email : updatedEmail;
-        _jobTitle = updatedJobTitle.isEmpty ? _jobTitle : updatedJobTitle;
-        if (updatedAvatar.isNotEmpty) {
-          _avatarUrl = updatedAvatar;
-          _avatarFile = null;
-        }
-        _nameController.text = _savedName;
-        _isEditing = false;
-      });
-    }
-
-    setState(() {
-      _isUpdatingProfile = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.message)),
-    );
-  }
-
-  ImageProvider _resolveAvatarImage() {
-    if (_avatarFile != null) {
-      return FileImage(_avatarFile!);
-    }
-
-    if (_avatarUrl.trim().isNotEmpty) {
-      return NetworkImage(_avatarUrl);
-    }
-
-    return const AssetImage('assets/images/RequraAvatar.png');
-  }
-
-  Future<void> _pickAvatarFromGallery() async {
-    await _pickAvatar(ImageSource.gallery);
-  }
-
-  Future<void> _pickAvatar(ImageSource source) async {
-    if (_isUploadingAvatar) {
-      return;
-    }
+  Future<void> _pickAvatarFromGallery(BuildContext context) async {
+    final cubit = context.read<ProfileCubit>();
 
     final XFile? pickedFile = await _imagePicker.pickImage(
-      source: source,
+      source: ImageSource.gallery,
       imageQuality: 85,
     );
 
@@ -195,54 +71,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final int sizeBytes = await file.length();
 
     if (sizeBytes > _maxAvatarBytes) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('File size must be less than 5MB.')),
       );
       return;
     }
 
-    final File? previousFile = _avatarFile;
-    final String previousUrl = _avatarUrl;
-
-    setState(() {
-      _isUploadingAvatar = true;
-      _avatarFile = file;
-    });
-
-    final response = await _authService.uploadAvatar(file: file);
-
-    if (!mounted) {
-      return;
-    }
-
-    if (response.isSuccess && response.data is Map<String, dynamic>) {
-      final String newUrl =
-          (response.data['avatarUrl'] ?? '').toString().trim();
-      if (newUrl.isNotEmpty) {
-        setState(() {
-          _avatarUrl = newUrl;
-        });
-      }
-    } else {
-      setState(() {
-        _avatarFile = previousFile;
-        _avatarUrl = previousUrl;
-      });
-    }
-
-    setState(() {
-      _isUploadingAvatar = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.message)),
-    );
+    cubit.uploadAvatar(file);
   }
 
-  Future<void> _confirmDeleteAccount() async {
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final cubit = context.read<ProfileCubit>();
     final bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -269,30 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (shouldDelete == true) {
-      _handleDeleteAccount();
-    }
-  }
-
-  Future<void> _handleDeleteAccount() async {
-    final response = await _authService.deleteAccount();
-
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.message)),
-    );
-
-    if (response.isSuccess) {
-      await _authService.clearSessionTokens();
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
-        '/login',
-        (route) => false,
-      );
+      cubit.deleteAccount();
     }
   }
 
@@ -343,147 +160,228 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  ImageProvider _resolveAvatarImage(ProfileLoaded state) {
+    if (state.avatarFile != null) {
+      return FileImage(state.avatarFile!);
+    }
+
+    if (state.profile.avatarUrl.trim().isNotEmpty) {
+      return NetworkImage(state.profile.avatarUrl);
+    }
+
+    return const AssetImage('assets/images/RequraAvatar.png');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundHomeScreen,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listener: (context, state) {
+        _syncControllerWithState(state);
+
+        if (state is ProfileActionSuccess) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        } else if (state is ProfileError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        } else if (state is ProfileDeleted) {
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pushNamedAndRemoveUntil('/login', (route) => false);
+        }
+      },
+      builder: (context, state) {
+        final bool isLoading =
+            state is ProfileLoading || state is ProfileInitial;
+        ProfileLoaded? loadedState;
+
+        if (state is ProfileLoaded) {
+          loadedState = state;
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.backgroundHomeScreen,
+          body: SafeArea(
+            child: Stack(
               children: [
-                Container(
-                  height: 2.h,
-                  color: AppColors.statusInProgress,
+                Column(
+                  children: [
+                    Container(height: 2.h, color: AppColors.statusInProgress),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _TopBar(),
+                            SizedBox(height: 18.h),
+                            Text(
+                              'Profile Settings',
+                              style: boldStyle(
+                                fontSize: FontSize.font24,
+                                color: AppColors.darkgrey,
+                              ),
+                            ),
+                            SizedBox(height: 16.h),
+                            if (loadedState != null)
+                              _ProfileCard(
+                                nameController: _nameController,
+                                email: loadedState.profile.email,
+                                role: loadedState.profile.jobTitle,
+                                isEditing: loadedState.isEditing,
+                                displayName: loadedState.profile.name,
+                                avatarImage: _resolveAvatarImage(loadedState),
+                                isUploadingAvatar:
+                                    loadedState.isUploadingAvatar,
+                                onEditAvatar: () =>
+                                    _pickAvatarFromGallery(context),
+                                onStartEditing: () =>
+                                    context.read<ProfileCubit>().startEditing(),
+                                onCancelEditing: () => context
+                                    .read<ProfileCubit>()
+                                    .cancelEditing(),
+                                onUpdateProfile: () => context
+                                    .read<ProfileCubit>()
+                                    .updateProfile(_nameController.text),
+                                isUpdatingProfile:
+                                    loadedState.isUpdatingProfile,
+                              )
+                            else if (state is ProfileError)
+                              Container(
+                                height: 200.h,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Failed to load profile',
+                                      style: regularStyle(fontSize: FontSize.font14, color: AppColors.error),
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    ElevatedButton(
+                                      onPressed: () => context.read<ProfileCubit>().loadProfile(),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              Container(
+                                height: 200.h,
+                                alignment: Alignment.center,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primaryText,
+                                ),
+                              ),
+                            SizedBox(height: 16.h),
+                            const _SectionLabel(label: 'ACCOUNT'),
+                            SizedBox(height: 10.h),
+                            _SettingsTile(
+                              title: 'Email',
+                              subtitle:
+                                  loadedState?.profile.email ?? (state is ProfileError ? 'Error' : 'Loading...'),
+                              icon: Icons.mail_outline,
+                              iconColor: const Color(0xFF7B5DD4),
+                              iconBackground: const Color(0xFFEDE7FF),
+                            ),
+                            _SettingsTile(
+                              title: 'Change Password',
+                              icon: Icons.lock_outline,
+                              iconColor: const Color(0xFF7B5DD4),
+                              iconBackground: const Color(0xFFEDE7FF),
+                              onTap: () {
+                                Navigator.of(
+                                  context,
+                                  rootNavigator: true,
+                                ).pushNamed('/resetPassword');
+                              },
+                            ),
+                            _SettingsTile(
+                              title: 'Role',
+                              subtitle:
+                                  loadedState?.profile.jobTitle ?? (state is ProfileError ? 'Error' : 'Loading...'),
+                              icon: Icons.manage_accounts_outlined,
+                              iconColor: const Color(0xFF7B5DD4),
+                              iconBackground: const Color(0xFFEDE7FF),
+                            ),
+                            SizedBox(height: 12.h),
+                            const _SectionLabel(label: 'PREFERENCES'),
+                            SizedBox(height: 10.h),
+                            _SettingsTile(
+                              title: 'Language',
+                              subtitle: _selectedLanguage,
+                              icon: Icons.language,
+                              iconColor: const Color(0xFF7B5DD4),
+                              iconBackground: const Color(0xFFEDE7FF),
+                              showChevron: true,
+                              onTap: _chooseLanguage,
+                            ),
+                            _SettingsToggleTile(
+                              title: 'Push Notifications',
+                              subtitle: 'AI complete, approvals, comments',
+                              icon: Icons.notifications_none,
+                              iconColor: const Color(0xFFE2A310),
+                              iconBackground: const Color(0xFFFFF3CF),
+                              value: _pushNotificationsEnabled,
+                              onChanged: (value) {
+                                setState(() {
+                                  _pushNotificationsEnabled = value;
+                                });
+                              },
+                            ),
+                            _SettingsToggleTile(
+                              title: 'Email Digests',
+                              subtitle: 'Weekly summary',
+                              icon: Icons.mail_outline,
+                              iconColor: const Color(0xFF3383E1),
+                              iconBackground: const Color(0xFFDDEBFF),
+                              value: _emailDigestsEnabled,
+                              onChanged: (value) {
+                                setState(() {
+                                  _emailDigestsEnabled = value;
+                                });
+                              },
+                            ),
+                            SizedBox(height: 18.h),
+                            Text(
+                              'Danger Zone',
+                              style: semiBoldStyle(
+                                fontSize: FontSize.font14,
+                                color: const Color(0xFFD04A2B),
+                              ),
+                            ),
+                            SizedBox(height: 10.h),
+                            _DangerZoneCard(
+                              onDelete: () => _confirmDeleteAccount(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _TopBar(),
-                        SizedBox(height: 18.h),
-                        Text(
-                          'Profile Settings',
-                          style: boldStyle(
-                            fontSize: FontSize.font24,
-                            color: AppColors.darkgrey,
-                          ),
+                if (isLoading && loadedState == null)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryText,
                         ),
-                        SizedBox(height: 16.h),
-                        _ProfileCard(
-                          nameController: _nameController,
-                          email: _email,
-                          role: _jobTitle,
-                          isEditing: _isEditing,
-                          displayName: _savedName,
-                          avatarImage: _resolveAvatarImage(),
-                          isUploadingAvatar: _isUploadingAvatar,
-                          onEditAvatar: _pickAvatarFromGallery,
-                          onStartEditing: _startEditing,
-                          onCancelEditing: _cancelEditing,
-                          onUpdateProfile: _updateProfile,
-                          isUpdatingProfile: _isUpdatingProfile,
-                        ),
-                        SizedBox(height: 16.h),
-                        const _SectionLabel(label: 'ACCOUNT'),
-                        SizedBox(height: 10.h),
-                        _SettingsTile(
-                          title: 'Email',
-                          subtitle: _email,
-                          icon: Icons.mail_outline,
-                          iconColor: Color(0xFF7B5DD4),
-                          iconBackground: Color(0xFFEDE7FF),
-                        ),
-                        _SettingsTile(
-                          title: 'Change Password',
-                          icon: Icons.lock_outline,
-                          iconColor: const Color(0xFF7B5DD4),
-                          iconBackground: const Color(0xFFEDE7FF),
-                          onTap: () {
-                            Navigator.of(context, rootNavigator: true)
-                                .pushNamed('/resetPassword');
-                          },
-                        ),
-                        _SettingsTile(
-                          title: 'Role',
-                          subtitle: _jobTitle,
-                          icon: Icons.manage_accounts_outlined,
-                          iconColor: Color(0xFF7B5DD4),
-                          iconBackground: Color(0xFFEDE7FF),
-                        ),
-                        SizedBox(height: 12.h),
-                        const _SectionLabel(label: 'PREFERENCES'),
-                        SizedBox(height: 10.h),
-                        _SettingsTile(
-                          title: 'Language',
-                          subtitle: _selectedLanguage,
-                          icon: Icons.language,
-                          iconColor: Color(0xFF7B5DD4),
-                          iconBackground: Color(0xFFEDE7FF),
-                          showChevron: true,
-                          onTap: _chooseLanguage,
-                        ),
-                        _SettingsToggleTile(
-                          title: 'Push Notifications',
-                          subtitle: 'AI complete, approvals, comments',
-                          icon: Icons.notifications_none,
-                          iconColor: const Color(0xFFE2A310),
-                          iconBackground: const Color(0xFFFFF3CF),
-                          value: _pushNotificationsEnabled,
-                          onChanged: (value) {
-                            setState(() {
-                              _pushNotificationsEnabled = value;
-                            });
-                          },
-                        ),
-                        _SettingsToggleTile(
-                          title: 'Email Digests',
-                          subtitle: 'Weekly summary',
-                          icon: Icons.mail_outline,
-                          iconColor: const Color(0xFF3383E1),
-                          iconBackground: const Color(0xFFDDEBFF),
-                          value: _emailDigestsEnabled,
-                          onChanged: (value) {
-                            setState(() {
-                              _emailDigestsEnabled = value;
-                            });
-                          },
-                        ),
-                        SizedBox(height: 18.h),
-                        Text(
-                          'Danger Zone',
-                          style: semiBoldStyle(
-                            fontSize: FontSize.font14,
-                            color: const Color(0xFFD04A2B),
-                          ),
-                        ),
-                        SizedBox(height: 10.h),
-                        _DangerZoneCard(
-                          onDelete: _confirmDeleteAccount,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
-            if (_isLoadingProfile)
-              Positioned.fill(
-                child: Container(
-                  // ignore: deprecated_member_use
-                  color: Colors.white.withOpacity(0.6),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primaryText,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -502,13 +400,19 @@ class _TopBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(8.r),
             color: const Color(0xFFEDE7FF),
           ),
-          child: Image(image:const AssetImage('assets/images/logo.png'), height: 16.h, width: 16.w, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.smart_toy,
-              color: const Color(0xFF7B5DD4),
-              size: 14.sp,
-            );
-          }),
+          child: Image(
+            image: const AssetImage('assets/images/logo.png'),
+            height: 16.h,
+            width: 16.w,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                Icons.smart_toy,
+                color: const Color(0xFF7B5DD4),
+                size: 14.sp,
+              );
+            },
+          ),
         ),
         const Spacer(),
         const _ActionIcon(icon: Icons.notifications_none),
@@ -534,11 +438,7 @@ class _ActionIcon extends StatelessWidget {
         color: AppColors.white,
         border: Border.all(color: const Color(0xFFE4E4E8)),
       ),
-      child: Icon(
-        icon,
-        color: AppColors.grey,
-        size: 17.sp,
-      ),
+      child: Icon(icon, color: AppColors.grey, size: 17.sp),
     );
   }
 }
@@ -755,7 +655,10 @@ class _ProfileInfoRow extends StatelessWidget {
                 ),
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8.w,
+                    vertical: 8.h,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r),
                     borderSide: const BorderSide(color: Color(0xFFD5D5DB)),
@@ -802,7 +705,9 @@ class _ActionButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isPrimary ? AppColors.primaryText : const Color(0xFFF2F2F7),
+          backgroundColor: isPrimary
+              ? AppColors.primaryText
+              : const Color(0xFFF2F2F7),
           foregroundColor: isPrimary ? AppColors.white : AppColors.primaryText,
           elevation: 0,
           side: BorderSide(
@@ -887,11 +792,7 @@ class _SettingsTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10.r),
                 color: iconBackground,
               ),
-              child: Icon(
-                icon,
-                size: 19.sp,
-                color: iconColor,
-              ),
+              child: Icon(icon, size: 19.sp, color: iconColor),
             ),
             SizedBox(width: 10.w),
             Expanded(
@@ -969,11 +870,7 @@ class _SettingsToggleTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10.r),
               color: iconBackground,
             ),
-            child: Icon(
-              icon,
-              size: 19.sp,
-              color: iconColor,
-            ),
+            child: Icon(icon, size: 19.sp, color: iconColor),
           ),
           SizedBox(width: 10.w),
           Expanded(
@@ -1142,4 +1039,3 @@ class _LanguageOption extends StatelessWidget {
     );
   }
 }
-

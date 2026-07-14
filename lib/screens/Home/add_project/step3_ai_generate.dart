@@ -1,25 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:requra/core/api/api_client.dart';
+import 'package:requra/features/add_project/presentation/cubit/add_project_cubit.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
-import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/features/project/data/models/project_creation_result.dart';
-import 'package:requra/features/project/data/services/project_creation_service.dart';
 
 class Step3AiGenerate extends StatefulWidget {
-  final ProjectDetails? projectDetails;
-  final List<SourceItem> sources;
-  final VoidCallback onBack;
   final VoidCallback onViewResults;
 
   const Step3AiGenerate({
     super.key,
-    required this.projectDetails,
-    required this.sources,
-    required this.onBack,
     required this.onViewResults,
   });
 
@@ -28,9 +21,6 @@ class Step3AiGenerate extends StatefulWidget {
 }
 
 class _Step3AiGenerateState extends State<Step3AiGenerate> {
-  bool _isLoading = true;
-  ProjectCreationResult? _result;
-
   // Rotating text for loading state
   final List<String> _loadingMessages = [
     'Understanding Stakeholders...',
@@ -46,7 +36,6 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
   void initState() {
     super.initState();
     _startLoadingMessages();
-    _createProject();
   }
 
   @override
@@ -57,63 +46,55 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
 
   void _startLoadingMessages() {
     _messageTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
-      setState(() {
-        _currentMessageIndex =
-            (_currentMessageIndex + 1) % _loadingMessages.length;
-      });
+      if (mounted) {
+        setState(() {
+          _currentMessageIndex =
+              (_currentMessageIndex + 1) % _loadingMessages.length;
+        });
+      }
     });
   }
 
-  Future<void> _createProject() async {
-    try {
-      final service = ProjectCreationService(apiClient: ApiClient());
-
-      // We pass non-null details even though it's nullable in the widget,
-      // as the user shouldn't reach step 3 without it.
-      // If it's somehow null, we provide a fallback empty one.
-      final details =
-          widget.projectDetails ??
-          const ProjectDetails(
-            projectName: 'Unknown',
-            clientEmail: '',
-            projectType: 0,
-            description: '',
-            teamMembers: [],
-          );
-
-      final result = await service.createProject(details, widget.sources);
-
-      if (mounted) {
-        setState(() {
-          _result = result;
-          _isLoading = false;
-        });
-        _messageTimer?.cancel();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to generate project: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        widget.onBack();
-      }
-    }
-  }
-
   void _onViewResults() {
+    context.read<AddProjectCubit>().reset();
     widget.onViewResults();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 500),
-      child: _isLoading ? _buildLoadingState() : _buildSuccessState(),
+    return BlocConsumer<AddProjectCubit, AddProjectState>(
+      listener: (context, state) {
+        if (state is AddProjectSuccess || state is AddProjectError) {
+          _messageTimer?.cancel();
+        }
+        if (state is AddProjectError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to generate project: ${state.message}'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: _buildStateContent(context, state),
+        );
+      },
     );
+  }
+
+  Widget _buildStateContent(BuildContext context, AddProjectState state) {
+    if (state is AddProjectCreating) {
+      return _buildLoadingState();
+    } else if (state is AddProjectSuccess) {
+      return _buildSuccessState(state.result);
+    } else if (state is AddProjectError) {
+      return _buildErrorState(context, state.message);
+    }
+    return const SizedBox.shrink();
   }
 
   Widget _buildLoadingState() {
@@ -208,9 +189,7 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
     );
   }
 
-  Widget _buildSuccessState() {
-    if (_result == null) return const SizedBox.shrink();
-
+  Widget _buildSuccessState(ProjectCreationResult result) {
     return SingleChildScrollView(
       key: const ValueKey('success_state'),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
@@ -264,27 +243,27 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
                   icon: Icons.person_outline,
                   iconColor: AppColors.primary,
                   iconBgColor: const Color(0xFFEBE6F5),
-                  count: _result!.actorsCount,
+                  count: result.actorsCount,
                   title: 'Actors Identified',
-                  subtitle: _result!.actorsSummary,
+                  subtitle: result.actorsSummary,
                 ),
                 SizedBox(width: 16.w),
                 _buildSummaryCard(
                   icon: Icons.checklist_rtl,
                   iconColor: Colors.green,
                   iconBgColor: const Color(0xFFE8F5E9),
-                  count: _result!.requirementsCount,
+                  count: result.requirementsCount,
                   title: 'Requirements Generated',
-                  subtitle: _result!.requirementsSummary,
+                  subtitle: result.requirementsSummary,
                 ),
                 SizedBox(width: 16.w),
                 _buildSummaryCard(
                   icon: Icons.assignment_outlined,
                   iconColor: Colors.orange,
                   iconBgColor: const Color(0xFFFFF3E0),
-                  count: _result!.userStoriesCount,
+                  count: result.userStoriesCount,
                   title: 'User Stories Created',
-                  subtitle: _result!.userStoriesSummary,
+                  subtitle: result.userStoriesSummary,
                 ),
               ],
             ),
@@ -298,7 +277,7 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
               // Back
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.onBack,
+                  onPressed: () => context.read<AddProjectCubit>().goBackToStep2(),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                     side: BorderSide(color: AppColors.borderButton),
@@ -350,6 +329,34 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, String message) {
+    return Center(
+      key: const ValueKey('error_state'),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, color: Colors.red, size: 64.r),
+          SizedBox(height: 16.h),
+          Text(
+            'Generation Failed',
+            style: boldStyle(fontSize: FontSize.font18, color: AppColors.darkgrey),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            message,
+            style: regularStyle(fontSize: FontSize.font14, color: AppColors.lightgrey),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24.h),
+          OutlinedButton(
+            onPressed: () => context.read<AddProjectCubit>().goBackToStep2(),
+            child: const Text('Go Back'),
           ),
         ],
       ),
@@ -423,3 +430,4 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
     );
   }
 }
+

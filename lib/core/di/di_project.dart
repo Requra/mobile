@@ -48,6 +48,7 @@ void initProjectDI() {
         uploadAvatarUseCase: sl(),
         deleteAccountUseCase: sl(),
         changePasswordUseCase: sl(),
+        logoutUseCase: sl(),
       ));
 
   // UseCases
@@ -62,6 +63,7 @@ void initProjectDI() {
   sl.registerLazySingleton(() => UploadAvatarUseCase(sl()));
   sl.registerLazySingleton(() => DeleteAccountUseCase(sl()));
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProjectRepository>(

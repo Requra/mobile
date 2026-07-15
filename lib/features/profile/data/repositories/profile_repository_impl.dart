@@ -92,4 +92,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Left(ServerFailure(msg));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> logout() async {
+    try {
+      final response = await remoteDataSource.logout();
+      if (response.isSuccess) {
+        return const Right(true);
+      } else {
+        return Left(ServerFailure(response.message));
+      }
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

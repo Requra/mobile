@@ -80,3 +80,7 @@ class ProfileError extends ProfileState {
   @override
   List<Object?> get props => [message];
 }
+
+class ProfileLoggedOut extends ProfileState {
+  const ProfileLoggedOut();
+}

@@ -13,11 +13,12 @@ class ApiConstants {
   static const String changePassword = '/api/profile/change-password';
   static const String uploadAvatar = '/api/profile/avatar';
   static const String updateProfile = '/api/profile';
-  static const String deleteAccount = '/api/account';
+  static const String deleteAccount = '/api/profile';
   static const String refreshToken = '/api/Auth/refresh-token';
   static const String googleLogin = '/api/Auth/google-login';
   static const String confirmAccount = '/api/Auth/confirm-account';
   static const String resendOtp = '/api/Auth/otp/resend';
+  static const String logout = '/api/Auth/logout';
 
   // ── Meeting (v1 API) ──
   static const String meetingsBase =

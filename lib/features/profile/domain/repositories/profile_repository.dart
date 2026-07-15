@@ -9,4 +9,5 @@ abstract class ProfileRepository {
   Future<Either<Failure, String>> uploadAvatar(File file);
   Future<Either<Failure, bool>> deleteAccount();
   Future<Either<Failure, bool>> changePassword(String currentPassword, String newPassword);
+  Future<Either<Failure, bool>> logout();
 }

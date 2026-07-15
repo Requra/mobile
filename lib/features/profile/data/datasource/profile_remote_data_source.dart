@@ -8,6 +8,7 @@ abstract class ProfileRemoteDataSource {
   Future<AuthResponse> uploadAvatar(File file);
   Future<AuthResponse> deleteAccount();
   Future<AuthResponse> changePassword(String currentPassword, String newPassword);
+  Future<AuthResponse> logout();
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -41,5 +42,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       currentPassword: currentPassword,
       newPassword: newPassword,
     );
+  }
+
+  @override
+  Future<AuthResponse> logout() {
+    return authService.logout();
   }
 }

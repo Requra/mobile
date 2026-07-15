@@ -53,3 +53,13 @@ class ChangePasswordUseCase {
     return await repository.changePassword(currentPassword, newPassword);
   }
 }
+
+class LogoutUseCase {
+  final ProfileRepository repository;
+
+  LogoutUseCase(this.repository);
+
+  Future<Either<Failure, bool>> call() async {
+    return await repository.logout();
+  }
+}

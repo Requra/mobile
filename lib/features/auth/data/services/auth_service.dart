@@ -148,6 +148,17 @@ class AuthService {
     return _get(endpoint: ApiConstants.updateProfile);
   }
 
+  Future<AuthResponse> logout() async {
+    final AuthResponse response = await _post(
+      endpoint: ApiConstants.logout,
+      body: <String, dynamic>{},
+    );
+    if (response.isSuccess) {
+      await _tokenStorage.clearTokens();
+    }
+    return response;
+  }
+
   Future<AuthResponse> deleteAccount() {
     return _deleteAccountWithFallback();
   }

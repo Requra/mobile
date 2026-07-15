@@ -12,6 +12,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   final UploadAvatarUseCase _uploadAvatarUseCase;
   final DeleteAccountUseCase _deleteAccountUseCase;
   final ChangePasswordUseCase _changePasswordUseCase;
+  final LogoutUseCase _logoutUseCase;
 
   ProfileCubit({
     required GetProfileUseCase getProfileUseCase,
@@ -19,11 +20,13 @@ class ProfileCubit extends Cubit<ProfileState> {
     required UploadAvatarUseCase uploadAvatarUseCase,
     required DeleteAccountUseCase deleteAccountUseCase,
     required ChangePasswordUseCase changePasswordUseCase,
+    required LogoutUseCase logoutUseCase,
   })  : _getProfileUseCase = getProfileUseCase,
         _updateProfileUseCase = updateProfileUseCase,
         _uploadAvatarUseCase = uploadAvatarUseCase,
         _deleteAccountUseCase = deleteAccountUseCase,
         _changePasswordUseCase = changePasswordUseCase,
+        _logoutUseCase = logoutUseCase,
         super(const ProfileInitial());
 
   Future<void> loadProfile() async {
@@ -134,6 +137,16 @@ class ProfileCubit extends Cubit<ProfileState> {
           emit(previousState);
         }
       },
+    );
+  }
+
+  Future<void> logout() async {
+    emit(const ProfileLoading());
+    final result = await _logoutUseCase();
+
+    result.fold(
+      (failure) => emit(ProfileError(failure.message)),
+      (_) => emit(const ProfileLoggedOut()),
     );
   }
 }

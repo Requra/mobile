@@ -16,6 +16,11 @@ import 'package:requra/features/profile/data/repositories/profile_repository_imp
 import 'package:requra/features/profile/domain/repositories/profile_repository.dart';
 import 'package:requra/features/profile/domain/usecases/profile_usecases.dart';
 import 'package:requra/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:requra/features/result_view/data/datasource/result_view_remote_data_source.dart';
+import 'package:requra/features/result_view/data/repositories/result_view_repository_impl.dart';
+import 'package:requra/features/result_view/domain/repositories/result_view_repository.dart';
+import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -51,6 +56,13 @@ void initProjectDI() {
         logoutUseCase: sl(),
       ));
 
+  sl.registerFactory(() => ResultViewCubit(
+        getProjectDetailsUseCase: sl(),
+        getProjectMeetingsUseCase: sl(),
+        getProjectDocumentsUseCase: sl(),
+        uploadDocumentUseCase: sl(),
+      ));
+
   // UseCases
   sl.registerLazySingleton(() => GetProjectsUseCase(sl()));
   sl.registerLazySingleton(() => DeleteProjectUseCase(sl()));
@@ -65,6 +77,11 @@ void initProjectDI() {
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
 
+  sl.registerLazySingleton(() => GetProjectDetailsUseCase(sl()));
+  sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));
+  sl.registerLazySingleton(() => GetProjectDocumentsUseCase(sl()));
+  sl.registerLazySingleton(() => UploadDocumentUseCase(sl()));
+
   // Repository
   sl.registerLazySingleton<ProjectRepository>(
     //register interfaces not impl (will call it)
@@ -76,6 +93,9 @@ void initProjectDI() {
   sl.registerLazySingleton<ProfileRepository>(
       () => ProfileRepositoryImpl(remoteDataSource: sl()));
 
+  sl.registerLazySingleton<ResultViewRepository>(
+      () => ResultViewRepositoryImpl(remoteDataSource: sl()));
+
   // Data Sources
   sl.registerLazySingleton<ProjectRemoteDataSource>(
       () => ProjectRemoteDataSourceImpl(apiClient: sl()));
@@ -85,4 +105,8 @@ void initProjectDI() {
 
   sl.registerLazySingleton<ProfileRemoteDataSource>(
       () => ProfileRemoteDataSourceImpl(authService: sl()));
+
+  sl.registerLazySingleton<ResultViewRemoteDataSource>(
+      () => ResultViewRemoteDataSourceImpl(apiClient: sl()));
 }
+

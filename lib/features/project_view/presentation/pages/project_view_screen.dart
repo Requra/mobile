@@ -7,7 +7,7 @@ import 'package:requra/features/project_view/presentation/cubit/project_cubit.da
 import 'package:requra/features/project_view/presentation/cubit/project_state.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_header.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_search_sort_bar.dart';
-import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_tab_bar.dart';
+import 'package:requra/core/global_widgets/custom_tab_bar.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_list_view.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_error_state.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_loading_state.dart';
@@ -22,7 +22,7 @@ class ProjectViewScreen extends StatefulWidget {
 }
 
 class _ProjectViewScreenState extends State<ProjectViewScreen> {
-  static const _tabs = ['Processing', 'Completed', 'Draft'];
+  static const _tabs = ['Processing', 'Completed', 'Draft' ];
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -92,7 +92,7 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> {
                   if (state is ProjectLoaded) {
                     return Column(
                       children: [
-                        ProjectTabBar(
+                        CustomTabBar(
                           tabs: _tabs,
                           counts: [
                             state.processingProjects.length,

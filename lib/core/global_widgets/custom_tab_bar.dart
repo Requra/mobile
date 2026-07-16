@@ -4,11 +4,17 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 
-class ProjectTabBar extends StatelessWidget {
+class CustomTabBar extends StatelessWidget {
   final List<String> tabs;
-  final List<int> counts;
+  final List<int>? counts;
+  final bool isScrollable;
 
-  const ProjectTabBar({super.key, required this.tabs, required this.counts});
+  const CustomTabBar({
+    super.key,
+    required this.tabs,
+    this.counts,
+    this.isScrollable = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +26,8 @@ class ProjectTabBar extends StatelessWidget {
           animation: ctrl,
           builder: (context, _) {
             return TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
+              isScrollable: isScrollable,
+              tabAlignment: isScrollable ? TabAlignment.start : TabAlignment.fill,
               indicatorColor: AppColors.primary,
               indicatorWeight: 2.sp,
               labelColor: AppColors.primary,
@@ -29,6 +35,7 @@ class ProjectTabBar extends StatelessWidget {
               indicatorSize: TabBarIndicatorSize.label,
               tabs: List.generate(tabs.length, (i) {
                 final active = ctrl.index == i;
+                final bool showCount = counts != null && i < counts!.length;
                 return Tab(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -40,24 +47,29 @@ class ProjectTabBar extends StatelessWidget {
                           color: active ? AppColors.primary : AppColors.grey,
                         ),
                       ),
-                      SizedBox(width: 4.w),
-                      Container(
-                        width: 20.w,
-                        height: 20.h,
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.lightPrimary : AppColors.lightgrey,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${counts[i]}',
-                            style: semiBoldStyle(
-                              fontSize: FontSize.font12,
-                              color: active ? AppColors.primary : AppColors.grey,
+                      if (showCount) ...[
+                        SizedBox(width: 4.w),
+                        Container(
+                          width: 22.w,
+                          height: 22.w,
+                          decoration: BoxDecoration(
+                            color: active
+                                ? AppColors.lightPrimary
+                                : AppColors.lightgrey,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${counts![i]}',
+                              style: semiBoldStyle(
+                                fontSize: FontSize.font12,
+                                color:
+                                    active ? AppColors.primary : AppColors.grey,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ]
                     ],
                   ),
                 );

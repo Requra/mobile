@@ -64,13 +64,13 @@ class CustomButton extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: iconColor, size: 18.sp),
+                Icon(icon, color: transparent ? AppColors.black : iconColor, size: 18.sp),
                 SizedBox(width: 8.w),
                 Text(
                     text,
                     textAlign: TextAlign.center,
-                    style: isRegularStyle ? regularStyle(fontSize: FontSize.font14, color: textColor) :
-                    boldStyle(fontSize: FontSize.font14, color: textColor)
+                    style: isRegularStyle ? regularStyle(fontSize: FontSize.font14, color: transparent ? AppColors.black : textColor) :
+                    boldStyle(fontSize: FontSize.font14, color: transparent ? AppColors.black : textColor)
                 )
               ],
             ),

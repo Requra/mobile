@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/screens/Home/profile/setNewPassword_screen.dart';
 import 'package:requra/screens/Home/profile/updatePassword_screen.dart';
 import 'package:requra/screens/auth/create_new_password_screen.dart';
@@ -9,7 +10,9 @@ import 'package:requra/screens/auth/login_screen.dart';
 import 'package:requra/features/project_view/presentation/pages/project_view_screen.dart';
 import 'package:requra/features/project_view/presentation/pages/edit_project_screen.dart';
 import 'package:requra/features/project_view/domain/entities/project.dart';
-import 'package:requra/screens/Home/resultView_screen.dart';
+import 'package:requra/features/result_view/presentation/pages/result_view_screen.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/core/di/di_project.dart';
 import 'package:requra/screens/auth/signup_screen.dart';
 import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/screens/meeting/live_meeting_screen.dart';
@@ -51,7 +54,13 @@ class AppRoutes {
       projectView: (context) => ProjectViewScreen(
         onAddProject: () => Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.addProject),
       ),
-      resultView: (_) => const ResultviewScreen(),
+      resultView: (context) {
+        final project = ModalRoute.of(context)!.settings.arguments as Project;
+        return BlocProvider(
+          create: (_) => sl<ResultViewCubit>(),
+          child: ResultViewScreen(project: project),
+        );
+      },
       users: (_) => const UserstoriesTabview(),
       resetPassword: (_) => const setNewPasswordScreen(),
       passwordUpdated: (_) => const UpdatepasswordScreen(),
@@ -64,3 +73,4 @@ class AppRoutes {
     };
   }
 }
+

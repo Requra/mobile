@@ -334,7 +334,10 @@ class ProjectCard extends StatelessWidget {
                       color1: AppColors.primary,
                       isRegularStyle: true,
                       onTap: () {
-
+                        Navigator.of(context, rootNavigator: true).pushNamed(
+                          AppRoutes.resultView,
+                          arguments: project,
+                        );
                       },
                     )
                 ),

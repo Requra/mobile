@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
+import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
 
@@ -10,16 +11,19 @@ class ResultViewCubit extends Cubit<ResultViewState> {
   final GetProjectDetailsUseCase _getProjectDetails;
   final GetProjectMeetingsUseCase _getProjectMeetings;
   final GetProjectDocumentsUseCase _getProjectDocuments;
+  final GetAiResultsDashboardUseCase _getAiResultsDashboard;
   final UploadDocumentUseCase _uploadDocument;
 
   ResultViewCubit({
     required GetProjectDetailsUseCase getProjectDetailsUseCase,
     required GetProjectMeetingsUseCase getProjectMeetingsUseCase,
     required GetProjectDocumentsUseCase getProjectDocumentsUseCase,
+    required GetAiResultsDashboardUseCase getAiResultsDashboardUseCase,
     required UploadDocumentUseCase uploadDocumentUseCase,
   })  : _getProjectDetails = getProjectDetailsUseCase,
         _getProjectMeetings = getProjectMeetingsUseCase,
         _getProjectDocuments = getProjectDocumentsUseCase,
+        _getAiResultsDashboard = getAiResultsDashboardUseCase,
         _uploadDocument = uploadDocumentUseCase,
         super(ResultViewInitial());
 
@@ -35,11 +39,13 @@ class ResultViewCubit extends Cubit<ResultViewState> {
       _getProjectDetails(projectId),
       _getProjectMeetings(projectId),
       _getProjectDocuments(projectId),
+      _getAiResultsDashboard(projectId),
     ]);
 
     final detailsResult = results[0];
     final meetingsResult = results[1];
     final documentsResult = results[2];
+    final aiResult = results[3];
 
     // Check details result
     ProjectDetails? details;
@@ -62,12 +68,20 @@ class ResultViewCubit extends Cubit<ResultViewState> {
       (_) => documents = [],
       (data) => documents = data as List<Document>,
     );
+    
+    // Check AI results
+    AiResultsDashboard? aiDashboard;
+    aiResult.fold(
+      (_) => aiDashboard = null,
+      (data) => aiDashboard = data as AiResultsDashboard,
+    );
 
     emit(ResultViewLoaded(
       projectDetails: details!,
       meetings: meetings,
       documents: documents,
       totalRequirements: totalRequirements,
+      aiDashboard: aiDashboard,
     ));
   }
 
@@ -96,6 +110,7 @@ class ResultViewCubit extends Cubit<ResultViewState> {
       meetings: currentState.meetings,
       documents: List.from(currentState.documents)..add(tempDoc),
       totalRequirements: currentState.totalRequirements,
+      aiDashboard: currentState.aiDashboard,
     ));
 
     try {
@@ -115,6 +130,7 @@ class ResultViewCubit extends Cubit<ResultViewState> {
             meetings: currentState.meetings,
             documents: currentState.documents,
             totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
           ));
           return failure.message; // Return error string
         },
@@ -128,6 +144,7 @@ class ResultViewCubit extends Cubit<ResultViewState> {
             meetings: currentState.meetings,
             documents: updatedDocuments,
             totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
           ));
           return null; // Return null on success
         },
@@ -139,6 +156,7 @@ class ResultViewCubit extends Cubit<ResultViewState> {
         meetings: currentState.meetings,
         documents: currentState.documents,
         totalRequirements: currentState.totalRequirements,
+        aiDashboard: currentState.aiDashboard,
       ));
       return e.toString();
     }

@@ -6,6 +6,7 @@ import 'package:requra/features/result_view/data/models/project_details_model.da
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:requra/features/result_view/data/models/document_model.dart';
+import 'package:requra/features/result_view/data/models/ai_results_dashboard_model.dart';
 
 abstract class ResultViewRemoteDataSource {
   Future<ProjectDetailsModel> getProjectDetails(String id);
@@ -19,6 +20,7 @@ abstract class ResultViewRemoteDataSource {
     required int language,
     String? meetingId,
   });
+  Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId);
 }
 
 class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
@@ -121,6 +123,26 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
       }
 
       return DocumentModel.fromJson(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId) async {
+    try {
+      final response = await apiClient.dio.get(
+        ApiConstants.aiResultsDashboard(projectId),
+      );
+
+      Map<String, dynamic> data;
+      if (response.data['data'] != null) {
+        data = response.data['data'];
+      } else {
+        data = response.data;
+      }
+
+      return AiResultsDashboardModel.fromJson(data);
     } catch (e) {
       rethrow;
     }

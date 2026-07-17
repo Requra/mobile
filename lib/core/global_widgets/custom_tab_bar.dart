@@ -35,7 +35,7 @@ class CustomTabBar extends StatelessWidget {
               indicatorSize: TabBarIndicatorSize.label,
               tabs: List.generate(tabs.length, (i) {
                 final active = ctrl.index == i;
-                final bool showCount = counts != null && i < counts!.length;
+                final bool showCount = counts != null && i < counts!.length && counts![i] >= 0;
                 return Tab(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

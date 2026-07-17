@@ -26,4 +26,7 @@ class ApiConstants {
 
   // ── Projects ──
   static const String projects = '/api/projects';
+
+  static String aiResultsDashboard(String projectId) =>
+      '/api/projects/$projectId/ai/results-dashboard';
 }

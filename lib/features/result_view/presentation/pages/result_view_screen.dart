@@ -9,6 +9,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/ai_results_tab.dart';
 import 'package:requra/features/result_view/presentation/widgets/meetings/meetings_tab.dart';
 import 'package:requra/features/result_view/presentation/widgets/overview/overview_tab.dart';
 
@@ -123,33 +124,26 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
                           projectId: state.projectDetails.id,
                         ),
 
-                        /// AI Results tab (placeholder)
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.smart_toy_outlined,
-                                  size: 64.sp,
-                                  color: AppColors.lightgrey),
-                              SizedBox(height: 12.h),
-                              Text(
-                                'AI Results',
-                                style: boldStyle(
-                                  fontSize: FontSize.font18,
-                                  color: AppColors.black,
+                        /// AI Results tab
+                        state.aiDashboard != null
+                            ? AiResultsTab(dashboard: state.aiDashboard!)
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.error_outline,
+                                        size: 64.sp, color: AppColors.error),
+                                    SizedBox(height: 12.h),
+                                    Text(
+                                      'Failed to load AI Results',
+                                      style: boldStyle(
+                                        fontSize: FontSize.font18,
+                                        color: AppColors.black,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                'Coming soon...',
-                                style: regularStyle(
-                                  fontSize: FontSize.font14,
-                                  color: AppColors.lightgrey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
 
                         /// Meetings tab
                         MeetingsTab(meetings: state.meetings),

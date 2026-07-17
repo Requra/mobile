@@ -6,6 +6,7 @@ import 'package:requra/features/result_view/data/datasource/result_view_remote_d
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
+import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/domain/repositories/result_view_repository.dart';
 
 class ResultViewRepositoryImpl implements ResultViewRepository {
@@ -69,6 +70,19 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
         language: language,
         meetingId: meetingId,
       );
+      return Right(result);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'A network error occurred.'));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(
+      String projectId) async {
+    try {
+      final result = await remoteDataSource.getAiResultsDashboard(projectId);
       return Right(result);
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'A network error occurred.'));

@@ -4,6 +4,7 @@ import 'package:requra/core/errors/failures.dart';
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
+import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 
 abstract class ResultViewRepository {
   Future<Either<Failure, ProjectDetails>> getProjectDetails(String id);
@@ -17,4 +18,5 @@ abstract class ResultViewRepository {
     required int language,
     String? meetingId,
   });
+  Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(String projectId);
 }

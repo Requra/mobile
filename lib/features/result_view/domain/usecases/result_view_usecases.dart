@@ -4,6 +4,7 @@ import 'package:requra/core/errors/failures.dart';
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
+import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/domain/repositories/result_view_repository.dart';
 
 class GetProjectDetailsUseCase {
@@ -57,5 +58,15 @@ class UploadDocumentUseCase {
       language: language,
       meetingId: meetingId,
     );
+  }
+}
+
+class GetAiResultsDashboardUseCase {
+  final ResultViewRepository repository;
+
+  GetAiResultsDashboardUseCase(this.repository);
+
+  Future<Either<Failure, AiResultsDashboard>> call(String projectId) {
+    return repository.getAiResultsDashboard(projectId);
   }
 }

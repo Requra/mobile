@@ -90,4 +90,17 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       return Left(ServerFailure('An unexpected error occurred.'));
     }
   }
+
+  @override
+  Future<Either<Failure, Meeting>> createMeeting(
+      String projectId, Map<String, dynamic> data) async {
+    try {
+      final result = await remoteDataSource.createMeeting(projectId, data);
+      return Right(result);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'A network error occurred.'));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred.'));
+    }
+  }
 }

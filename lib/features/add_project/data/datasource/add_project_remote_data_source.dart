@@ -1,4 +1,5 @@
 import 'package:requra/core/api/api_client.dart';
+import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/features/project/data/models/add_project_model.dart';
 import 'package:requra/features/project/data/models/project_creation_result.dart';
 
@@ -15,20 +16,33 @@ class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
   @override
   Future<ProjectCreationResult> createProject(
       ProjectDetails details, List<SourceItem> sources) async {
-    // Here we would typically use apiClient.dio.post(...) to send multipart form data
-    // For now, we simulate a network delay and return mock data to match the UI requirements
-    
-    await Future.delayed(const Duration(seconds: 4));
+    // Build the request body matching the API contract
+    final requestBody = {
+      'name': details.projectName,
+      'description': details.description,
+      'ProjectType': details.projectType.toString(),
+      'clientEmail': details.clientEmail,
+      'teamMembers': details.teamMembers
+          .map((email) => {'email': email})
+          .toList(),
+    };
 
-    // Simulate successful response with mock data
-    return const ProjectCreationResult(
-      actorsCount: 5,
-      actorsSummary: 'Customer, Admin, Delivery Agent...',
-      requirementsCount: 24,
-      requirementsSummary: 'Functional + Non-functional',
-      userStoriesCount: 18,
-      userStoriesSummary: 'Ready for development',
-      projectId: 'proj-mock-123',
+    final response = await apiClient.dio.post(
+      ApiConstants.projects,
+      data: requestBody,
     );
+
+    final responseData = response.data;
+
+    // The API wraps the project data inside a "data" key
+    if (responseData is Map<String, dynamic> &&
+        responseData['isSuccess'] == true &&
+        responseData['data'] != null) {
+      return ProjectCreationResult.fromJson(
+          responseData['data'] as Map<String, dynamic>);
+    }
+
+    throw Exception(
+        responseData?['message'] ?? 'Failed to create project');
   }
 }

@@ -62,6 +62,7 @@ void initProjectDI() {
         getProjectDocumentsUseCase: sl(),
         getAiResultsDashboardUseCase: sl(),
         uploadDocumentUseCase: sl(),
+        createMeetingUseCase: sl(),
       ));
 
   // UseCases
@@ -83,6 +84,7 @@ void initProjectDI() {
   sl.registerLazySingleton(() => GetProjectDocumentsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiResultsDashboardUseCase(sl()));
   sl.registerLazySingleton(() => UploadDocumentUseCase(sl()));
+  sl.registerLazySingleton(() => CreateMeetingUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProjectRepository>(

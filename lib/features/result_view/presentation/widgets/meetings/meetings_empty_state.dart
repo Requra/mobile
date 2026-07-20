@@ -3,7 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/global_widgets/custom_button.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
+import 'package:requra/features/result_view/presentation/screens/create_meeting_screen.dart';
 
 class MeetingsEmptyState extends StatelessWidget {
   const MeetingsEmptyState({super.key});
@@ -49,7 +53,18 @@ class MeetingsEmptyState extends StatelessWidget {
               text: 'Create Meeting',
               icon: Icons.videocam_outlined,
               onTap: () {
-                // TODO: navigate to create meeting
+                final state = context.read<ResultViewCubit>().state;
+                if (state is ResultViewLoaded) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<ResultViewCubit>(),
+                        child: CreateMeetingScreen(projectId: state.projectDetails.id),
+                      ),
+                    ),
+                  );
+                }
               },
               color1: AppColors.primary,
             ),

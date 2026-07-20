@@ -13,6 +13,7 @@ class ResultViewCubit extends Cubit<ResultViewState> {
   final GetProjectDocumentsUseCase _getProjectDocuments;
   final GetAiResultsDashboardUseCase _getAiResultsDashboard;
   final UploadDocumentUseCase _uploadDocument;
+  final CreateMeetingUseCase _createMeeting;
 
   ResultViewCubit({
     required GetProjectDetailsUseCase getProjectDetailsUseCase,
@@ -20,11 +21,13 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required GetProjectDocumentsUseCase getProjectDocumentsUseCase,
     required GetAiResultsDashboardUseCase getAiResultsDashboardUseCase,
     required UploadDocumentUseCase uploadDocumentUseCase,
+    required CreateMeetingUseCase createMeetingUseCase,
   })  : _getProjectDetails = getProjectDetailsUseCase,
         _getProjectMeetings = getProjectMeetingsUseCase,
         _getProjectDocuments = getProjectDocumentsUseCase,
         _getAiResultsDashboard = getAiResultsDashboardUseCase,
         _uploadDocument = uploadDocumentUseCase,
+        _createMeeting = createMeetingUseCase,
         super(ResultViewInitial());
 
   /// Fetches project details and meetings in parallel.
@@ -158,6 +161,45 @@ class ResultViewCubit extends Cubit<ResultViewState> {
         totalRequirements: currentState.totalRequirements,
         aiDashboard: currentState.aiDashboard,
       ));
+      return e.toString();
+    }
+  }
+
+  Future<String?> createMeeting({
+    required String projectId,
+    required String title,
+    required String description,
+    required String? scheduledAt,
+  }) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return 'State not loaded';
+
+    // We can show a loading indicator in the UI, or handle it via a specific state if needed.
+    // For now we just return null on success or error string on failure.
+    final requestBody = {
+      'title': title,
+      'description': description,
+      if (scheduledAt != null && scheduledAt.isNotEmpty) 'scheduledAt': scheduledAt,
+    };
+
+    try {
+      final result = await _createMeeting(projectId, requestBody);
+
+      return result.fold(
+        (failure) => failure.message,
+        (meeting) {
+          final updatedMeetings = List<Meeting>.from(currentState.meetings)..add(meeting);
+          emit(ResultViewLoaded(
+            projectDetails: currentState.projectDetails,
+            meetings: updatedMeetings,
+            documents: currentState.documents,
+            totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
+          ));
+          return null; // Success
+        },
+      );
+    } catch (e) {
       return e.toString();
     }
   }

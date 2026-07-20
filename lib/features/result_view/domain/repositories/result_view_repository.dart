@@ -19,4 +19,5 @@ abstract class ResultViewRepository {
     String? meetingId,
   });
   Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(String projectId);
+  Future<Either<Failure, Meeting>> createMeeting(String projectId, Map<String, dynamic> data);
 }

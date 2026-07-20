@@ -70,3 +70,14 @@ class GetAiResultsDashboardUseCase {
     return repository.getAiResultsDashboard(projectId);
   }
 }
+
+class CreateMeetingUseCase {
+  final ResultViewRepository repository;
+
+  CreateMeetingUseCase(this.repository);
+
+  Future<Either<Failure, Meeting>> call(
+      String projectId, Map<String, dynamic> data) {
+    return repository.createMeeting(projectId, data);
+  }
+}

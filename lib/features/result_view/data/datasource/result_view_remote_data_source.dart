@@ -21,6 +21,7 @@ abstract class ResultViewRemoteDataSource {
     String? meetingId,
   });
   Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId);
+  Future<MeetingModel> createMeeting(String projectId, Map<String, dynamic> data);
 }
 
 class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
@@ -143,6 +144,26 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
       }
 
       return AiResultsDashboardModel.fromJson(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+  @override
+  Future<MeetingModel> createMeeting(String projectId, Map<String, dynamic> data) async {
+    try {
+      final response = await apiClient.dio.post(
+        '${ApiConstants.projects}/$projectId/meetings',
+        data: data,
+      );
+
+      Map<String, dynamic> responseData;
+      if (response.data['data'] != null) {
+        responseData = response.data['data'];
+      } else {
+        responseData = response.data;
+      }
+
+      return MeetingModel.fromJson(responseData);
     } catch (e) {
       rethrow;
     }

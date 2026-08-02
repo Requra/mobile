@@ -31,6 +31,8 @@ class _SignupScreenState extends State<SignupScreen> {
   // Local-only UI state: inline field errors and password-checklist visibility.
   // AuthCubit never sees these; they are pure presentation concerns.
   bool _passwordTypingStarted = false;
+  int _selectedRole =
+      1; // 0 = Stakeholder, 1 = BusinessAnalyst, 2 = ProjectManager
   String? _fullNameError;
   String? _emailError;
   String? _passwordError;
@@ -76,8 +78,10 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   bool _validateForm() {
-    final String? fullNameErr =
-        Validators.required(_fullNameController.text, 'Full name');
+    final String? fullNameErr = Validators.required(
+      _fullNameController.text,
+      'Full name',
+    );
     final String? emailErr = Validators.email(_emailController.text);
     final String? passErr = Validators.password(_passwordController.text);
     final String? confirmErr = Validators.confirmPassword(
@@ -103,11 +107,12 @@ class _SignupScreenState extends State<SignupScreen> {
   void _handleSignup(BuildContext context) {
     if (!_validateForm()) return;
     context.read<AuthCubit>().signup(
-          fullName: _fullNameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-          confirmPassword: _confirmPasswordController.text,
-        );
+      fullName: _fullNameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      confirmPassword: _confirmPasswordController.text,
+      role: _selectedRole,
+    );
   }
 
   void _handleGoogleSignup(BuildContext context) {
@@ -143,9 +148,9 @@ class _SignupScreenState extends State<SignupScreen> {
             (Route<dynamic> route) => false,
           );
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
         }
         // AuthUnauthenticated means Google sign-in was cancelled — no action.
       },
@@ -188,13 +193,74 @@ class _SignupScreenState extends State<SignupScreen> {
                         errorText: _emailError,
                       ),
                       SizedBox(height: 14.h),
+                      DropdownButtonFormField<int>(
+                        value: _selectedRole,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.work_outline,
+                            color: AppColors.primaryText,
+                            size: 20.r,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 16.h,
+                            horizontal: 16.w,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryText,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide(
+                              color: AppColors.primaryText.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryText,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 0,
+                            child: Text('Stakeholder'),
+                          ),
+                          DropdownMenuItem(
+                            value: 1,
+                            child: Text('Business Analyst'),
+                          ),
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text('Project Manager'),
+                          ),
+                        ],
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedRole = newValue;
+                            });
+                          }
+                        },
+                      ),
+                      SizedBox(height: 14.h),
                       CustomTextField(
                         hintText: 'Password',
                         icon: Icons.lock_outline,
                         isPassword: true,
                         controller: _passwordController,
                         onChanged: _onPasswordChanged,
-                        errorText: _passwordTypingStarted ? _passwordError : null,
+                        errorText: _passwordTypingStarted
+                            ? _passwordError
+                            : null,
                       ),
                       if (_passwordTypingStarted) ...<Widget>[
                         SizedBox(height: 8.h),
@@ -214,9 +280,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       SizedBox(height: 22.h),
                       CustomButton(
                         text: isLoading ? 'Creating...' : 'Create Account',
-                        onTap: isLoading
-                            ? null
-                            : () => _handleSignup(context),
+                        onTap: isLoading ? null : () => _handleSignup(context),
                       ),
                       SizedBox(height: 16.h),
                       Row(

@@ -14,53 +14,41 @@ class AuthService {
 
   Future<AuthResponse> confirmAccount({
     required String email,
-    required String otpCode,
+    required String code,
   }) {
     return _post(
       endpoint: ApiConstants.confirmAccount,
-      body: <String, dynamic>{'email': email, 'otpCode': otpCode},
+      body: <String, dynamic>{'email': email, 'code': code},
       includeAuthHeader: false,
     );
   }
 
   Future<AuthResponse> resendOtp({
     required String email,
-    required int otpType,
+    required String purpose,
   }) {
     return _post(
       endpoint: ApiConstants.resendOtp,
-      body: <String, dynamic>{'email': email, 'otpType': otpType},
+      body: <String, dynamic>{'email': email, 'purpose': purpose},
       includeAuthHeader: false,
     );
   }
 
   Future<AuthResponse> googleLogin({required String idToken}) {
-    final String platform = _resolvePlatformParam();
-    final Uri uri = _resolveUri(
-      ApiConstants.googleLogin,
-      queryParameters: <String, String>{
-        'idToken': idToken,
-        'platform': platform,
-      },
-    );
-
     if (kDebugMode) {
-      final Uri safeUri = uri.replace(
-        queryParameters: <String, String>{
-          'idToken': '***',
-          'platform': platform,
-        },
-      );
       debugPrint(
-        'Google login request: $safeUri (idTokenLength=${idToken.length})',
+        'Google login request: ${ApiConstants.googleLogin} (idTokenLength=${idToken.length})',
       );
     }
 
-    return _get(
-      endpoint: uri.toString(),
+    return _post(
+      endpoint: ApiConstants.googleLogin,
+      body: <String, dynamic>{
+        'idToken': idToken,
+        'platform': 'Mobile',
+      },
       includeAuthHeader: false,
       allowRefreshRetry: false,
-      debugLabel: 'googleLogin',
     );
   }
 
@@ -70,7 +58,11 @@ class AuthService {
   }) {
     return _post(
       endpoint: ApiConstants.login,
-      body: <String, dynamic>{'email': email, 'password': password},
+      body: <String, dynamic>{
+        'email': email,
+        'password': password,
+        'platform': 'Mobile',
+      },
       includeAuthHeader: false,
     );
   }
@@ -80,6 +72,7 @@ class AuthService {
     required String email,
     required String password,
     required String confirmPassword,
+    required int role,
   }) {
     return _post(
       endpoint: ApiConstants.signup,
@@ -88,7 +81,7 @@ class AuthService {
         'email': email,
         'password': password,
         'confirmPassword': confirmPassword,
-        'role': 1,
+        'role': role,
       },
       includeAuthHeader: false,
     );
@@ -102,23 +95,30 @@ class AuthService {
     );
   }
 
-  Future<AuthResponse> verifyOtp({required String otp}) {
+  Future<AuthResponse> verifyOtp({
+    required String email,
+    required String code,
+  }) {
     return _post(
       endpoint: ApiConstants.verifyOtp,
-      body: <String, dynamic>{'otp': otp},
+      body: <String, dynamic>{'email': email, 'code': code},
       includeAuthHeader: false,
     );
   }
 
   Future<AuthResponse> resetPassword({
+    required String email,
+    required String code,
     required String newPassword,
-    required String confirmPassword,
+    required String confirmNewPassword,
   }) {
     return _post(
       endpoint: ApiConstants.resetPassword,
       body: <String, dynamic>{
+        'email': email,
+        'code': code,
         'newPassword': newPassword,
-        'confirmPassword': confirmPassword,
+        'confirmNewPassword': confirmNewPassword,
       },
       includeAuthHeader: false,
     );
@@ -153,9 +153,11 @@ class AuthService {
       endpoint: ApiConstants.logout,
       body: <String, dynamic>{},
     );
-    if (response.isSuccess) {
-      await _tokenStorage.clearTokens();
-    }
+    
+    // Always clear local tokens regardless of server response
+    // to prevent the user from getting stuck in a logged-in state.
+    await _tokenStorage.clearTokens();
+    
     return response;
   }
 
@@ -673,20 +675,7 @@ class AuthService {
     return value != null && value.trim().isNotEmpty;
   }
 
-  String _resolvePlatformParam() {
-    if (kIsWeb) {
-      return 'web';
-    }
 
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-        return 'ios';
-      case TargetPlatform.android:
-        return 'android';
-      default:
-        return 'android';
-    }
-  }
 
   bool _isUnauthorized(int httpStatusCode, int apiStatusCode) {
     return httpStatusCode == 401 || apiStatusCode == 401;

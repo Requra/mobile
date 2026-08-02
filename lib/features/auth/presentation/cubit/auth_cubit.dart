@@ -22,17 +22,31 @@ class AuthCubit extends Cubit<AuthState> {
   final GoogleSignIn _googleSignIn;
   static const SecureTokenStorage _tokenStorage = SecureTokenStorage();
 
+  /// Stored credentials for auto-login after email confirmation.
+  String? _pendingEmail;
+  String? _pendingPassword;
+
   // ---------------------------------------------------------------------------
   // Token check — called by SplashScreen after its animation completes.
   // ---------------------------------------------------------------------------
 
-  /// Checks whether a valid access token is stored and emits
-  /// [AuthAuthenticated] or [AuthUnauthenticated] accordingly.
+  /// Checks whether a valid access token is stored and validates it
+  /// by attempting a token refresh. Emits [AuthAuthenticated] if valid,
+  /// or [AuthUnauthenticated] if missing / expired / invalid.
   Future<void> appStarted() async {
     final String? token = await _tokenStorage.readAccessToken();
-    if (token != null && token.trim().isNotEmpty) {
+    if (token == null || token.trim().isEmpty) {
+      emit(const AuthUnauthenticated());
+      return;
+    }
+
+    // Validate the session by refreshing the token.
+    final refreshResponse = await _authService.refreshAuthToken();
+    if (refreshResponse.isSuccess) {
       emit(const AuthAuthenticated());
     } else {
+      // Token is stale or account no longer exists — clear and go to login.
+      await _tokenStorage.clearTokens();
       emit(const AuthUnauthenticated());
     }
   }
@@ -54,9 +68,26 @@ class AuthCubit extends Cubit<AuthState> {
     );
 
     if (response.isSuccess) {
+      _pendingEmail = null;
+      _pendingPassword = null;
       emit(const AuthAuthenticated());
     } else {
-      emit(AuthError(response.message));
+      // If the server says the account is unconfirmed, redirect to OTP.
+      final String msg = response.message.toLowerCase();
+      if (msg.contains('confirm') && msg.contains('email')) {
+        _pendingEmail = email.trim();
+        _pendingPassword = password;
+
+        // Send a fresh confirmation OTP so the user gets a code immediately.
+        await _authService.resendOtp(
+          email: email.trim(),
+          purpose: 'EmailConfirmation',
+        );
+
+        emit(AuthVerificationRequired(email.trim()));
+      } else {
+        emit(AuthError(response.message));
+      }
     }
   }
 
@@ -69,6 +100,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
     required String confirmPassword,
+    required int role,
   }) async {
     if (state is AuthLoading) return;
     emit(const AuthLoading());
@@ -78,6 +110,7 @@ class AuthCubit extends Cubit<AuthState> {
       email: email.trim(),
       password: password,
       confirmPassword: confirmPassword,
+      role: role,
     );
 
     if (response.isSuccess) {
@@ -95,19 +128,36 @@ class AuthCubit extends Cubit<AuthState> {
   /// On success emits [AuthUnauthenticated] so the screen navigates to Login.
   Future<void> confirmAccount({
     required String email,
-    required String otpCode,
+    required String code,
   }) async {
     if (state is AuthLoading) return;
     emit(const AuthLoading());
 
     final response = await _authService.confirmAccount(
       email: email.trim(),
-      otpCode: otpCode.trim(),
+      code: code.trim(),
     );
 
     if (response.isSuccess) {
-      // Account confirmed — user should now log in.
-      emit(const AuthUnauthenticated());
+      // If we have stored login credentials (user came from login flow),
+      // auto-login instead of going back to the login screen.
+      if (_pendingEmail != null && _pendingPassword != null) {
+        final loginResponse = await _authService.login(
+          email: _pendingEmail!,
+          password: _pendingPassword!,
+        );
+        _pendingEmail = null;
+        _pendingPassword = null;
+        if (loginResponse.isSuccess) {
+          emit(const AuthAuthenticated());
+        } else {
+          // Login failed after confirmation — send to login screen.
+          emit(const AuthUnauthenticated());
+        }
+      } else {
+        // Came from signup flow — user should log in manually.
+        emit(const AuthUnauthenticated());
+      }
     } else {
       emit(AuthError(response.message));
     }
@@ -120,7 +170,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<String> resendConfirmationOtp({required String email}) async {
     final response = await _authService.resendOtp(
       email: email.trim(),
-      otpType: 0, // 0 = account confirmation
+      purpose: 'EmailConfirmation',
     );
     return response.message;
   }
@@ -194,6 +244,13 @@ class AuthCubit extends Cubit<AuthState> {
   // ---------------------------------------------------------------------------
 
   Future<void> logout() async {
+    // Always clear local tokens and navigate to login, regardless of
+    // whether the server-side logout succeeds (avoids "user not found").
+    try {
+      await _authService.logout();
+    } catch (_) {
+      // Ignore server errors — the important thing is clearing local state.
+    }
     await _authService.clearSessionTokens();
     emit(const AuthUnauthenticated());
   }

@@ -77,7 +77,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     if (!_validateForm()) return;
     context.read<ForgotPasswordCubit>().resetPassword(
           newPassword: _passwordController.text,
-          confirmPassword: _confirmPasswordController.text,
+          confirmNewPassword: _confirmPasswordController.text,
         );
   }
 

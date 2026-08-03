@@ -31,8 +31,7 @@ class _SignupScreenState extends State<SignupScreen> {
   // Local-only UI state: inline field errors and password-checklist visibility.
   // AuthCubit never sees these; they are pure presentation concerns.
   bool _passwordTypingStarted = false;
-  int _selectedRole =
-      1; // 0 = Stakeholder, 1 = BusinessAnalyst, 2 = ProjectManager
+  String _selectedRole = 'BusinessAnalyst';
   String? _fullNameError;
   String? _emailError;
   String? _passwordError;
@@ -193,7 +192,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         errorText: _emailError,
                       ),
                       SizedBox(height: 14.h),
-                      DropdownButtonFormField<int>(
+                      DropdownButtonFormField<String>(
                         value: _selectedRole,
                         decoration: InputDecoration(
                           prefixIcon: Icon(
@@ -231,19 +230,23 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         items: const [
                           DropdownMenuItem(
-                            value: 0,
+                            value: 'None',
+                            child: Text('None'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Stakeholder',
                             child: Text('Stakeholder'),
                           ),
                           DropdownMenuItem(
-                            value: 1,
+                            value: 'BusinessAnalyst',
                             child: Text('Business Analyst'),
                           ),
                           DropdownMenuItem(
-                            value: 2,
+                            value: 'ProjectManager',
                             child: Text('Project Manager'),
                           ),
                         ],
-                        onChanged: (int? newValue) {
+                        onChanged: (String? newValue) {
                           if (newValue != null) {
                             setState(() {
                               _selectedRole = newValue;

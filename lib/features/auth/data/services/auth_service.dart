@@ -73,7 +73,7 @@ class AuthService {
     required String email,
     required String password,
     required String confirmPassword,
-    required int role,
+    required String role,
   }) {
     return _post(
       endpoint: ApiConstants.signup,

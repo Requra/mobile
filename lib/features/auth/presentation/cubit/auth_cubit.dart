@@ -100,7 +100,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
     required String confirmPassword,
-    required int role,
+    required String role,
   }) async {
     if (state is AuthLoading) return;
     emit(const AuthLoading());

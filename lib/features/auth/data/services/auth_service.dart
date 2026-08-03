@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' as http_parser;
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/core/storage/secure_token_storage.dart';
 import 'package:requra/features/auth/data/models/auth_response.dart';
@@ -579,9 +580,25 @@ class AuthService {
       includeAuthHeader: includeAuthHeader,
     );
 
+    // Determine the content type from the file extension.
+    final String ext = file.path.split('.').last.toLowerCase();
+    final Map<String, String> mimeMap = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+    };
+    final String mimeType = mimeMap[ext] ?? 'application/octet-stream';
+    final List<String> mimeParts = mimeType.split('/');
+
     final http.MultipartRequest request = http.MultipartRequest('POST', uri)
       ..headers.addAll(headers)
-      ..files.add(await http.MultipartFile.fromPath('avatar', file.path));
+      ..files.add(await http.MultipartFile.fromPath(
+        'File',
+        file.path,
+        contentType: http_parser.MediaType(mimeParts[0], mimeParts[1]),
+      ));
 
     final http.StreamedResponse streamedResponse = await request.send();
     return http.Response.fromStream(streamedResponse);

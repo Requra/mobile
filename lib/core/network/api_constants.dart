@@ -15,9 +15,12 @@ class ApiConstants {
       'https://requra-ai.runasp.net/api/Auth/password/reset';
   static const String changePassword =
       'https://requra-ai.runasp.net/api/profile/change-password';
-  static const String uploadAvatar = '/api/profile/avatar';
-  static const String updateProfile = '/api/profile';
-  static const String deleteAccount = '/api/profile';
+  static const String uploadAvatar =
+      'https://requra-ai.runasp.net/api/profile/avatar';
+  static const String updateProfile =
+      'https://requra-ai.runasp.net/api/profile';
+  static const String deleteAccount =
+      'https://requra-ai.runasp.net/api/profile';
   static const String refreshToken =
       'https://requra-ai.runasp.net/api/Auth/refresh-token';
   static const String googleLogin =

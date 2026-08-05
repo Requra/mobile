@@ -5,6 +5,7 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
+import 'package:requra/features/result_view/presentation/screens/meeting_details_screen.dart';
 
 class MeetingCard extends StatelessWidget {
   final Meeting meeting;
@@ -157,7 +158,12 @@ class MeetingCard extends StatelessWidget {
               const Spacer(),
               GestureDetector(
                 onTap: () {
-                  // TODO: navigate to meeting details
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MeetingDetailsScreen(meeting: meeting),
+                    ),
+                  );
                 },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

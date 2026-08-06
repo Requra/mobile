@@ -71,7 +71,6 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> with SingleTicker
           SizedBox(height: 10.h),
           ProjectSearchSortBar(
             searchController: _searchController,
-            sortBy: "Name",
           ),
           SizedBox(height: 10.h),
           Expanded(

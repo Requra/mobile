@@ -3,12 +3,30 @@ import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/project_view/domain/usecases/project_usecases.dart';
 import 'package:requra/features/project_view/presentation/cubit/project_state.dart';
 
+/// Cached data for a single tab
+class _TabCache {
+  final List<Project> projects;
+  final int currentPage;
+  final int totalPages;
+  final int totalCount;
+
+  const _TabCache({
+    required this.projects,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalCount,
+  });
+}
+
 class ProjectCubit extends Cubit<ProjectState> {
   final GetProjectsUseCase _getProjects;
   final DeleteProjectUseCase _deleteProject;
   final EditProjectUseCase _editProject;
 
   final GetProjectByIdUseCase _getProjectById;
+
+  /// Cache keyed by status (null = "All Projects")
+  final Map<String?, _TabCache> _cache = {};
 
   ProjectCubit({
     required GetProjectsUseCase getProjectsUseCase,
@@ -21,25 +39,47 @@ class ProjectCubit extends Cubit<ProjectState> {
         _getProjectById = getProjectByIdUseCase,
         super(ProjectInitial());
 
-  /// fetch projects from API
+  /// fetch projects from API (always hits network)
   Future<void> fetchProjects({String? status, int page = 1}) async {
     emit(ProjectLoading());
 
     final result = await _getProjects(status: status, pageNumber: page);
     result.fold(
       (failure) => emit(ProjectError(failure.message)),
-      (paginated) => emit(ProjectLoaded(
-        allProjects: paginated.items,
-        currentPage: paginated.currentPage,
-        totalPages: paginated.totalPages,
-        totalCount: paginated.totalCount,
-        activeStatus: status,
-      )),
+      (paginated) {
+        // Update cache for this tab
+        _cache[status] = _TabCache(
+          projects: paginated.items,
+          currentPage: paginated.currentPage,
+          totalPages: paginated.totalPages,
+          totalCount: paginated.totalCount,
+        );
+        emit(ProjectLoaded(
+          allProjects: paginated.items,
+          currentPage: paginated.currentPage,
+          totalPages: paginated.totalPages,
+          totalCount: paginated.totalCount,
+          activeStatus: status,
+        ));
+      },
     );
   }
 
+  /// Switch tab — uses cache if available, otherwise fetches from API
   Future<void> changeTab(String? status) async {
-    await fetchProjects(status: status, page: 1);
+    final cached = _cache[status];
+    if (cached != null) {
+      // Show cached data instantly — no loading, no API call
+      emit(ProjectLoaded(
+        allProjects: cached.projects,
+        currentPage: cached.currentPage,
+        totalPages: cached.totalPages,
+        totalCount: cached.totalCount,
+        activeStatus: status,
+      ));
+    } else {
+      await fetchProjects(status: status, page: 1);
+    }
   }
 
   Future<void> loadMore() async {
@@ -60,6 +100,15 @@ class ProjectCubit extends Cubit<ProjectState> {
       },
       (paginated) {
         final updatedProjects = List<Project>.from(currentState.allProjects)..addAll(paginated.items);
+        
+        // Update cache with the combined list
+        _cache[currentState.activeStatus] = _TabCache(
+          projects: updatedProjects,
+          currentPage: paginated.currentPage,
+          totalPages: paginated.totalPages,
+          totalCount: paginated.totalCount,
+        );
+        
         emit(currentState.copyWith(
           allProjects: updatedProjects,
           currentPage: paginated.currentPage,
@@ -84,6 +133,11 @@ class ProjectCubit extends Cubit<ProjectState> {
     }
   }
 
+  /// Invalidate all cached tabs (after delete/edit)
+  void _invalidateCache() {
+    _cache.clear();
+  }
+
   ///delete project by id
   Future<void> deleteProject(String id) async {
     if (state is! ProjectLoaded) {
@@ -103,6 +157,7 @@ class ProjectCubit extends Cubit<ProjectState> {
         emit(currentState.copyWith());
       },
       (_) async {
+        _invalidateCache();
         emit(const ProjectActionSuccess('Project deleted successfully.'));
         await fetchProjects(status: currentState.activeStatus, page: 1);
       },
@@ -124,6 +179,7 @@ class ProjectCubit extends Cubit<ProjectState> {
         return false;
       },
       (updated) {
+        _invalidateCache();
         final updatedList = currentState.allProjects.map((p) {
           return p.id == id ? updated : p;
         }).toList();

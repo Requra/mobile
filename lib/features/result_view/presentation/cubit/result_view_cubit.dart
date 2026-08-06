@@ -184,4 +184,39 @@ class ResultViewCubit extends Cubit<ResultViewState> {
       return e.toString();
     }
   }
+
+  Future<String?> createMeeting({
+    required String projectId,
+    required String title,
+    required String description,
+    String? scheduledAt,
+  }) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return 'State not loaded';
+
+    final result = await _createMeeting(
+      projectId,
+      {
+        'title': title,
+        'description': description,
+        if (scheduledAt != null) 'scheduledAt': scheduledAt,
+      },
+    );
+
+    return result.fold(
+      (failure) => failure.message,
+      (meeting) {
+        final updatedMeetings = List<Meeting>.from(currentState.meetings)
+          ..add(meeting);
+        emit(ResultViewLoaded(
+          projectDetails: currentState.projectDetails,
+          meetings: updatedMeetings,
+          documents: currentState.documents,
+          totalRequirements: currentState.totalRequirements,
+          aiDashboard: currentState.aiDashboard,
+        ));
+        return null;
+      },
+    );
+  }
 }

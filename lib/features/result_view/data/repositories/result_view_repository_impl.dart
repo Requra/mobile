@@ -57,8 +57,8 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
     required File file,
     required String projectId,
     required String title,
-    required int type,
-    required int language,
+    required String type,
+    required String language,
     String? meetingId,
   }) async {
     try {

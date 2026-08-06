@@ -16,8 +16,8 @@ abstract class ResultViewRemoteDataSource {
     required File file,
     required String projectId,
     required String title,
-    required int type,
-    required int language,
+    required String type,
+    required String language,
     String? meetingId,
   });
   Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId);
@@ -41,6 +41,7 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
         data = response.data;
       }
 
+      // teamMembers is already inside the project details JSON
       return ProjectDetailsModel.fromJson(data);
     } catch (e) {
       rethrow;
@@ -53,12 +54,16 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
       final response = await apiClient.dio
           .get('${ApiConstants.projects}/$projectId/meetings');
 
-      List<dynamic> items;
-      if (response.data['data'] != null &&
+      List<dynamic> items = [];
+      if (response.data['data'] is List) {
+        items = response.data['data'];
+      } else if (response.data['data'] != null &&
           response.data['data']['items'] != null) {
         items = response.data['data']['items'];
-      } else {
-        items = [];
+      } else if (response.data['items'] != null) {
+        items = response.data['items'];
+      } else if (response.data is List) {
+        items = response.data;
       }
 
       return items.map((json) => MeetingModel.fromJson(json)).toList();
@@ -71,16 +76,25 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   Future<List<DocumentModel>> getProjectDocuments(String projectId) async {
     try {
       final response = await apiClient.dio.get(
-        '/api/documents',
-        queryParameters: {'project_id': projectId},
+        ApiConstants.documents,
+        queryParameters: {'projectId': projectId},
       );
 
-      List<dynamic> items;
-      if (response.data['data'] != null &&
+      // Handle 204 No Content or empty data
+      if (response.statusCode == 204 || response.data == null || response.data == '') {
+        return [];
+      }
+
+      List<dynamic> items = [];
+      if (response.data['data'] is List) {
+        items = response.data['data'];
+      } else if (response.data['data'] != null &&
           response.data['data']['items'] != null) {
         items = response.data['data']['items'];
-      } else {
-        items = [];
+      } else if (response.data['items'] != null) {
+        items = response.data['items'];
+      } else if (response.data is List) {
+        items = response.data;
       }
 
       return items.map((json) => DocumentModel.fromJson(json)).toList();
@@ -94,24 +108,25 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
     required File file,
     required String projectId,
     required String title,
-    required int type,
-    required int language,
+    required String type,
+    required String language,
     String? meetingId,
   }) async {
     try {
       final fileName = file.path.split('/').last;
       
+      // Use PascalCase as required by the backend API
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(file.path, filename: fileName),
-        'projectId': projectId,
-        'title': title,
-        'type': type,
-        'language': language,
-        if (meetingId != null) 'meetingId': meetingId,
+        'File': await MultipartFile.fromFile(file.path, filename: fileName),
+        'ProjectId': projectId,
+        'Title': title,
+        'Type': type,
+        'Language': language,
+        if (meetingId != null) 'MeetingId': meetingId,
       });
 
       final response = await apiClient.dio.post(
-        '/api/documents',
+        ApiConstants.documents,
         data: formData,
       );
 

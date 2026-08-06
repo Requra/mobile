@@ -46,8 +46,8 @@ class UploadDocumentUseCase {
     required File file,
     required String projectId,
     required String title,
-    required int type,
-    required int language,
+    required String type,
+    required String language,
     String? meetingId,
   }) {
     return repository.uploadDocument(

@@ -15,14 +15,14 @@ class DocumentModel extends Document {
     return DocumentModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
-      type: json['type'] as int?,
+      type: json['type'],
       storageUrl: json['storageUrl'],
       // fileSize comes in as various numeric types (can be negative due to mock data)
       fileSize: _parseFileSize(json['fileSize']),
       status: json['status'] ?? 0,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
-          : null,
+      createdAt: json['updatedAt'] != null 
+          ? DateTime.tryParse(json['updatedAt']) 
+          : (json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null),
     );
   }
 

@@ -92,14 +92,15 @@ class FileManagementSection extends StatelessWidget {
                 if (result != null && result.files.single.path != null) {
                   File file = File(result.files.single.path!);
                   String fileName = result.files.single.name;
+                  String extension = result.files.single.extension ?? 'pdf';
 
                   if (context.mounted) {
                     final error = await context.read<ResultViewCubit>().uploadDocument(
                           file: file,
                           projectId: projectId,
                           title: fileName,
-                          type: 1, // Defaulting to 1 as per API docs
-                          language: 1, // Defaulting to 1 (En)
+                          type: extension,
+                          language: 'En',
                         );
                         
                     if (error != null && context.mounted) {
@@ -133,7 +134,31 @@ class FileManagementSection extends StatelessWidget {
               itemCount: documents.length,
               separatorBuilder: (_, __) => Divider(color: const Color(0xFFE5E7EB), height: 24.h),
               itemBuilder: (context, index) {
-                return DocumentTile(document: documents[index]);
+                final document = documents[index];
+                return InkWell(
+                  onTap: () async {
+                    if (document.status == 999) return; // Don't download if uploading
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Downloading document...')),
+                    );
+                    
+                    final result = await context.read<ResultViewCubit>().downloadDocument(document: document);
+                    
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result ?? 'Download finished'),
+                          backgroundColor: result != null && result.contains('Success') 
+                            ? AppColors.statusFinished 
+                            : AppColors.error,
+                        ),
+                      );
+                    }
+                  },
+                  child: DocumentTile(document: document),
+                );
               },
             ),
           ]

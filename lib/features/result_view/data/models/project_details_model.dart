@@ -1,4 +1,5 @@
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
+import 'package:requra/features/result_view/data/models/project_member_model.dart';
 
 class ProjectDetailsModel extends ProjectDetails {
   const ProjectDetailsModel({
@@ -8,17 +9,20 @@ class ProjectDetailsModel extends ProjectDetails {
     required super.projectType,
     required super.status,
     required super.clientName,
+    required super.clientEmail,
     required super.teamMembers,
     super.createdAt,
   });
 
   factory ProjectDetailsModel.fromJson(Map<String, dynamic> json) {
-    // Parse team members from list of objects with 'email' key
-    final List<String> members = [];
+    final String clientEmail = json['clientEmail'] ?? '';
+
+    // Parse team members from list of objects
+    final List<ProjectMemberModel> members = [];
     if (json['teamMembers'] is List) {
       for (final member in json['teamMembers']) {
-        if (member is Map<String, dynamic> && member['email'] != null) {
-          members.add(member['email']);
+        if (member is Map<String, dynamic>) {
+          members.add(ProjectMemberModel.fromJson(member));
         }
       }
     }
@@ -30,6 +34,7 @@ class ProjectDetailsModel extends ProjectDetails {
       projectType: json['projectType'] ?? '',
       status: json['status'] ?? '',
       clientName: json['clientName'] ?? '',
+      clientEmail: clientEmail,
       teamMembers: members,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])

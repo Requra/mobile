@@ -3,10 +3,10 @@ import 'package:equatable/equatable.dart';
 class Document extends Equatable {
   final String id;
   final String title;
-  final int? type;
+  final dynamic type;
   final String? storageUrl;
   final double? fileSize;
-  final int status;
+  final dynamic status;
   final DateTime? createdAt;
 
   const Document({

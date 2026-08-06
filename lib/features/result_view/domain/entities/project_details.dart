@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:requra/features/result_view/domain/entities/project_member.dart';
 
 class ProjectDetails extends Equatable {
   final String id;
@@ -7,7 +8,8 @@ class ProjectDetails extends Equatable {
   final String projectType;
   final String status;
   final String clientName;
-  final List<String> teamMembers;
+  final String clientEmail;
+  final List<ProjectMember> teamMembers;
   final DateTime? createdAt;
 
   const ProjectDetails({
@@ -17,6 +19,7 @@ class ProjectDetails extends Equatable {
     required this.projectType,
     required this.status,
     required this.clientName,
+    required this.clientEmail,
     required this.teamMembers,
     this.createdAt,
   });
@@ -29,6 +32,7 @@ class ProjectDetails extends Equatable {
         projectType,
         status,
         clientName,
+        clientEmail,
         teamMembers,
         createdAt,
       ];

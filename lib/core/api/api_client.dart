@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:requra/core/network/api_constants.dart';
+import 'package:requra/core/storage/secure_token_storage.dart';
 
 class ApiClient {
   late Dio _dio;
@@ -19,8 +20,11 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Mock token since ApiDog endpoints seem to expect some Authorization header
-          options.headers['Authorization'] = 'Bearer ANY_TOKEN';
+          final tokenStorage = const SecureTokenStorage();
+          final token = await tokenStorage.readAccessToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
           return handler.next(options);
         },
         onResponse: (response, handler) {
@@ -47,8 +51,22 @@ class ApiClient {
               break;
 
             case DioExceptionType.badResponse:
-              message =
-              'Server error (${e.response?.statusCode ?? 'Unknown'})';
+              final data = e.response?.data;
+              if (data is Map<String, dynamic>) {
+                if (data['errors'] != null && 
+                    ((data['errors'] is List && (data['errors'] as List).isNotEmpty) || 
+                     (data['errors'] is Map && (data['errors'] as Map).isNotEmpty))) {
+                  message = data['errors'].toString();
+                } else if (data['message'] != null && data['message'].toString().isNotEmpty) {
+                  message = data['message'].toString();
+                } else if (data['title'] != null && data['title'].toString().isNotEmpty) {
+                  message = data['title'].toString();
+                } else {
+                  message = 'Server error (${e.response?.statusCode})';
+                }
+              } else {
+                message = 'Server error (${e.response?.statusCode ?? 'Unknown'})';
+              }
               break;
 
             case DioExceptionType.cancel:
@@ -65,6 +83,7 @@ class ApiClient {
               response: e.response,
               type: e.type,
               error: message,
+              message: message,
             ),
           );
         },

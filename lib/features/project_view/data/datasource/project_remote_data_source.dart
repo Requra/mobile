@@ -1,11 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:requra/core/api/api_client.dart';
+import 'package:requra/core/storage/secure_token_storage.dart';
 import 'package:requra/core/network/api_constants.dart';
+import 'package:requra/features/project_view/data/models/paginated_projects.dart';
 import 'package:requra/features/project_view/data/models/project_model.dart';
 
 abstract class ProjectRemoteDataSource {
-  Future<List<ProjectModel>> getProjects();
+  Future<PaginatedProjects> getProjects({String? status, int pageNumber = 1, int pageSize = 10});
   Future<bool> deleteProject(String id);
   Future<ProjectModel> editProject(String id, Map<String, dynamic> data);
+  Future<ProjectModel> getProjectById(String id);
 }
 
 class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
@@ -14,19 +18,39 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   ProjectRemoteDataSourceImpl({required this.apiClient});
 
   @override
-  Future<List<ProjectModel>> getProjects() async {
+  Future<PaginatedProjects> getProjects({String? status, int pageNumber = 1, int pageSize = 10}) async {
     try {
-      final response = await apiClient.dio.get(ApiConstants.projects);
+      final tokenStorage = const SecureTokenStorage();
+      final userId = await tokenStorage.readUserId();
       
-      List<dynamic> data;
-      //if status code == 200
-      if (response.data['data']['items'] != null) {
-        data = response.data['data']['items'];
-      } else {
-        data = [];
+      final queryParams = <String, dynamic>{
+        'PageNumber': pageNumber,
+        'PageSize': pageSize,
+      };
+      if (userId != null) {
+        queryParams['UserId'] = userId;
       }
-
-      return data.map((json) => ProjectModel.fromJson(json)).toList();
+      if (status != null && status.isNotEmpty) {
+        queryParams['Status'] = status;
+      }
+      
+      final response = await apiClient.dio.get(
+        ApiConstants.projects,
+        queryParameters: queryParams,
+      );
+      
+      // Debug: log the raw response to see item structure
+      debugPrint('[getProjects] raw response keys: ${response.data?.keys}');
+      if (response.data['data'] != null) {
+        final data = response.data['data'];
+        if (data is Map && data['items'] is List) {
+          for (final item in (data['items'] as List).take(2)) {
+            debugPrint('[getProjects] item keys: ${(item as Map).keys}, id=${item['id']}');
+          }
+        }
+         return PaginatedProjects.fromJson(data);
+      }
+      return const PaginatedProjects(items: [], totalCount: 0, totalPages: 0, currentPage: 1);
     } catch (e) {
       rethrow;
     }
@@ -35,7 +59,9 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   @override
   Future<bool> deleteProject(String id) async {
     try {
-      final response = await apiClient.dio.delete('${ApiConstants.projects}/$id');
+      debugPrint('[deleteProject] Deleting project with id: "$id"');
+      debugPrint('[deleteProject] URL: ${ApiConstants.projectById(id)}');
+      final response = await apiClient.dio.delete(ApiConstants.projectById(id));
       if (response.data is Map) {
         return response.data['isSuccess'] ?? true;
       }
@@ -48,7 +74,25 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   @override
   Future<ProjectModel> editProject(String id, Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.dio.patch('${ApiConstants.projects}/$id', data: data);
+      final response = await apiClient.dio.patch(ApiConstants.projectById(id), data: data);
+      
+      Map<String, dynamic> responseData;
+      if (response.data is Map && response.data['data'] != null) {
+        responseData = response.data['data'];
+      } else {
+        responseData = response.data;
+      }
+      
+      return ProjectModel.fromJson(responseData);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ProjectModel> getProjectById(String id) async {
+    try {
+      final response = await apiClient.dio.get(ApiConstants.projectById(id));
       
       Map<String, dynamic> responseData;
       if (response.data is Map && response.data['data'] != null) {

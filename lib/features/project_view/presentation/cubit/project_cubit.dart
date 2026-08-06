@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/project_view/domain/usecases/project_usecases.dart';
 import 'package:requra/features/project_view/presentation/cubit/project_state.dart';
 
@@ -7,23 +8,66 @@ class ProjectCubit extends Cubit<ProjectState> {
   final DeleteProjectUseCase _deleteProject;
   final EditProjectUseCase _editProject;
 
+  final GetProjectByIdUseCase _getProjectById;
+
   ProjectCubit({
     required GetProjectsUseCase getProjectsUseCase,
     required DeleteProjectUseCase deleteProjectUseCase,
     required EditProjectUseCase editProjectUseCase,
+    required GetProjectByIdUseCase getProjectByIdUseCase,
   })  : _getProjects = getProjectsUseCase,
         _deleteProject = deleteProjectUseCase,
         _editProject = editProjectUseCase,
+        _getProjectById = getProjectByIdUseCase,
         super(ProjectInitial());
 
   /// fetch projects from API
-  Future<void> fetchProjects() async {
+  Future<void> fetchProjects({String? status, int page = 1}) async {
     emit(ProjectLoading());
 
-    final result = await _getProjects();
+    final result = await _getProjects(status: status, pageNumber: page);
     result.fold(
       (failure) => emit(ProjectError(failure.message)),
-      (projects) => emit(ProjectLoaded(allProjects: projects)),
+      (paginated) => emit(ProjectLoaded(
+        allProjects: paginated.items,
+        currentPage: paginated.currentPage,
+        totalPages: paginated.totalPages,
+        totalCount: paginated.totalCount,
+        activeStatus: status,
+      )),
+    );
+  }
+
+  Future<void> changeTab(String? status) async {
+    await fetchProjects(status: status, page: 1);
+  }
+
+  Future<void> loadMore() async {
+    if (state is! ProjectLoaded) return;
+    final currentState = state as ProjectLoaded;
+    
+    if (currentState.isLoadingMore || currentState.currentPage >= currentState.totalPages) return;
+    
+    emit(currentState.copyWith(isLoadingMore: true));
+    
+    final nextPage = currentState.currentPage + 1;
+    final result = await _getProjects(status: currentState.activeStatus, pageNumber: nextPage);
+    
+    result.fold(
+      (failure) {
+        emit(currentState.copyWith(isLoadingMore: false));
+        emit(ProjectActionError(failure.message));
+      },
+      (paginated) {
+        final updatedProjects = List<Project>.from(currentState.allProjects)..addAll(paginated.items);
+        emit(currentState.copyWith(
+          allProjects: updatedProjects,
+          currentPage: paginated.currentPage,
+          totalPages: paginated.totalPages,
+          totalCount: paginated.totalCount,
+          isLoadingMore: false,
+        ));
+      },
     );
   }
 
@@ -45,22 +89,22 @@ class ProjectCubit extends Cubit<ProjectState> {
     if (state is! ProjectLoaded) {
       return;
     }
+    if (id.isEmpty) {
+      emit(const ProjectActionError('Cannot delete: project ID is missing.'));
+      return;
+    }
     final currentState = state as ProjectLoaded;
-
-
-    //⚠️⚠️⚠️ should remove after success
-    final currentProjects = currentState.allProjects.where((p) => p.id != id).toList();
-    emit(currentState.copyWith(allProjects: currentProjects));
 
     final result = await _deleteProject(id);
     result.fold(
       (failure) {
         emit(ProjectActionError(failure.message));
-        emit(currentState);
+        // Re-emit a fresh copy so Equatable doesn't suppress it
+        emit(currentState.copyWith());
       },
-      (_) {
+      (_) async {
         emit(const ProjectActionSuccess('Project deleted successfully.'));
-        emit(currentState.copyWith(allProjects: currentProjects));
+        await fetchProjects(status: currentState.activeStatus, page: 1);
       },
     );
   }
@@ -91,6 +135,15 @@ class ProjectCubit extends Cubit<ProjectState> {
         ));
         return true;
       },
+    );
+  }
+
+  /// get project details by id
+  Future<Project?> getProjectDetails(String id) async {
+    final result = await _getProjectById(id);
+    return result.fold(
+      (failure) => null,
+      (project) => project,
     );
   }
 }

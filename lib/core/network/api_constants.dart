@@ -36,8 +36,12 @@ class ApiConstants {
       'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
 
   // ── Projects ──
-  static const String projects = '/api/projects';
+  static const String projects = 'https://requra-ai.runasp.net/api/projects';
+
+  static String projectById(String id) =>
+      'https://requra-ai.runasp.net/api/Projects/$id';
 
   static String aiResultsDashboard(String projectId) =>
-      '/api/projects/$projectId/ai/results-dashboard';
+  '/api/projects/$projectId/ai/results-dashboard';
+    //   'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';
 }

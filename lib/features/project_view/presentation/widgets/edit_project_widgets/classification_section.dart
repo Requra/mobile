@@ -4,19 +4,20 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 
-/// Classification section with project type checkboxes displayed as
+/// Classification section with project type radio-like selection displayed as
 /// outlined containers with icons (matching the web design).
 class ClassificationSection extends StatelessWidget {
-  final List<String> selectedTypes;
-  final ValueChanged<String> onToggleType;
+  final String selectedType;
+  final ValueChanged<String> onTypeChanged;
 
   const ClassificationSection({
     super.key,
-    required this.selectedTypes,
-    required this.onToggleType,
+    required this.selectedType,
+    required this.onTypeChanged,
   });
 
   static const _typeOptions = [
+    _TypeOption('None', Icons.do_not_disturb_alt_outlined),
     _TypeOption('Financial', Icons.account_balance_outlined),
     _TypeOption('Medical', Icons.medical_services_outlined),
     _TypeOption('Educational', Icons.school_outlined),
@@ -63,9 +64,9 @@ class ClassificationSection extends StatelessWidget {
           spacing: 10.w,
           runSpacing: 10.h,
           children: _typeOptions.map((opt) {
-            final isSelected = selectedTypes.contains(opt.label);
+            final isSelected = selectedType == opt.label;
             return GestureDetector(
-              onTap: () => onToggleType(opt.label),
+              onTap: () => onTypeChanged(opt.label),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                 decoration: BoxDecoration(
@@ -90,7 +91,7 @@ class ClassificationSection extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(4.r),
+                        shape: BoxShape.circle,
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primary

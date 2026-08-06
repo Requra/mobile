@@ -41,6 +41,7 @@ void initProjectDI() {
         getProjectsUseCase: sl(),
         deleteProjectUseCase: sl(),
         editProjectUseCase: sl(),
+        getProjectByIdUseCase: sl(),
       ));
       
   sl.registerFactory(() => AddProjectCubit(
@@ -78,6 +79,8 @@ void initProjectDI() {
   sl.registerLazySingleton(() => DeleteAccountUseCase(sl()));
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
+
+  sl.registerLazySingleton(() => GetProjectByIdUseCase(sl()));
 
   sl.registerLazySingleton(() => GetProjectDetailsUseCase(sl()));
   sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));

@@ -17,12 +17,24 @@ class ProjectLoaded extends ProjectState {
   final String searchQuery;
   final String sortBy;
   final bool isSubmitting;
+  
+  // Pagination and filtering fields
+  final int currentPage;
+  final int totalPages;
+  final int totalCount;
+  final String? activeStatus;
+  final bool isLoadingMore;
 
   const ProjectLoaded({
     required this.allProjects,
     this.searchQuery = '',
     this.sortBy = 'Name',
     this.isSubmitting = false,
+    this.currentPage = 1,
+    this.totalPages = 1,
+    this.totalCount = 0,
+    this.activeStatus,
+    this.isLoadingMore = false,
   });
 
   ProjectLoaded copyWith({
@@ -30,12 +42,23 @@ class ProjectLoaded extends ProjectState {
     String? searchQuery,
     String? sortBy,
     bool? isSubmitting,
+    int? currentPage,
+    int? totalPages,
+    int? totalCount,
+    String? activeStatus,
+    bool? isLoadingMore,
+    bool clearStatus = false,
   }) {
     return ProjectLoaded(
       allProjects: allProjects ?? this.allProjects,
       searchQuery: searchQuery ?? this.searchQuery,
       sortBy: sortBy ?? this.sortBy,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      totalCount: totalCount ?? this.totalCount,
+      activeStatus: clearStatus ? null : (activeStatus ?? this.activeStatus),
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 
@@ -57,23 +80,18 @@ class ProjectLoaded extends ProjectState {
     return list;
   }
 
-  List<Project> get processingProjects => filteredProjects.where((p) {
-        final s = p.status.toLowerCase();
-        return s.contains('process') ||
-            s.contains('progress');
-  }).toList();
-
-  List<Project> get completedProjects => filteredProjects.where((p) {
-        final s = p.status.toLowerCase();
-        return s.contains('complet') || s.contains('finish');
-  }).toList();
-
-  List<Project> get draftProjects => filteredProjects.where((p) {
-        return !processingProjects.contains(p) && !completedProjects.contains(p);
-      }).toList();
-
   @override
-  List<Object?> get props => [allProjects, searchQuery, sortBy, isSubmitting];
+  List<Object?> get props => [
+        allProjects,
+        searchQuery,
+        sortBy,
+        isSubmitting,
+        currentPage,
+        totalPages,
+        totalCount,
+        activeStatus,
+        isLoadingMore,
+      ];
 }
 
 class ProjectError extends ProjectState {

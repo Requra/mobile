@@ -142,11 +142,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   Future<void> logout() async {
     emit(const ProfileLoading());
-    final result = await _logoutUseCase();
-
-    result.fold(
-      (failure) => emit(ProfileError(failure.message)),
-      (_) => emit(const ProfileLoggedOut()),
-    );
+    
+    // Ignore server result — always log out locally.
+    await _logoutUseCase();
+    emit(const ProfileLoggedOut());
   }
 }

@@ -6,6 +6,10 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/presentation/widgets/meetings/meeting_card.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
+import 'package:requra/features/result_view/presentation/screens/create_meeting_screen.dart';
 import 'package:requra/features/result_view/presentation/widgets/meetings/meetings_empty_state.dart';
 
 class MeetingsTab extends StatelessWidget {
@@ -50,7 +54,18 @@ class MeetingsTab extends StatelessWidget {
                 icon: Icons.add,
                 color1: AppColors.primary,
                 onTap: () {
-                  // TODO: navigate to create meeting
+                  final state = context.read<ResultViewCubit>().state;
+                  if (state is ResultViewLoaded) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<ResultViewCubit>(),
+                          child: CreateMeetingScreen(projectId: state.projectDetails.id),
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
             ],

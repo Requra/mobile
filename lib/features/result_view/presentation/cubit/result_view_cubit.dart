@@ -15,6 +15,7 @@ class ResultViewCubit extends Cubit<ResultViewState> {
   final GetProjectDocumentsUseCase _getProjectDocuments;
   final GetAiResultsDashboardUseCase _getAiResultsDashboard;
   final UploadDocumentUseCase _uploadDocument;
+  final CreateMeetingUseCase _createMeeting;
 
   ResultViewCubit({
     required GetProjectDetailsUseCase getProjectDetailsUseCase,
@@ -22,11 +23,13 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required GetProjectDocumentsUseCase getProjectDocumentsUseCase,
     required GetAiResultsDashboardUseCase getAiResultsDashboardUseCase,
     required UploadDocumentUseCase uploadDocumentUseCase,
+    required CreateMeetingUseCase createMeetingUseCase,
   })  : _getProjectDetails = getProjectDetailsUseCase,
         _getProjectMeetings = getProjectMeetingsUseCase,
         _getProjectDocuments = getProjectDocumentsUseCase,
         _getAiResultsDashboard = getAiResultsDashboardUseCase,
         _uploadDocument = uploadDocumentUseCase,
+        _createMeeting = createMeetingUseCase,
         super(ResultViewInitial());
 
   /// Fetches project details and meetings in parallel.

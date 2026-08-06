@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureTokenStorage {
@@ -32,5 +33,30 @@ class SecureTokenStorage {
       _secureStorage.delete(key: _accessTokenKey),
       _secureStorage.delete(key: _refreshTokenKey),
     ]);
+  }
+
+  Future<String?> readUserId() async {
+    final token = await readAccessToken();
+    if (token == null || token.isEmpty) return null;
+    
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      
+      String payload = parts[1];
+      String normalized = base64Url.normalize(payload);
+      String resp = utf8.decode(base64Url.decode(normalized));
+      
+      final Map<String, dynamic> payloadMap = json.decode(resp);
+      
+      // Common JWT claims for user ID
+      return payloadMap['nameid']?.toString() ?? 
+             payloadMap['uid']?.toString() ?? 
+             payloadMap['sub']?.toString() ?? 
+             payloadMap['UserId']?.toString() ??
+             payloadMap['id']?.toString();
+    } catch (e) {
+      return null;
+    }
   }
 }

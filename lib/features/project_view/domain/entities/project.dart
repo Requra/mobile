@@ -9,7 +9,12 @@ class Project extends Equatable {
   final int totalRequirements;
   final int totalUserStories;
   final int totalComments;
+  final String? projectType;
+  final String? clientEmail;
+  final String? language;
+  final List<String>? teamMembers;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Project({
     required this.id,
@@ -20,7 +25,12 @@ class Project extends Equatable {
     required this.totalRequirements,
     required this.totalUserStories,
     required this.totalComments,
+    this.projectType,
+    this.clientEmail,
+    this.language,
+    this.teamMembers,
     this.createdAt,
+    this.updatedAt,
   });
 
   @override
@@ -33,6 +43,11 @@ class Project extends Equatable {
         totalRequirements,
         totalUserStories,
         totalComments,
+        projectType,
+        clientEmail,
+        language,
+        teamMembers,
         createdAt,
+        updatedAt,
       ];
 }

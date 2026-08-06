@@ -13,7 +13,7 @@ class ProjectEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['processing', 'completed', 'draft'];
+    const labels = ['all projects', 'in progress', 'drafted', 'completed', 'cancelled'];
     return Center(
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 24.h),

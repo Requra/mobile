@@ -408,7 +408,7 @@ class _ProjectsOverview extends StatelessWidget {
         starring: 2,
         comments: 6,
         created: '34 ago',
-        status: 'Draft'),
+        status: 'Drafted'),
   ];
 
   @override

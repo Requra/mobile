@@ -20,9 +20,11 @@ import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
 import 'package:requra/features/main_layout/presentation/pages/main_navigation.dart';
 import 'package:requra/screens/splash_screen.dart';
+import 'package:requra/screens/onboarding/onboarding_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
+  static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String forgotPassword = '/forgotPassword';
@@ -43,6 +45,7 @@ class AppRoutes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       splash: (_) => const SplashScreen(),
+      onboarding: (_) => const OnboardingScreen(),
       login: (_) => const LoginScreen(),
       signup: (_) => const SignupScreen(),
       forgotPassword: (_) => const ForgotPasswordScreen(),

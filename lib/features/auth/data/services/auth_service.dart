@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' as http_parser;
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/core/storage/secure_token_storage.dart';
 import 'package:requra/features/auth/data/models/auth_response.dart';
@@ -14,53 +15,41 @@ class AuthService {
 
   Future<AuthResponse> confirmAccount({
     required String email,
-    required String otpCode,
+    required String code,
   }) {
     return _post(
       endpoint: ApiConstants.confirmAccount,
-      body: <String, dynamic>{'email': email, 'otpCode': otpCode},
+      body: <String, dynamic>{'email': email, 'code': code},
       includeAuthHeader: false,
     );
   }
 
   Future<AuthResponse> resendOtp({
     required String email,
-    required int otpType,
+    required String purpose,
   }) {
     return _post(
       endpoint: ApiConstants.resendOtp,
-      body: <String, dynamic>{'email': email, 'otpType': otpType},
+      body: <String, dynamic>{'email': email, 'purpose': purpose},
       includeAuthHeader: false,
     );
   }
 
   Future<AuthResponse> googleLogin({required String idToken}) {
-    final String platform = _resolvePlatformParam();
-    final Uri uri = _resolveUri(
-      ApiConstants.googleLogin,
-      queryParameters: <String, String>{
-        'idToken': idToken,
-        'platform': platform,
-      },
-    );
-
     if (kDebugMode) {
-      final Uri safeUri = uri.replace(
-        queryParameters: <String, String>{
-          'idToken': '***',
-          'platform': platform,
-        },
-      );
       debugPrint(
-        'Google login request: $safeUri (idTokenLength=${idToken.length})',
+        'Google login request: ${ApiConstants.googleLogin} (idTokenLength=${idToken.length})',
       );
     }
 
-    return _get(
-      endpoint: uri.toString(),
+    return _post(
+      endpoint: ApiConstants.googleLogin,
+      body: <String, dynamic>{
+        'idToken': idToken,
+        'platform': 'Mobile',
+      },
       includeAuthHeader: false,
       allowRefreshRetry: false,
-      debugLabel: 'googleLogin',
     );
   }
 
@@ -70,7 +59,11 @@ class AuthService {
   }) {
     return _post(
       endpoint: ApiConstants.login,
-      body: <String, dynamic>{'email': email, 'password': password},
+      body: <String, dynamic>{
+        'email': email,
+        'password': password,
+        'platform': 'Mobile',
+      },
       includeAuthHeader: false,
     );
   }
@@ -80,6 +73,7 @@ class AuthService {
     required String email,
     required String password,
     required String confirmPassword,
+    required String role,
   }) {
     return _post(
       endpoint: ApiConstants.signup,
@@ -88,7 +82,7 @@ class AuthService {
         'email': email,
         'password': password,
         'confirmPassword': confirmPassword,
-        'role': 1,
+        'role': role,
       },
       includeAuthHeader: false,
     );
@@ -102,23 +96,30 @@ class AuthService {
     );
   }
 
-  Future<AuthResponse> verifyOtp({required String otp}) {
+  Future<AuthResponse> verifyOtp({
+    required String email,
+    required String code,
+  }) {
     return _post(
       endpoint: ApiConstants.verifyOtp,
-      body: <String, dynamic>{'otp': otp},
+      body: <String, dynamic>{'email': email, 'code': code},
       includeAuthHeader: false,
     );
   }
 
   Future<AuthResponse> resetPassword({
+    required String email,
+    required String code,
     required String newPassword,
-    required String confirmPassword,
+    required String confirmNewPassword,
   }) {
     return _post(
       endpoint: ApiConstants.resetPassword,
       body: <String, dynamic>{
+        'email': email,
+        'code': code,
         'newPassword': newPassword,
-        'confirmPassword': confirmPassword,
+        'confirmNewPassword': confirmNewPassword,
       },
       includeAuthHeader: false,
     );
@@ -153,9 +154,11 @@ class AuthService {
       endpoint: ApiConstants.logout,
       body: <String, dynamic>{},
     );
-    if (response.isSuccess) {
-      await _tokenStorage.clearTokens();
-    }
+    
+    // Always clear local tokens regardless of server response
+    // to prevent the user from getting stuck in a logged-in state.
+    await _tokenStorage.clearTokens();
+    
     return response;
   }
 
@@ -577,9 +580,25 @@ class AuthService {
       includeAuthHeader: includeAuthHeader,
     );
 
+    // Determine the content type from the file extension.
+    final String ext = file.path.split('.').last.toLowerCase();
+    final Map<String, String> mimeMap = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+    };
+    final String mimeType = mimeMap[ext] ?? 'application/octet-stream';
+    final List<String> mimeParts = mimeType.split('/');
+
     final http.MultipartRequest request = http.MultipartRequest('POST', uri)
       ..headers.addAll(headers)
-      ..files.add(await http.MultipartFile.fromPath('avatar', file.path));
+      ..files.add(await http.MultipartFile.fromPath(
+        'File',
+        file.path,
+        contentType: http_parser.MediaType(mimeParts[0], mimeParts[1]),
+      ));
 
     final http.StreamedResponse streamedResponse = await request.send();
     return http.Response.fromStream(streamedResponse);
@@ -673,20 +692,7 @@ class AuthService {
     return value != null && value.trim().isNotEmpty;
   }
 
-  String _resolvePlatformParam() {
-    if (kIsWeb) {
-      return 'web';
-    }
 
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-        return 'ios';
-      case TargetPlatform.android:
-        return 'android';
-      default:
-        return 'android';
-    }
-  }
 
   bool _isUnauthorized(int httpStatusCode, int apiStatusCode) {
     return httpStatusCode == 401 || apiStatusCode == 401;

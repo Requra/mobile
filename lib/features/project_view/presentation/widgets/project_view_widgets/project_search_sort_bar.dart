@@ -5,16 +5,15 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/project_view/presentation/cubit/project_cubit.dart';
+import 'package:requra/features/project_view/presentation/cubit/project_state.dart';
 import 'package:requra/core/global_widgets/custom_text_field.dart';
 
 class ProjectSearchSortBar extends StatelessWidget {
   final TextEditingController searchController;
-  final String sortBy;
 
   const ProjectSearchSortBar({
     super.key,
     required this.searchController,
-    required this.sortBy,
   });
 
   @override
@@ -24,9 +23,9 @@ class ProjectSearchSortBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Container(
+            child: SizedBox(
               height: 42.h,
-              child:CustomTextField(
+              child: CustomTextField(
                 controller: searchController,
                 onChanged: (v) => context.read<ProjectCubit>().searchProjects(v),
                 hintText: 'Search project...',
@@ -35,37 +34,44 @@ class ProjectSearchSortBar extends StatelessWidget {
                 borderColor: AppColors.grey,
                 borderRadius: 8,
               ),
-
             ),
           ),
           SizedBox(width: 8.w),
-          Container(
-            height: 42.h,
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppColors.grey),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: sortBy,
-                icon: Icon(Icons.keyboard_arrow_down, size: 18.sp),
-                style: regularStyle(fontSize: FontSize.font10, color: AppColors.black),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    context.read<ProjectCubit>().sortProjects(newValue);
-                  }
-                },
-                items: <String>['Name', 'Features', 'Comments']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text('Sort by $value', style: regularStyle(fontSize: FontSize.font10, color: AppColors.black)),
-                  );
-                }).toList(),
-              ),
-            ),
+          BlocSelector<ProjectCubit, ProjectState, String>(
+            selector: (state) {
+              if (state is ProjectLoaded) return state.sortBy;
+              return 'Name';
+            },
+            builder: (context, sortBy) {
+              return Container(
+                height: 42.h,
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.grey),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: sortBy,
+                    icon: Icon(Icons.keyboard_arrow_down, size: 18.sp),
+                    style: regularStyle(fontSize: FontSize.font10, color: AppColors.black),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        context.read<ProjectCubit>().sortProjects(newValue);
+                      }
+                    },
+                    items: <String>['Name', 'Features', 'Comments']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text('Sort by $value', style: regularStyle(fontSize: FontSize.font10, color: AppColors.black)),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

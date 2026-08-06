@@ -30,21 +30,60 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   late final TextEditingController _memberCtrl;
 
   late String _selectedStatus;
-  final List<String> _selectedTypes = [];
-  final List<String> _teamMembers = [];
+  late String _selectedType;
+  late List<String> _teamMembers;
 
-  static const _statusOptions = ['InProgress', 'Completed', 'Draft'];
+  static const _statusOptions = ['InProgress', 'Completed', 'Drafted', 'Cancelled'];
+
+  bool _isLoadingDetails = true;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.project.name);
     _descCtrl = TextEditingController(text: widget.project.description);
-    _clientCtrl = TextEditingController(text: widget.project.clientName);
+    // Use clientEmail if available, fallback to clientName
+    _clientCtrl = TextEditingController(
+        text: widget.project.clientEmail ?? widget.project.clientName);
     _memberCtrl = TextEditingController();
     _selectedStatus = _statusOptions.contains(widget.project.status)
         ? widget.project.status
         : _statusOptions.first;
+    _selectedType = widget.project.projectType ?? 'None';
+    _teamMembers = widget.project.teamMembers != null 
+        ? List<String>.from(widget.project.teamMembers!) 
+        : [];
+    if (_clientCtrl.text.isNotEmpty) {
+      _teamMembers.removeWhere((email) => email.toLowerCase() == _clientCtrl.text.toLowerCase());
+    }
+        
+    _fetchDetails();
+  }
+
+  Future<void> _fetchDetails() async {
+    final details = await context.read<ProjectCubit>().getProjectDetails(widget.project.id);
+    if (mounted && details != null) {
+      setState(() {
+        _nameCtrl.text = details.name;
+        _descCtrl.text = details.description;
+        _clientCtrl.text = details.clientEmail ?? details.clientName;
+        _selectedStatus = _statusOptions.contains(details.status)
+            ? details.status
+            : _statusOptions.first;
+        _selectedType = details.projectType ?? 'None';
+        if (details.teamMembers != null) {
+          _teamMembers = List<String>.from(details.teamMembers!);
+          if (_clientCtrl.text.isNotEmpty) {
+            _teamMembers.removeWhere((email) => email.toLowerCase() == _clientCtrl.text.toLowerCase());
+          }
+        }
+        _isLoadingDetails = false;
+      });
+    } else if (mounted) {
+      setState(() {
+        _isLoadingDetails = false;
+      });
+    }
   }
 
   @override
@@ -59,6 +98,12 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   void _addMember() {
     final email = _memberCtrl.text.trim();
     if (email.isNotEmpty && !_teamMembers.contains(email)) {
+      if (_clientCtrl.text.isNotEmpty && email.toLowerCase() == _clientCtrl.text.trim().toLowerCase()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Client email cannot be added as a team member')),
+        );
+        return;
+      }
       setState(() {
         _teamMembers.add(email);
         _memberCtrl.clear();
@@ -69,10 +114,8 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   void _removeMember(String email) =>
       setState(() => _teamMembers.remove(email));
 
-  void _toggleType(String type) => setState(() {
-        _selectedTypes.contains(type)
-            ? _selectedTypes.remove(type)
-            : _selectedTypes.add(type);
+  void _onTypeChanged(String type) => setState(() {
+        _selectedType = type;
       });
 
   Future<void> _onSave() async {
@@ -83,10 +126,11 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
       {
         'name': _nameCtrl.text.trim(),
         'description': _descCtrl.text.trim(),
-        'clientName': _clientCtrl.text.trim(),
+        'projectType': _selectedType,
         'status': _selectedStatus,
-        'projectTypes': _selectedTypes,
-        'teamMembers': _teamMembers,
+        'clientEmail': _clientCtrl.text.trim(),
+        'language': 'En',
+        'teamMembers': _teamMembers.map((e) => {'email': e}).toList(),
       },
     );
 
@@ -126,11 +170,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             );
           }
         },
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-            child: Column(
+        child: _isLoadingDetails
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                  child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 /// Page header
@@ -198,8 +244,8 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                       const Divider(color: Color(0xFFE5E7EB), height: 1),
                       SizedBox(height: 24.h),
                       ClassificationSection(
-                        selectedTypes: _selectedTypes,
-                        onToggleType: _toggleType,
+                        selectedType: _selectedType,
+                        onTypeChanged: _onTypeChanged,
                       ),
                       SizedBox(height: 24.h),
                       const Divider(color: Color(0xFFE5E7EB), height: 1),

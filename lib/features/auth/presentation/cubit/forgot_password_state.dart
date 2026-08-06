@@ -30,14 +30,15 @@ class ForgotPasswordOtpSent extends ForgotPasswordState {
 }
 
 /// OTP was verified successfully; the user may now set a new password.
-/// [otp] is kept in case the reset-password endpoint requires it.
+/// [email] and [code] are kept so the reset-password endpoint can use them.
 class ForgotPasswordOtpVerified extends ForgotPasswordState {
-  const ForgotPasswordOtpVerified(this.otp);
+  const ForgotPasswordOtpVerified({required this.email, required this.code});
 
-  final String otp;
+  final String email;
+  final String code;
 
   @override
-  List<Object?> get props => [otp];
+  List<Object?> get props => [email, code];
 }
 
 /// Password was reset successfully.

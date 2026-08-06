@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/project_view/presentation/cubit/project_cubit.dart';
+import 'package:requra/features/project_view/presentation/cubit/project_state.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_card.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_empty_state.dart';
 
@@ -11,19 +12,28 @@ class ProjectListView extends StatelessWidget {
   final List<Project> projects;
   final int tabIndex;
   final VoidCallback onAddProject;
+  final ScrollController scrollController;
+  final bool isLoadingMore;
 
   const ProjectListView({
     super.key,
     required this.projects,
     required this.tabIndex,
     required this.onAddProject,
+    required this.scrollController,
+    required this.isLoadingMore,
   });
 
   @override
   Widget build(BuildContext context) {
     if (projects.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () async => context.read<ProjectCubit>().fetchProjects(),
+        onRefresh: () async => context.read<ProjectCubit>().fetchProjects(
+          status: context.read<ProjectCubit>().state is ProjectLoaded
+              ? (context.read<ProjectCubit>().state as ProjectLoaded).activeStatus
+              : null,
+          page: 1,
+        ),
         child: ProjectEmptyState(
           tabIndex: tabIndex,
           onAddProject: onAddProject,
@@ -32,13 +42,27 @@ class ProjectListView extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () async => context.read<ProjectCubit>().fetchProjects(),
+      onRefresh: () async => context.read<ProjectCubit>().fetchProjects(
+          status: context.read<ProjectCubit>().state is ProjectLoaded
+              ? (context.read<ProjectCubit>().state as ProjectLoaded).activeStatus
+              : null,
+          page: 1,
+        ),
       color: AppColors.primary,
       child: ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-        itemCount: projects.length,
+        itemCount: projects.length + (isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == projects.length) {
+            return Padding(
+              padding: EdgeInsets.all(16.0.r),
+              child: const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            );
+          }
           final p = projects[index];
           return ProjectCard(
             project: p,

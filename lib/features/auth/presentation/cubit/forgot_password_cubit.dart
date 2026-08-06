@@ -11,6 +11,12 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
 
   final AuthService _authService;
 
+  /// Email entered in the forgot-password step, carried forward across the flow.
+  String _email = '';
+
+  /// OTP code verified in step 2, forwarded to the reset-password call.
+  String _code = '';
+
   // ---------------------------------------------------------------------------
   // Step 1 — Send reset-code email
   // ---------------------------------------------------------------------------
@@ -21,10 +27,11 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
     if (state is ForgotPasswordLoading) return;
     emit(const ForgotPasswordLoading());
 
-    final response = await _authService.forgotPassword(email: email.trim());
+    _email = email.trim();
+    final response = await _authService.forgotPassword(email: _email);
 
     if (response.isSuccess) {
-      emit(ForgotPasswordOtpSent(email.trim()));
+      emit(ForgotPasswordOtpSent(_email));
     } else {
       emit(ForgotPasswordError(response.firstError.isNotEmpty
           ? response.firstError
@@ -38,14 +45,19 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
 
   /// Calls the verify-OTP endpoint.  On success, emits [ForgotPasswordOtpVerified]
   /// so CreateNewPasswordScreen knows it may proceed.
-  Future<void> verifyResetOtp({required String otp}) async {
+  Future<void> verifyResetOtp({required String code}) async {
     if (state is ForgotPasswordLoading) return;
     emit(const ForgotPasswordLoading());
 
-    final response = await _authService.verifyOtp(otp: otp.trim());
+    final String trimmedCode = code.trim();
+    final response = await _authService.verifyOtp(
+      email: _email,
+      code: trimmedCode,
+    );
 
     if (response.isSuccess) {
-      emit(ForgotPasswordOtpVerified(otp.trim()));
+      _code = trimmedCode;
+      emit(ForgotPasswordOtpVerified(email: _email, code: trimmedCode));
     } else {
       emit(ForgotPasswordError(response.message));
     }
@@ -58,14 +70,16 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
   /// Calls the reset-password endpoint.  On success emits [ForgotPasswordSuccess].
   Future<void> resetPassword({
     required String newPassword,
-    required String confirmPassword,
+    required String confirmNewPassword,
   }) async {
     if (state is ForgotPasswordLoading) return;
     emit(const ForgotPasswordLoading());
 
     final response = await _authService.resetPassword(
+      email: _email,
+      code: _code,
       newPassword: newPassword,
-      confirmPassword: confirmPassword,
+      confirmNewPassword: confirmNewPassword,
     );
 
     if (response.isSuccess) {
@@ -87,7 +101,7 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
   Future<String> resendResetOtp({required String email}) async {
     final response = await _authService.resendOtp(
       email: email.trim(),
-      otpType: 1, // 1 = password reset
+      purpose: 'PasswordReset',
     );
     return response.message;
   }

@@ -5,27 +5,41 @@ class ApiConstants {
   static const String baseUrl =
       'https://mock.apidog.com/m1/1212435-1208182-default';
 
-  static const String login = '/api/Auth/login';
-  static const String signup = '/api/Auth/register';
-  static const String forgotPassword = '/api/Auth/password/forgot';
-  static const String verifyOtp = '/api/Auth/password/verifyotp';
-  static const String resetPassword = '/api/Auth/password/reset';
-  static const String changePassword = '/api/profile/change-password';
-  static const String uploadAvatar = '/api/profile/avatar';
-  static const String updateProfile = '/api/profile';
-  static const String deleteAccount = '/api/profile';
-  static const String refreshToken = '/api/Auth/refresh-token';
-  static const String googleLogin = '/api/Auth/google-login';
-  static const String confirmAccount = '/api/Auth/confirm-account';
-  static const String resendOtp = '/api/Auth/otp/resend';
-  static const String logout = '/api/Auth/logout';
+  static const String login = 'https://requra-ai.runasp.net/api/Auth/login';
+  static const String signup = 'https://requra-ai.runasp.net/api/Auth/register';
+  static const String forgotPassword =
+      'https://requra-ai.runasp.net/api/Auth/password/forgot';
+  static const String verifyOtp =
+      'https://requra-ai.runasp.net/api/Auth/password/verifyotp';
+  static const String resetPassword =
+      'https://requra-ai.runasp.net/api/Auth/password/reset';
+  static const String changePassword =
+      'https://requra-ai.runasp.net/api/profile/change-password';
+  static const String uploadAvatar =
+      'https://requra-ai.runasp.net/api/profile/avatar';
+  static const String updateProfile =
+      'https://requra-ai.runasp.net/api/profile';
+  static const String deleteAccount =
+      'https://requra-ai.runasp.net/api/profile';
+  static const String refreshToken =
+      'https://requra-ai.runasp.net/api/Auth/refresh-token';
+  static const String googleLogin =
+      'https://requra-ai.runasp.net/api/Auth/google-login';
+  static const String confirmAccount =
+      'https://requra-ai.runasp.net/api/Auth/confirm-account';
+  static const String resendOtp =
+      'https://requra-ai.runasp.net/api/Auth/otp/resend';
+  static const String logout = 'https://requra-ai.runasp.net/api/Auth/logout';
 
   // ── Meeting (v1 API) ──
   static const String meetingsBase =
       'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
 
   // ── Projects ──
-  static const String projects = '/api/projects';
+  static const String projects = 'https://requra-ai.runasp.net/api/projects';
+
+  static String projectById(String id) =>
+      'https://requra-ai.runasp.net/api/Projects/$id';
 
   static String projectMembers(String id) =>
       'https://requra-ai.runasp.net/api/projects/$id/members';
@@ -33,5 +47,6 @@ class ApiConstants {
   static const String documents = 'https://requra-ai.runasp.net/api/Documents';
 
   static String aiResultsDashboard(String projectId) =>
-      '/api/projects/$projectId/ai/results-dashboard';
+  '/api/projects/$projectId/ai/results-dashboard';
+    //   'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';
 }

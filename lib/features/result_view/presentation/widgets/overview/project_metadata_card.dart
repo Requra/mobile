@@ -29,6 +29,22 @@ class ProjectMetadataCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Find the client member in the team members list if they exist to get their role
+    final clientEmail = details.clientEmail.trim().toLowerCase();
+    
+    final clientMemberIndex = clientEmail.isNotEmpty
+        ? details.teamMembers.indexWhere((m) => m.email.trim().toLowerCase() == clientEmail)
+        : -1;
+        
+    final clientRole = clientMemberIndex != -1 
+        ? details.teamMembers[clientMemberIndex].projectRole 
+        : '';
+
+    // Filter out the client from the team members list
+    final filteredTeamMembers = clientEmail.isNotEmpty
+        ? details.teamMembers.where((m) => m.email.trim().toLowerCase() != clientEmail).toList()
+        : details.teamMembers;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       padding: EdgeInsets.all(16.w),
@@ -54,17 +70,24 @@ class ProjectMetadataCard extends StatelessWidget {
           /// Client section
           const MetadataSectionLabel(icon: Icons.person_outline, label: 'CLIENT'),
           SizedBox(height: 8.h),
-          MetadataClientTile(name: details.clientName),
+          MetadataClientTile(
+            email: details.clientEmail,
+            name: details.clientName,
+            role: clientRole,
+          ),
 
           SizedBox(height: 16.h),
 
           /// Team members section
-          const MetadataSectionLabel(icon: Icons.groups_outlined, label: 'TEAM MEMBERS'),
-          SizedBox(height: 8.h),
-          ...details.teamMembers.map((email) => Padding(
-                padding: EdgeInsets.only(bottom: 6.h),
-                child: MetadataMemberTile(email: email),
-              )),
+          if (filteredTeamMembers.isNotEmpty) ...[
+            const MetadataSectionLabel(icon: Icons.groups_outlined, label: 'TEAM MEMBERS'),
+            SizedBox(height: 8.h),
+            ...filteredTeamMembers.map((member) => Padding(
+                  padding: EdgeInsets.only(bottom: 6.h),
+                  child: MetadataMemberTile(member: member),
+                )),
+            SizedBox(height: 16.h),
+          ],
 
           SizedBox(height: 16.h),
 

@@ -14,8 +14,8 @@ abstract class ResultViewRepository {
     required File file,
     required String projectId,
     required String title,
-    required int type,
-    required int language,
+    required String type,
+    required String language,
     String? meetingId,
   });
   Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(String projectId);

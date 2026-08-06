@@ -12,8 +12,13 @@ class DocumentTile extends StatelessWidget {
   const DocumentTile({super.key, required this.document});
 
   String get _statusLabel {
-    // Arbitrary mapping based on standard statuses for mock API
-    switch (document.status) {
+    final status = document.status;
+    if (status is String) {
+      return status.toUpperCase();
+    }
+    
+    // Fallback for integer mappings if mock data is used
+    switch (status) {
       case 999:
         return 'UPLOADING';
       case 0:

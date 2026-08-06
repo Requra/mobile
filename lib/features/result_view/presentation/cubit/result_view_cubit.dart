@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
@@ -92,8 +94,8 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required File file,
     required String projectId,
     required String title,
-    required int type,
-    required int language,
+    required String type,
+    required String language,
   }) async {
     final currentState = state;
     if (currentState is! ResultViewLoaded) return 'State not loaded';
@@ -165,40 +167,19 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     }
   }
 
-  Future<String?> createMeeting({
-    required String projectId,
-    required String title,
-    required String description,
-    required String? scheduledAt,
-  }) async {
-    final currentState = state;
-    if (currentState is! ResultViewLoaded) return 'State not loaded';
-
-    // We can show a loading indicator in the UI, or handle it via a specific state if needed.
-    // For now we just return null on success or error string on failure.
-    final requestBody = {
-      'title': title,
-      'description': description,
-      if (scheduledAt != null && scheduledAt.isNotEmpty) 'scheduledAt': scheduledAt,
-    };
-
+  Future<String?> downloadDocument({required Document document}) async {
     try {
-      final result = await _createMeeting(projectId, requestBody);
-
-      return result.fold(
-        (failure) => failure.message,
-        (meeting) {
-          final updatedMeetings = List<Meeting>.from(currentState.meetings)..add(meeting);
-          emit(ResultViewLoaded(
-            projectDetails: currentState.projectDetails,
-            meetings: updatedMeetings,
-            documents: currentState.documents,
-            totalRequirements: currentState.totalRequirements,
-            aiDashboard: currentState.aiDashboard,
-          ));
-          return null; // Success
-        },
-      );
+      if (document.storageUrl == null || document.storageUrl!.isEmpty) return 'No download URL available';
+      
+      final directory = await getExternalStorageDirectory();
+      if (directory == null) return 'Could not access storage';
+      
+      final savedPath = '${directory.path}/${document.title}';
+      
+      final dio = Dio();
+      await dio.download(document.storageUrl!, savedPath);
+      
+      return 'Downloaded to: $savedPath';
     } catch (e) {
       return e.toString();
     }

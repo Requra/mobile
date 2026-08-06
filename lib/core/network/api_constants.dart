@@ -41,6 +41,11 @@ class ApiConstants {
   static String projectById(String id) =>
       'https://requra-ai.runasp.net/api/Projects/$id';
 
+  static String projectMembers(String id) =>
+      'https://requra-ai.runasp.net/api/projects/$id/members';
+
+  static const String documents = 'https://requra-ai.runasp.net/api/Documents';
+
   static String aiResultsDashboard(String projectId) =>
   '/api/projects/$projectId/ai/results-dashboard';
     //   'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';

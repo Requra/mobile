@@ -16,7 +16,7 @@ class ResultviewScreen extends StatefulWidget {
 }
 
 class _resultviewScreenState extends State<ResultviewScreen> {
-  final tabs = ["Overview", "User Stories", "Requirements" , "Exports"];
+  final tabs = ["Overview", "User Stories", "Requirements", "Exports"];
 
   @override
   Widget build(BuildContext context) {
@@ -85,17 +85,21 @@ class _resultviewScreenState extends State<ResultviewScreen> {
                 children: [
                   ///make it card don't use users stories tab view
                   Center(child: Text("tab1")),
-                  
+
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w , vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 10.h,
+                    ),
                     child: ListView.builder(
                       itemCount: 3,
                       itemBuilder: (context, index) {
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 10.h),
-                        child: UserstoriesTabview(),
-                      );
-                    },),
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 10.h),
+                          child: UserstoriesTabview(),
+                        );
+                      },
+                    ),
                   ),
                   Center(child: Text("tab3")),
                   Center(child: Text("tab4")),
@@ -108,4 +112,3 @@ class _resultviewScreenState extends State<ResultviewScreen> {
     );
   }
 }
-

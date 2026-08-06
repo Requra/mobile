@@ -32,7 +32,11 @@ class _MainNavigationState extends State<MainNavigation> {
           _controller.jumpToTab(2);
         },
       ),
-      const AddProjectScreen(),
+      AddProjectScreen(
+        onViewResults: () {
+          _controller.jumpToTab(3);
+        },
+      ),
       const ResultviewScreen(),
       const ProfileScreen(),
     ];

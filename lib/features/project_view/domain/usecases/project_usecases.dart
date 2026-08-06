@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:requra/core/errors/failures.dart';
+import 'package:requra/features/project_view/data/models/paginated_projects.dart';
 import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/project_view/domain/repositories/project_repository.dart';
 
@@ -8,8 +9,8 @@ class GetProjectsUseCase {
 
   GetProjectsUseCase(this.repository);
 
-  Future<Either<Failure, List<Project>>> call() {
-    return repository.getProjects();
+  Future<Either<Failure, PaginatedProjects>> call({String? status, int pageNumber = 1, int pageSize = 10}) {
+    return repository.getProjects(status: status, pageNumber: pageNumber, pageSize: pageSize);
   }
 }
 
@@ -30,5 +31,15 @@ class EditProjectUseCase {
 
   Future<Either<Failure, Project>> call(String id, Map<String, dynamic> data) {
     return repository.editProject(id, data);
+  }
+}
+
+class GetProjectByIdUseCase {
+  final ProjectRepository repository;
+
+  GetProjectByIdUseCase(this.repository);
+
+  Future<Either<Failure, Project>> call(String id) {
+    return repository.getProjectById(id);
   }
 }

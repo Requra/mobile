@@ -9,7 +9,10 @@ String statusLabel(String status) {
     case 'Completed':
       return 'Completed';
     case 'Draft':
-      return 'Draft';
+    case 'Drafted':
+      return 'Drafted';
+    case 'Cancelled':
+      return 'Cancelled';
     default:
       return status;
   }
@@ -24,13 +27,17 @@ String projectStatusBadge(String status) {
   if (s.contains('complet') || s.contains('finish')) {
     return 'FINISHED';
   }
-  return 'Draft';
+  if (s.contains('cancel')) {
+    return 'CANCELLED';
+  }
+  return 'DRAFTED';
 }
 
 /// Returns the background color for a project status badge.
 Color statusBadgeBg(String badge) {
   if (badge == 'IN PROGRESS') return AppColors.statusInProgressLight;
   if (badge == 'FINISHED') return AppColors.statusFinishedLight;
+  if (badge == 'CANCELLED') return Colors.red.shade100;
   return AppColors.grey;
 }
 
@@ -38,6 +45,7 @@ Color statusBadgeBg(String badge) {
 Color statusBadgeColor(String badge) {
   if (badge == 'IN PROGRESS') return AppColors.statusInProgress;
   if (badge == 'FINISHED') return AppColors.statusFinished;
+  if (badge == 'CANCELLED') return Colors.red.shade700;
   return AppColors.lightgrey;
 }
 

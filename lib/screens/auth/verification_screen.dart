@@ -11,7 +11,7 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 
 import '../../widgets/auth_header.dart';
-import '../../widgets/custom_button.dart';
+import '../../core/global_widgets/custom_button.dart';
 
 // ---------------------------------------------------------------------------
 // Mode enum — replaces the old VerificationSource so naming is consistent
@@ -117,7 +117,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
 
     if (_isPasswordResetMode) {
-      context.read<ForgotPasswordCubit>().verifyResetOtp(otp: code);
+      context.read<ForgotPasswordCubit>().verifyResetOtp(code: code);
     } else {
       final String email = (widget.email ?? '').trim();
       if (email.isEmpty) {
@@ -130,7 +130,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       }
       context.read<AuthCubit>().confirmAccount(
             email: email,
-            otpCode: code,
+            code: code,
           );
     }
   }
@@ -192,9 +192,23 @@ class _VerificationScreenState extends State<VerificationScreen> {
         BlocListener<AuthCubit, AuthState>(
           listenWhen: (AuthState previous, AuthState current) =>
               widget.mode == VerificationMode.signup &&
-              (current is AuthUnauthenticated || current is AuthError),
+              (current is AuthAuthenticated ||
+                  current is AuthUnauthenticated ||
+                  current is AuthError),
           listener: (BuildContext context, AuthState state) {
-            if (state is AuthUnauthenticated) {
+            if (state is AuthAuthenticated) {
+              // Auto-login succeeded after confirmation — go straight to app.
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Account confirmed! Welcome.'),
+                ),
+              );
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/main',
+                (Route<dynamic> route) => false,
+              );
+            } else if (state is AuthUnauthenticated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Account confirmed! Please sign in.'),

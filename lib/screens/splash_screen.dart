@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
         if (state is AuthAuthenticated) {
           Navigator.pushReplacementNamed(context, '/main');
         } else if (state is AuthUnauthenticated) {
-          Navigator.pushReplacementNamed(context, '/login');
+          Navigator.pushReplacementNamed(context, '/onboarding');
         }
       },
       child: Scaffold(

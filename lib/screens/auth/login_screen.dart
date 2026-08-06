@@ -8,9 +8,10 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 
 import 'forgot_password_screen.dart';
+import 'verification_screen.dart';
 import '../../widgets/auth_header.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
+import '../../core/global_widgets/custom_button.dart';
+import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/social_auth_buttons_row.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -79,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Only react to transitions that are relevant to this screen.
       listenWhen: (AuthState previous, AuthState current) =>
           current is AuthAuthenticated ||
+          current is AuthVerificationRequired ||
           current is AuthError ||
           current is AuthUnauthenticated,
       listener: (BuildContext context, AuthState state) {
@@ -87,6 +89,17 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             '/main',
             (Route<dynamic> route) => false,
+          );
+        } else if (state is AuthVerificationRequired) {
+          // Account not confirmed — navigate to OTP verification.
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => VerificationScreen(
+                mode: VerificationSource.signup,
+                email: state.email,
+              ),
+            ),
           );
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(

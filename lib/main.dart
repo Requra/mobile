@@ -40,13 +40,10 @@ class MyApp extends StatelessWidget {
             BlocProvider<ForgotPasswordCubit>(
               // Covers ForgotPasswordScreen, VerificationScreen (password-reset
               // mode), and CreateNewPasswordScreen.
-              create: (_) => ForgotPasswordCubit(
-                authService: const AuthService(),
-              ),
+              create: (_) =>
+                  ForgotPasswordCubit(authService: const AuthService()),
             ),
-            BlocProvider<ProjectCubit>(
-              create: (_) => sl<ProjectCubit>(),
-            ),
+            BlocProvider<ProjectCubit>(create: (_) => sl<ProjectCubit>()),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -55,7 +52,7 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
             ),
             routes: AppRoutes.getRoutes(),
-            initialRoute: AppRoutes.main,
+            initialRoute: AppRoutes.splash,
           ),
         );
       },

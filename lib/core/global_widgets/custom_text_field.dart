@@ -8,7 +8,7 @@ class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
     required this.hintText,
-    required this.icon,
+    this.icon,
     this.isPassword = false,
     this.controller,
     this.keyboardType,
@@ -20,7 +20,7 @@ class CustomTextField extends StatefulWidget {
   });
 
   final String hintText;
-  final IconData icon;
+  final IconData? icon;
   final bool isPassword;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
@@ -59,7 +59,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           fontSize: 11.sp,
           height: 1.2,
         ),
-        prefixIcon: Icon(widget.icon),
+        prefixIcon: widget.icon == null ? null : Icon(widget.icon),
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(

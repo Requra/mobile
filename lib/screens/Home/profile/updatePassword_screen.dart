@@ -6,7 +6,7 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/widgets/circular_icon.dart';
-import 'package:requra/widgets/custom_button.dart';
+import 'package:requra/core/global_widgets/custom_button.dart';
 
 
 class UpdatepasswordScreen extends StatelessWidget {
@@ -48,7 +48,11 @@ class UpdatepasswordScreen extends StatelessWidget {
                         CustomButton(
                           text: "Back to Profile",
                           onTap: () {
-                            Navigator.pushReplacementNamed(context, "/profile");
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            } else {
+                              Navigator.of(context, rootNavigator: true).pop();
+                            }
                           },
                           color1: AppColors.primaryText,
                           color2: AppColors.primaryText,

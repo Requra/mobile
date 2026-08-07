@@ -497,7 +497,7 @@ class _ProjectOverviewRow extends StatelessWidget {
                 padding:
                     EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
-                  color: _statusColor.withOpacity(0.12),
+                  color: _statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Text(
@@ -570,7 +570,7 @@ class _NotificationsPanel extends StatelessWidget {
       child: GestureDetector(
         onTap: onClose,
         child: Container(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           child: Align(
             alignment: Alignment.topRight,
             child: GestureDetector(
@@ -583,7 +583,7 @@ class _NotificationsPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
@@ -677,5 +677,6 @@ class _NotifTile extends StatelessWidget {
     );
   }
 }
+
 
 

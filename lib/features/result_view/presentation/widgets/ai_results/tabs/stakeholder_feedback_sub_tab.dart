@@ -188,7 +188,7 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Text(
@@ -286,7 +286,7 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: targetColor.withOpacity(0.1),
+                  color: targetColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
@@ -412,3 +412,4 @@ class _FeedbackItem {
     this.resolutionDate,
   });
 }
+

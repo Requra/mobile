@@ -1,5 +1,4 @@
 import 'package:requra/features/project_view/data/models/project_model.dart';
-import 'package:requra/features/project_view/domain/entities/project.dart';
 
 class PaginatedProjects {
   final List<ProjectModel> items;
@@ -30,3 +29,4 @@ class PaginatedProjects {
     );
   }
 }
+

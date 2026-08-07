@@ -193,7 +193,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       SizedBox(height: 14.h),
                       DropdownButtonFormField<String>(
-                        value: _selectedRole,
+                        initialValue: _selectedRole,
                         decoration: InputDecoration(
                           prefixIcon: Icon(
                             Icons.work_outline,
@@ -229,10 +229,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         ),
                         items: const [
-                          DropdownMenuItem(
-                            value: 'None',
-                            child: Text('None'),
-                          ),
+                          DropdownMenuItem(value: 'None', child: Text('None')),
                           DropdownMenuItem(
                             value: 'Stakeholder',
                             child: Text('Stakeholder'),

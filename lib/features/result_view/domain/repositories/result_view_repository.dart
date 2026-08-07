@@ -1,14 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'dart:io';
 import 'package:requra/core/errors/failures.dart';
-import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 
 abstract class ResultViewRepository {
   Future<Either<Failure, ProjectDetails>> getProjectDetails(String id);
-  Future<Either<Failure, List<Meeting>>> getProjectMeetings(String projectId);
   Future<Either<Failure, List<Document>>> getProjectDocuments(String projectId);
   Future<Either<Failure, Document>> uploadDocument({
     required File file,
@@ -19,5 +17,4 @@ abstract class ResultViewRepository {
     String? meetingId,
   });
   Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(String projectId);
-  Future<Either<Failure, Meeting>> createMeeting(String projectId, Map<String, dynamic> data);
 }

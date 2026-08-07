@@ -22,6 +22,13 @@ import 'package:requra/features/result_view/domain/repositories/result_view_repo
 import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 
+import 'package:requra/features/meeting/data/datasource/meeting_remote_data_source.dart';
+import 'package:requra/features/meeting/data/repositories/meeting_repository_impl.dart';
+import 'package:requra/features/meeting/domain/repositories/meeting_repository.dart';
+import 'package:requra/features/meeting/domain/usecases/create_meeting_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/get_project_meetings_usecase.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
+
 final sl = GetIt.instance;
 
 void initProjectDI() {
@@ -59,10 +66,13 @@ void initProjectDI() {
 
   sl.registerFactory(() => ResultViewCubit(
         getProjectDetailsUseCase: sl(),
-        getProjectMeetingsUseCase: sl(),
         getProjectDocumentsUseCase: sl(),
         getAiResultsDashboardUseCase: sl(),
         uploadDocumentUseCase: sl(),
+      ));
+
+  sl.registerFactory(() => MeetingCubit(
+        getProjectMeetingsUseCase: sl(),
         createMeetingUseCase: sl(),
       ));
 
@@ -83,10 +93,11 @@ void initProjectDI() {
   sl.registerLazySingleton(() => GetProjectByIdUseCase(sl()));
 
   sl.registerLazySingleton(() => GetProjectDetailsUseCase(sl()));
-  sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));
   sl.registerLazySingleton(() => GetProjectDocumentsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiResultsDashboardUseCase(sl()));
   sl.registerLazySingleton(() => UploadDocumentUseCase(sl()));
+
+  sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));
   sl.registerLazySingleton(() => CreateMeetingUseCase(sl()));
 
   // Repository
@@ -103,6 +114,9 @@ void initProjectDI() {
   sl.registerLazySingleton<ResultViewRepository>(
       () => ResultViewRepositoryImpl(remoteDataSource: sl()));
 
+  sl.registerLazySingleton<MeetingRepository>(
+      () => MeetingRepositoryImpl(remoteDataSource: sl()));
+
   // Data Sources
   sl.registerLazySingleton<ProjectRemoteDataSource>(
       () => ProjectRemoteDataSourceImpl(apiClient: sl()));
@@ -115,5 +129,8 @@ void initProjectDI() {
 
   sl.registerLazySingleton<ResultViewRemoteDataSource>(
       () => ResultViewRemoteDataSourceImpl(apiClient: sl()));
+
+  sl.registerLazySingleton<MeetingRemoteDataSource>(
+      () => MeetingRemoteDataSourceImpl(apiClient: sl()));
 }
 

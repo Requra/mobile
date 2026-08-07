@@ -5,7 +5,7 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
-import 'package:requra/features/result_view/presentation/helpers/date_helper.dart';
+import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/ai_results_metric_card.dart';
 
 class AiResultsHeader extends StatelessWidget {
@@ -286,3 +286,4 @@ class AiResultsHeader extends StatelessWidget {
     );
   }
 }
+

@@ -4,7 +4,7 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
-import 'package:requra/features/result_view/presentation/helpers/date_helper.dart';
+import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
 
 class DocumentTile extends StatelessWidget {
   final Document document;
@@ -143,3 +143,4 @@ class DocumentTile extends StatelessWidget {
     );
   }
 }
+

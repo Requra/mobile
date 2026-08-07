@@ -6,7 +6,6 @@ import 'package:requra/features/auth/data/services/auth_service.dart';
 import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:requra/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:requra/features/project_view/presentation/cubit/project_cubit.dart';
-import 'screens/splash_screen.dart';
 import 'package:requra/core/di/di_project.dart';
 import 'package:requra/routes/app_routes.dart';
 
@@ -59,3 +58,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

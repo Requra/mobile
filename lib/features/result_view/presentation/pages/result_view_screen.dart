@@ -9,8 +9,10 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_state.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/ai_results_tab.dart';
-import 'package:requra/features/result_view/presentation/widgets/meetings/meetings_tab.dart';
+import 'package:requra/features/meeting/presentation/widgets/meetings/meetings_tab.dart';
 import 'package:requra/features/result_view/presentation/widgets/overview/overview_tab.dart';
 
 class ResultViewScreen extends StatefulWidget {
@@ -32,6 +34,7 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
           widget.project.id,
           totalRequirements: widget.project.totalRequirements,
         );
+    context.read<MeetingCubit>().fetchProjectMeetings(widget.project.id);
   }
 
   @override
@@ -146,7 +149,18 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
                               ),
 
                         /// Meetings tab
-                        MeetingsTab(meetings: state.meetings),
+                        BlocBuilder<MeetingCubit, MeetingState>(
+                          builder: (context, meetingState) {
+                            if (meetingState is MeetingLoading) {
+                              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                            } else if (meetingState is MeetingError) {
+                              return Center(child: Text(meetingState.message, style: TextStyle(color: AppColors.error)));
+                            } else if (meetingState is MeetingLoaded) {
+                              return MeetingsTab(meetings: meetingState.meetings);
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -161,3 +175,4 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
     );
   }
 }
+

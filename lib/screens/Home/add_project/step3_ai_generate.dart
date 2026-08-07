@@ -144,7 +144,7 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
               border: Border.all(color: const Color(0xFFEBEBEB)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -380,7 +380,7 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
         border: Border.all(color: const Color(0xFFF0F0F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -430,4 +430,5 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
     );
   }
 }
+
 

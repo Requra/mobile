@@ -141,7 +141,7 @@ class _HeroSection extends StatelessWidget {
                   width: 30.w,
                   height: 30.w,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Image.asset(
@@ -176,7 +176,7 @@ class _HeroSection extends StatelessWidget {
               padding:
                   EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
@@ -207,7 +207,7 @@ class _HeroSection extends StatelessWidget {
               'Upload PDFs, DOCX, or audio. Requra AI creates user stories, acceptance criteria, and a clean backlog in minutes.',
               style: regularStyle(
                 fontSize: FontSize.font13,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
               ),
             ),
 
@@ -347,7 +347,7 @@ class _WhiteIconBtn extends StatelessWidget {
       width: 32.w,
       height: 32.w,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Icon(icon, color: Colors.white, size: 17.sp),
@@ -375,9 +375,9 @@ class _FeatureCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
+          color: Colors.white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: OverflowBox(
           alignment: Alignment.topLeft,
@@ -402,7 +402,7 @@ class _FeatureCard extends StatelessWidget {
                 description,
                 style: regularStyle(
                   fontSize: FontSize.font10,
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                 ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -621,7 +621,7 @@ class _CtaCard extends StatelessWidget {
             'Take documents and meeting notes into user stories, acceptance criteria, and a clean backlog in minutes.',
             style: regularStyle(
               fontSize: FontSize.font12,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
             ),
           ),
           SizedBox(height: 20.h),
@@ -692,7 +692,7 @@ class _FooterSection extends StatelessWidget {
                 width: 28.w,
                 height: 28.w,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Image.asset(
@@ -720,7 +720,7 @@ class _FooterSection extends StatelessWidget {
             'We turning your documents and meeting\nnotes into specific requirements.',
             style: regularStyle(
               fontSize: FontSize.font12,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
           SizedBox(height: 20.h),
@@ -747,13 +747,13 @@ class _FooterSection extends StatelessWidget {
             ],
           ),
           SizedBox(height: 20.h),
-          Divider(color: Colors.white.withOpacity(0.2)),
+          Divider(color: Colors.white.withValues(alpha: 0.2)),
           SizedBox(height: 10.h),
           Text(
             '© 2026 Requra AI. All rights reserved.',
             style: regularStyle(
               fontSize: FontSize.font10,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -787,7 +787,7 @@ class _FooterColumn extends StatelessWidget {
               item,
               style: regularStyle(
                 fontSize: FontSize.font11,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -796,5 +796,6 @@ class _FooterColumn extends StatelessWidget {
     );
   }
 }
+
 
 

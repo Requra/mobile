@@ -86,7 +86,7 @@ class _userstoriesTabviewState extends State<UserstoriesTabview> {
             Container(
               decoration: BoxDecoration(
                 // ignore: deprecated_member_use
-                color: AppColors.lightPrimary.withOpacity(0.7),
+                color: AppColors.lightPrimary.withValues(alpha: 0.7),
                 border: Border.all(color: AppColors.lightPrimary, width: 1.w),
                 borderRadius: BorderRadius.all(Radius.circular(3.r)),
               ),
@@ -222,3 +222,4 @@ class _userstoriesTabviewState extends State<UserstoriesTabview> {
     );
   }
 }
+

@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'dart:io';
 import 'package:requra/core/errors/failures.dart';
-import 'package:requra/features/result_view/domain/entities/meeting.dart';
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
@@ -14,16 +13,6 @@ class GetProjectDetailsUseCase {
 
   Future<Either<Failure, ProjectDetails>> call(String id) {
     return repository.getProjectDetails(id);
-  }
-}
-
-class GetProjectMeetingsUseCase {
-  final ResultViewRepository repository;
-
-  GetProjectMeetingsUseCase(this.repository);
-
-  Future<Either<Failure, List<Meeting>>> call(String projectId) {
-    return repository.getProjectMeetings(projectId);
   }
 }
 
@@ -68,16 +57,5 @@ class GetAiResultsDashboardUseCase {
 
   Future<Either<Failure, AiResultsDashboard>> call(String projectId) {
     return repository.getAiResultsDashboard(projectId);
-  }
-}
-
-class CreateMeetingUseCase {
-  final ResultViewRepository repository;
-
-  CreateMeetingUseCase(this.repository);
-
-  Future<Either<Failure, Meeting>> call(
-      String projectId, Map<String, dynamic> data) {
-    return repository.createMeeting(projectId, data);
   }
 }

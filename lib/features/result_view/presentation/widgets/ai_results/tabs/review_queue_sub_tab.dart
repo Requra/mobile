@@ -140,7 +140,7 @@ class ReviewQueueSubTab extends StatelessWidget {
           margin: EdgeInsets.only(bottom: 8.h),
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: severityBg.withOpacity(0.3),
+            color: severityBg.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(color: severityBg),
           ),
@@ -311,3 +311,4 @@ class ReviewQueueSubTab extends StatelessWidget {
     );
   }
 }
+

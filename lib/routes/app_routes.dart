@@ -12,10 +12,11 @@ import 'package:requra/features/project_view/presentation/pages/edit_project_scr
 import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/result_view/presentation/pages/result_view_screen.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 import 'package:requra/core/di/di_project.dart';
 import 'package:requra/screens/auth/signup_screen.dart';
 import 'package:requra/screens/auth/verification_screen.dart';
-import 'package:requra/screens/meeting/live_meeting_screen.dart';
+import 'package:requra/features/meeting/presentation/pages/live_meeting_screen.dart';
 import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
 import 'package:requra/features/main_layout/presentation/pages/main_navigation.dart';
@@ -59,8 +60,11 @@ class AppRoutes {
       ),
       resultView: (context) {
         final project = ModalRoute.of(context)!.settings.arguments as Project;
-        return BlocProvider(
-          create: (_) => sl<ResultViewCubit>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => sl<ResultViewCubit>()),
+            BlocProvider(create: (_) => sl<MeetingCubit>()),
+          ],
           child: ResultViewScreen(project: project),
         );
       },
@@ -76,4 +80,5 @@ class AppRoutes {
     };
   }
 }
+
 

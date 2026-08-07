@@ -55,7 +55,7 @@ class MeetingDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MeetingDetailsHeader(meeting: meeting),
-            if (!_isEnded) MeetingActionButtons(status: meeting.status),
+            if (!_isEnded) MeetingActionButtons(meeting: meeting),
             SizedBox(height: 12.h),
             MeetingLifecycleCard(meeting: meeting),
             SizedBox(height: 14.h),

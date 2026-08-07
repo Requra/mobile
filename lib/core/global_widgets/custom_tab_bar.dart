@@ -8,12 +8,14 @@ class CustomTabBar extends StatelessWidget {
   final List<String> tabs;
   final List<int>? counts;
   final bool isScrollable;
+  final TabController? controller;
 
   const CustomTabBar({
     super.key,
     required this.tabs,
     this.counts,
     this.isScrollable = true,
+    this.controller,
   });
 
   @override
@@ -21,11 +23,12 @@ class CustomTabBar extends StatelessWidget {
     return Container(
       color: AppColors.backgroundHomeScreen,
       child: Builder(builder: (context) {
-        final ctrl = DefaultTabController.of(context);
+        final ctrl = controller ?? DefaultTabController.of(context);
         return AnimatedBuilder(
           animation: ctrl,
           builder: (context, _) {
             return TabBar(
+              controller: ctrl,
               isScrollable: isScrollable,
               tabAlignment: isScrollable ? TabAlignment.start : TabAlignment.fill,
               indicatorColor: AppColors.primary,

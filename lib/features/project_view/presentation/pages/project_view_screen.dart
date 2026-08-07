@@ -116,32 +116,11 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> with SingleTicker
                 if (state is ProjectLoaded) {
                   return Column(
                     children: [
-                      // We provide DefaultTabController here just for CustomTabBar to read it
-                      DefaultTabController(
-                        length: _tabs.length,
-                        initialIndex: _tabController.index,
-                        child: Builder(
-                          builder: (context) {
-                            // Sync DefaultTabController with our TabController
-                            final defaultTabController = DefaultTabController.of(context);
-                            _tabController.addListener(() {
-                              if (defaultTabController.index != _tabController.index) {
-                                defaultTabController.animateTo(_tabController.index);
-                              }
-                            });
-                            defaultTabController.addListener(() {
-                              if (defaultTabController.index != _tabController.index) {
-                                _tabController.animateTo(defaultTabController.index);
-                              }
-                            });
-                            
-                            return CustomTabBar(
-                              tabs: _tabs,
-                              // Only show count for the active tab since we only load one tab's data at a time from server
-                              counts: List.generate(_tabs.length, (i) => i == _tabController.index ? state.totalCount : -1),
-                            );
-                          }
-                        ),
+                      CustomTabBar(
+                        tabs: _tabs,
+                        controller: _tabController,
+                        // Only show count for the active tab since we only load one tab's data at a time from server
+                        counts: List.generate(_tabs.length, (i) => i == _tabController.index ? state.totalCount : -1),
                       ),
                       Expanded(
                         child: ProjectListView(

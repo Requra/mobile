@@ -110,8 +110,13 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
   @override
   void dispose() {
     _cameraController?.dispose();
-    _stopMicMeter();
-    _audioRecorder.dispose();
+    _amplitudeSubscription?.cancel();
+    _micStreamSubscription?.cancel();
+    try {
+      _audioRecorder.dispose();
+    } catch (e) {
+      debugPrint("Error disposing audio recorder: $e");
+    }
     super.dispose();
   }
 
@@ -187,9 +192,14 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
     await _micStreamSubscription?.cancel();
     _micStreamSubscription = null;
     
-    if (await _audioRecorder.isRecording()) {
-      await _audioRecorder.stop();
+    try {
+      if (await _audioRecorder.isRecording()) {
+        await _audioRecorder.stop();
+      }
+    } catch (e) {
+      debugPrint("Ignored error stopping mic meter (likely disposed): $e");
     }
+    
     if (mounted) {
       setState(() {
         _currentAmplitude = -50.0;

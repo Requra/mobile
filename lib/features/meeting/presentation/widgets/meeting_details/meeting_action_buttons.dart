@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_details_colors.dart';
+import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_invite_sheet.dart';
 import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/pages/pre_join_meeting_screen.dart';
+import 'package:requra/features/meeting/presentation/pages/create_meeting_screen.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 
 /// The style of an action button.
 enum MeetingActionStyle { primary, danger, dangerSolid, purple, outline }
@@ -25,7 +29,142 @@ class MeetingActionButtons extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PreJoinMeetingScreen(meeting: meeting),
+          builder: (_) => BlocProvider.value(
+            value: context.read<MeetingCubit>(),
+            child: PreJoinMeetingScreen(meeting: meeting),
+          ),
+        ),
+      );
+    }
+
+    void startAndJoinMeeting() async {
+      if (!context.mounted) return;
+      final cubit = context.read<MeetingCubit>();
+      final error = await cubit.startMeeting(meeting.id);
+
+      if (!context.mounted) return;
+
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: cubit,
+            child: PreJoinMeetingScreen(meeting: meeting),
+          ),
+        ),
+      );
+    }
+
+    void editDetails() {
+      if (!context.mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: context.read<MeetingCubit>(),
+            child: CreateMeetingScreen(
+              projectId: meeting.projectId,
+              meeting: meeting,
+            ),
+          ),
+        ),
+      ).then((result) {
+        if (result == true && context.mounted) {
+          // Pop back to the meetings list since the meeting was updated
+          Navigator.of(context).pop();
+        }
+      });
+    }
+
+    void cancelMeeting() {
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Cancel Meeting'),
+          content: const Text(
+            'Are you sure you want to cancel this meeting? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('No, Keep It'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                if (!context.mounted) return;
+
+                final cubit = context.read<MeetingCubit>();
+                final error = await cubit.cancelMeeting(meeting.id);
+
+                if (context.mounted) {
+                  if (error == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Meeting cancelled successfully')),
+                    );
+                    Navigator.of(context).pop();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error)),
+                    );
+                  }
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Yes, Cancel Meeting'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    void endMeeting() {
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('End Meeting'),
+          content: const Text(
+            'Are you sure you want to end this live meeting? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                if (!context.mounted) return;
+
+                final cubit = context.read<MeetingCubit>();
+                final error = await cubit.endMeeting(meeting.id);
+
+                if (context.mounted) {
+                  if (error == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Meeting ended successfully')),
+                    );
+                    Navigator.of(context).pop();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error)),
+                    );
+                  }
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Yes, End Meeting'),
+            ),
+          ],
         ),
       );
     }
@@ -43,7 +182,14 @@ class MeetingActionButtons extends StatelessWidget {
       emoji: '👤', 
       label: 'Invite', 
       style: MeetingActionStyle.outline,
-      onTap: () {},
+      onTap: () {
+        MeetingInviteSheet.show(
+          context,
+          meetingId: meeting.id,
+          projectId: meeting.projectId,
+          joinUrl: meeting.joinUrl,
+        );
+      },
     ));
 
     if (s == 'SCHEDULED') {
@@ -52,19 +198,19 @@ class MeetingActionButtons extends StatelessWidget {
           emoji: '✏️', 
           label: 'Edit Details', 
           style: MeetingActionStyle.outline,
-          onTap: () {},
+          onTap: editDetails,
         ),
         _ActionButton(
           emoji: '▶', 
           label: 'Start Meeting', 
           style: MeetingActionStyle.primary,
-          onTap: joinMeeting,
+          onTap: startAndJoinMeeting,
         ),
         _ActionButton(
           emoji: '⊗', 
           label: 'Cancel Meeting', 
           style: MeetingActionStyle.danger,
-          onTap: () {},
+          onTap: cancelMeeting,
         ),
       ]);
     } else if (s == 'CANCELLED') {
@@ -72,7 +218,7 @@ class MeetingActionButtons extends StatelessWidget {
         emoji: '▶', 
         label: 'Start Meeting', 
         style: MeetingActionStyle.primary,
-        onTap: joinMeeting,
+        onTap: startAndJoinMeeting,
       ));
     } else if (s == 'LIVE') {
       buttons.addAll([
@@ -80,13 +226,13 @@ class MeetingActionButtons extends StatelessWidget {
           emoji: '■', 
           label: 'End Meeting', 
           style: MeetingActionStyle.dangerSolid,
-          onTap: () {},
+          onTap: endMeeting,
         ),
         _ActionButton(
           emoji: '⊗', 
           label: 'Cancel Meeting', 
           style: MeetingActionStyle.danger,
-          onTap: () {},
+          onTap: cancelMeeting,
         ),
       ]);
     }
@@ -166,4 +312,3 @@ class _ActionButton extends StatelessWidget {
     }
   }
 }
-

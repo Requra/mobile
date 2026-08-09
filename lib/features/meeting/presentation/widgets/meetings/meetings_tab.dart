@@ -11,6 +11,7 @@ import 'package:requra/features/result_view/presentation/cubit/result_view_cubit
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
 import 'package:requra/features/meeting/presentation/pages/create_meeting_screen.dart';
 import 'package:requra/features/meeting/presentation/widgets/meetings/meetings_empty_state.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 
 class MeetingsTab extends StatelessWidget {
   final List<Meeting> meetings;
@@ -59,8 +60,11 @@ class MeetingsTab extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => BlocProvider.value(
-                          value: context.read<ResultViewCubit>(),
+                        builder: (_) => MultiBlocProvider(
+                          providers: [
+                            BlocProvider.value(value: context.read<ResultViewCubit>()),
+                            BlocProvider.value(value: context.read<MeetingCubit>()),
+                          ],
                           child: CreateMeetingScreen(projectId: state.projectDetails.id),
                         ),
                       ),

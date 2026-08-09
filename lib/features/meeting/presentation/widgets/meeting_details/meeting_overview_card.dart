@@ -49,7 +49,13 @@ class MeetingOverviewCard extends StatelessWidget {
         GestureDetector(
           onTap: () {
             if (meeting.joinUrl.isNotEmpty) {
-              Clipboard.setData(ClipboardData(text: meeting.joinUrl));
+              Clipboard.setData(ClipboardData(text: meeting.joinUrl)).then((_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Invitation link copied!')),
+                  );
+                }
+              });
             }
           },
           child: Text(

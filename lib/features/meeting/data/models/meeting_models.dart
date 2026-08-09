@@ -338,17 +338,20 @@ class ProjectMember {
     required this.id,
     required this.displayName,
     required this.email,
+    this.role,
   });
 
   final String id;
   final String displayName;
   final String email;
+  final String? role;
 
   factory ProjectMember.fromJson(Map<String, dynamic> json) {
     return ProjectMember(
-      id: (json['id'] ?? json['memberId'] ?? '').toString(),
-      displayName: (json['displayName'] ?? json['name'] ?? '').toString(),
+      id: (json['id'] ?? json['userId'] ?? json['memberId'] ?? '').toString(),
+      displayName: (json['displayName'] ?? json['name'] ?? json['firstName'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
+      role: (json['projectRole'] ?? json['role'])?.toString(),
     );
   }
 }
@@ -370,6 +373,44 @@ class ProjectStakeholder {
       id: (json['id'] ?? json['stakeholderId'] ?? '').toString(),
       displayName: (json['displayName'] ?? json['name'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
+    );
+  }
+}
+
+// ── MeetingInvitation (Real API) ──────────────────────────────────────────────
+
+/// An invitation from the new real API (GET /api/Meetings/:id/invitations).
+class MeetingInvitation {
+  const MeetingInvitation({
+    required this.id,
+    required this.meetingId,
+    required this.inviteType,
+    required this.email,
+    required this.displayName,
+    required this.role,
+    required this.status,
+    this.createdAt,
+  });
+
+  final String id;
+  final String meetingId;
+  final String inviteType; // "Guest" | "Participant"
+  final String email;
+  final String displayName;
+  final String role; // "Viewer" | "Owner" | "Contributor"
+  final String status; // "Pending" | "Accepted" | "Declined" | "Revoked"
+  final DateTime? createdAt;
+
+  factory MeetingInvitation.fromJson(Map<String, dynamic> json) {
+    return MeetingInvitation(
+      id: (json['id'] ?? '').toString(),
+      meetingId: (json['meetingId'] ?? '').toString(),
+      inviteType: (json['inviteType'] ?? json['inviteeType'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      displayName: (json['displayName'] ?? '').toString(),
+      role: (json['role'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      createdAt: _parseDateTime(json['createdAt']),
     );
   }
 }

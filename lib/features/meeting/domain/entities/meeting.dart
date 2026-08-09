@@ -41,4 +41,32 @@ class Meeting extends Equatable {
         createdAt,
         participantsCount,
       ];
+
+  Meeting copyWith({
+    String? id,
+    String? projectId,
+    String? title,
+    String? description,
+    String? status,
+    String? joinUrl,
+    DateTime? scheduledAt,
+    DateTime? startedAt,
+    DateTime? endedAt,
+    DateTime? createdAt,
+    int? participantsCount,
+  }) {
+    return Meeting(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      joinUrl: joinUrl ?? this.joinUrl,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
+      createdAt: createdAt ?? this.createdAt,
+      participantsCount: participantsCount ?? this.participantsCount,
+    );
+  }
 }

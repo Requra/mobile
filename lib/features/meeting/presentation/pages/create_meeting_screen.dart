@@ -5,12 +5,21 @@ import 'package:requra/core/global_widgets/custom_button.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
   final String projectId;
+
+  /// When non-null the screen works in **edit mode**: fields are pre-filled and
+  /// the submit button reads "UPDATE" instead of "CREATE MEETING".
+  final Meeting? meeting;
   
-  const CreateMeetingScreen({super.key, required this.projectId});
+  const CreateMeetingScreen({
+    super.key,
+    required this.projectId,
+    this.meeting,
+  });
 
   @override
   State<CreateMeetingScreen> createState() => _CreateMeetingScreenState();
@@ -21,6 +30,18 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
   final _descriptionController = TextEditingController();
   DateTime? _selectedDateTime;
   bool _isLoading = false;
+
+  bool get _isEditMode => widget.meeting != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditMode) {
+      _titleController.text = widget.meeting!.title;
+      _descriptionController.text = widget.meeting!.description;
+      _selectedDateTime = widget.meeting!.scheduledAt;
+    }
+  }
 
   String _formatDateTime(DateTime dt) {
     final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
@@ -34,14 +55,16 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
   Future<void> _pickDateTime() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDateTime ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
     if (date != null && mounted) {
       final time = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.now(),
+        initialTime: _selectedDateTime != null
+            ? TimeOfDay.fromDateTime(_selectedDateTime!)
+            : TimeOfDay.now(),
       );
       if (time != null) {
         setState(() {
@@ -57,7 +80,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     }
   }
 
-  Future<void> _createMeeting() async {
+  Future<void> _submit() async {
     if (_titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Meeting title is required')),
@@ -75,12 +98,23 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       formattedDate = _selectedDateTime!.toUtc().toIso8601String();
     }
 
-    final error = await cubit.createMeeting(
-      projectId: widget.projectId,
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      scheduledAt: formattedDate,
-    );
+    String? error;
+
+    if (_isEditMode) {
+      error = await cubit.updateMeeting(
+        meetingId: widget.meeting!.id,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        scheduledAt: formattedDate,
+      );
+    } else {
+      error = await cubit.createMeeting(
+        projectId: widget.projectId,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        scheduledAt: formattedDate,
+      );
+    }
 
     if (mounted) {
       setState(() {
@@ -89,9 +123,15 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
       if (error == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meeting created successfully')),
+          SnackBar(
+            content: Text(
+              _isEditMode
+                  ? 'Meeting updated successfully'
+                  : 'Meeting created successfully',
+            ),
+          ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error)),
@@ -109,7 +149,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         elevation: 0,
         leading: const BackButton(color: AppColors.black),
         title: Text(
-          'Create Sync Session',
+          _isEditMode ? 'Edit Sync Session' : 'Create Sync Session',
           style: boldStyle(fontSize: FontSize.font24, color: AppColors.black),
         ),
         centerTitle: true,
@@ -143,14 +183,14 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Icon(
-                            Icons.videocam_outlined,
+                            _isEditMode ? Icons.edit_outlined : Icons.videocam_outlined,
                             color: AppColors.primary,
                             size: 20.sp,
                           ),
                         ),
                         SizedBox(width: 12.w),
                         Text(
-                          'Schedule New Meeting',
+                          _isEditMode ? 'Edit Meeting Details' : 'Schedule New Meeting',
                           style: boldStyle(
                             fontSize: FontSize.font16,
                             color: AppColors.black,
@@ -160,7 +200,9 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      'Create a new sync space for your team. You can start it immediately or schedule for later.',
+                      _isEditMode
+                          ? 'Update your meeting information.'
+                          : 'Create a new sync space for your team. You can start it immediately or schedule for later.',
                       style: regularStyle(
                         fontSize: FontSize.font14,
                         color: AppColors.grey,
@@ -286,9 +328,11 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                         SizedBox(
                           width: 160.w,
                           child: CustomButton(
-                            text: _isLoading ? 'CREATING...' : 'CREATE MEETING',
+                            text: _isLoading
+                                ? (_isEditMode ? 'UPDATING...' : 'CREATING...')
+                                : (_isEditMode ? 'UPDATE' : 'CREATE MEETING'),
                             color1: AppColors.primary,
-                            onTap: _isLoading ? null : _createMeeting,
+                            onTap: _isLoading ? null : _submit,
                           ),
                         ),
                       ],
@@ -320,4 +364,3 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     );
   }
 }
-

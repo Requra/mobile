@@ -28,8 +28,19 @@ import 'package:requra/features/meeting/data/datasource/meeting_remote_data_sour
 import 'package:requra/features/meeting/data/repositories/meeting_repository_impl.dart';
 import 'package:requra/features/meeting/domain/repositories/meeting_repository.dart';
 import 'package:requra/features/meeting/domain/usecases/create_meeting_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/get_meeting_details_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/get_meeting_invitations_usecase.dart';
 import 'package:requra/features/meeting/domain/usecases/get_project_meetings_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/get_project_members_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/invite_guests_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/invite_participants_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/resend_invitation_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/update_meeting_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/cancel_meeting_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/start_meeting_usecase.dart';
+import 'package:requra/features/meeting/domain/usecases/end_meeting_usecase.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_invite_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -77,7 +88,20 @@ void initProjectDI() {
 
   sl.registerFactory(() => MeetingCubit(
         getProjectMeetingsUseCase: sl(),
+        getMeetingDetailsUseCase: sl(),
         createMeetingUseCase: sl(),
+        updateMeetingUseCase: sl(),
+        cancelMeetingUseCase: sl(),
+        startMeetingUseCase: sl(),
+        endMeetingUseCase: sl(),
+      ));
+
+  sl.registerFactory(() => MeetingInviteCubit(
+        getProjectMembersUseCase: sl(),
+        getMeetingInvitationsUseCase: sl(),
+        inviteParticipantsUseCase: sl(),
+        inviteGuestsUseCase: sl(),
+        resendInvitationUseCase: sl(),
       ));
 
   // UseCases
@@ -104,7 +128,17 @@ void initProjectDI() {
   sl.registerLazySingleton(() => UploadDocumentUseCase(sl()));
 
   sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMeetingDetailsUseCase(sl()));
   sl.registerLazySingleton(() => CreateMeetingUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateMeetingUseCase(sl()));
+  sl.registerLazySingleton(() => CancelMeetingUseCase(sl()));
+  sl.registerLazySingleton(() => StartMeetingUseCase(sl()));
+  sl.registerLazySingleton(() => EndMeetingUseCase(sl()));
+  sl.registerLazySingleton(() => GetProjectMembersUseCase(sl()));
+  sl.registerLazySingleton(() => GetMeetingInvitationsUseCase(sl()));
+  sl.registerLazySingleton(() => InviteParticipantsUseCase(sl()));
+  sl.registerLazySingleton(() => InviteGuestsUseCase(sl()));
+  sl.registerLazySingleton(() => ResendInvitationUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProjectRepository>(

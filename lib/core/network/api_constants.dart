@@ -35,6 +35,10 @@ class ApiConstants {
   static const String meetingsBase =
       'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
 
+  // ── Meetings (real API) ──
+  static const String meetings =
+      'https://requra-ai.runasp.net/api/Meetings';
+
   // ── Projects ──
   static const String projects = 'https://requra-ai.runasp.net/api/projects';
 

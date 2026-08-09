@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/pages/meeting_details_screen.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 
 class MeetingCard extends StatelessWidget {
   final Meeting meeting;
@@ -161,7 +163,10 @@ class MeetingCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MeetingDetailsScreen(meeting: meeting),
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<MeetingCubit>(),
+                        child: MeetingDetailsScreen(meeting: meeting),
+                      ),
                     ),
                   );
                 },

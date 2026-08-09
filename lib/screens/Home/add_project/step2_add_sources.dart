@@ -11,38 +11,14 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 
 /// Step 2 of the Add Project wizard — "Add Requirement Sources".
-///
-/// Contains 3 internal tabs (Meeting, Documents, Transcript) and a global
-/// list of uploaded sources that is shared across all tabs.
 class Step2AddSources extends StatefulWidget {
-  const Step2AddSources({
-    super.key,
-  });
+  const Step2AddSources({super.key});
 
   @override
   State<Step2AddSources> createState() => _Step2AddSourcesState();
 }
 
-class _Step2AddSourcesState extends State<Step2AddSources>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  // Transcript tab state
-  final _transcriptCtrl = TextEditingController();
-  DocumentType _transcriptType = DocumentType.pdf;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _transcriptCtrl.dispose();
-    super.dispose();
-  }
+class _Step2AddSourcesState extends State<Step2AddSources> {
 
   // ── Source management ────────────────────────────────────────────────────
 
@@ -52,26 +28,6 @@ class _Step2AddSourcesState extends State<Step2AddSources>
 
   void _removeSource(int index) {
     context.read<AddProjectCubit>().removeSource(index);
-  }
-
-  // ── Meetings ─────────────────────────────────────────────────────────────
-
-  void _startMeeting() {
-    // Add a live session source as a placeholder
-    _addSource(SourceItem(
-      fileName: 'Live Meeting Session',
-      fileSizeBytes: 0,
-      documentType: DocumentType.liveSession.value,
-    ));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Live meeting session added'),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
   }
 
   // ── File upload ──────────────────────────────────────────────────────────
@@ -88,49 +44,15 @@ class _Step2AddSourcesState extends State<Step2AddSources>
 
     for (final file in result.files) {
       final ext = '.${file.extension ?? ''}';
-      _addSource(SourceItem(
-        fileName: file.name,
-        fileSizeBytes: file.size,
-        documentType: DocumentType.fromExtension(ext).value,
-        fileBytes: file.bytes,
-      ));
-    }
-  }
-
-  // ── Transcript ───────────────────────────────────────────────────────────
-
-  void _saveTranscript() {
-    final text = _transcriptCtrl.text.trim();
-    if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter transcript text'),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      _addSource(
+        SourceItem(
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          documentType: DocumentType.fromExtension(ext).value,
+          fileBytes: file.bytes,
         ),
       );
-      return;
     }
-
-    final ext = _transcriptType == DocumentType.pdf ? '.pdf' : '.docx';
-    _addSource(SourceItem(
-      fileName: 'transcript$ext',
-      fileSizeBytes: text.length,
-      documentType: _transcriptType.value,
-      transcriptText: text,
-    ));
-
-    _transcriptCtrl.clear();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Transcript saved'),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -140,9 +62,15 @@ class _Step2AddSourcesState extends State<Step2AddSources>
     // Read the sources from the state
     final cubitState = context.watch<AddProjectCubit>().state;
     final List<SourceItem> sources = (cubitState is AddProjectStep2) ? cubitState.sources : [];
+    final String? projectId = (cubitState is AddProjectStep2) ? cubitState.projectId : null;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.only(
+        left: 20.w,
+        right: 20.w,
+        bottom: 400.h,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -174,92 +102,8 @@ class _Step2AddSourcesState extends State<Step2AddSources>
           ),
           SizedBox(height: 20.h),
 
-          // ── Tabs ──
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: const Color(0xFFEEEEF0),
-                  width: 1.h,
-                ),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: AppColors.primary,
-              indicatorWeight: 2.5,
-              labelPadding: EdgeInsets.symmetric(horizontal: 4.w),
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.lightgrey,
-              labelStyle: semiBoldStyle(
-                fontSize: FontSize.font13,
-                color: AppColors.primary,
-              ),
-              unselectedLabelStyle: regularStyle(
-                fontSize: FontSize.font13,
-                color: AppColors.lightgrey,
-              ),
-              tabs: [
-                Tab(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.mic_none_outlined, size: 16.r),
-                        SizedBox(width: 4.w),
-                        const Text('Meeting'),
-                      ],
-                    ),
-                  ),
-                ),
-                Tab(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.file_upload_outlined, size: 16.r),
-                        SizedBox(width: 4.w),
-                        const Text('Documents'),
-                      ],
-                    ),
-                  ),
-                ),
-                Tab(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.edit_note_outlined, size: 16.r),
-                        SizedBox(width: 4.w),
-                        const Text('Transcript'),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _buildDocumentsTab(),
 
-          // ── Tab content (not using TabBarView to avoid nested scroll) ──
-          AnimatedBuilder(
-            animation: _tabController,
-            builder: (_, _) {
-              switch (_tabController.index) {
-                case 0:
-                  return _buildMeetingTab();
-                case 1:
-                  return _buildDocumentsTab();
-                case 2:
-                  return _buildTranscriptTab();
-                default:
-                  return const SizedBox.shrink();
-              }
-            },
-          ),
           SizedBox(height: 24.h),
 
           // ── Uploaded Sources ──
@@ -311,7 +155,8 @@ class _Step2AddSourcesState extends State<Step2AddSources>
               // Back
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => context.read<AddProjectCubit>().goBackToStep1(),
+                  onPressed: () =>
+                      context.read<AddProjectCubit>().goBackToStep1(),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                     side: BorderSide(color: AppColors.borderButton),
@@ -329,14 +174,16 @@ class _Step2AddSourcesState extends State<Step2AddSources>
                 ),
               ),
               SizedBox(width: 12.w),
-              // Continue
+              // Generate
               Expanded(
                 flex: 2,
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14.r),
-                    gradient: const LinearGradient(
-                      colors: [AppColors.lightPrimary, AppColors.primary],
+                    gradient: LinearGradient(
+                      colors: sources.isEmpty 
+                          ? [AppColors.grey, AppColors.grey]
+                          : [AppColors.lightPrimary, AppColors.primary],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
@@ -344,7 +191,8 @@ class _Step2AddSourcesState extends State<Step2AddSources>
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => context.read<AddProjectCubit>().createProject(),
+                      onTap: sources.isEmpty || projectId == null ? null : () =>
+                          context.read<AddProjectCubit>().uploadAndGenerate(projectId, sources),
                       borderRadius: BorderRadius.circular(14.r),
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -352,15 +200,18 @@ class _Step2AddSourcesState extends State<Step2AddSources>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Continue',
+                              'Generate',
                               style: boldStyle(
                                 fontSize: FontSize.font14,
                                 color: Colors.white,
                               ),
                             ),
                             SizedBox(width: 6.w),
-                            Icon(Icons.arrow_forward,
-                                color: Colors.white, size: 18.r),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 18.r,
+                            ),
                           ],
                         ),
                       ),
@@ -371,68 +222,6 @@ class _Step2AddSourcesState extends State<Step2AddSources>
             ],
           ),
           SizedBox(height: 24.h),
-        ],
-      ),
-    );
-  }
-
-  // ── Meeting Tab ──────────────────────────────────────────────────────────
-
-  Widget _buildMeetingTab() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F5FB),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Column(
-        children: [
-          // Mic icon circle
-          Container(
-            width: 56.r,
-            height: 56.r,
-            decoration: BoxDecoration(
-              color: AppColors.lightPrimaryBorder,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.mic, color: AppColors.primary, size: 28.r),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Ready to Capture Live Meeting',
-            style: semiBoldStyle(
-              fontSize: FontSize.font14,
-              color: AppColors.darkgrey,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            'Transcript in real-time, extract requirements, and\nmap stakeholder input instantly',
-            style: regularStyle(
-              fontSize: FontSize.font11,
-              color: AppColors.lightgrey,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 20.h),
-          OutlinedButton(
-            onPressed: _startMeeting,
-            style: OutlinedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
-              side: BorderSide(color: AppColors.primary, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: Text(
-              'Start Meeting',
-              style: semiBoldStyle(
-                fontSize: FontSize.font14,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -461,8 +250,11 @@ class _Step2AddSourcesState extends State<Step2AddSources>
           ),
           child: Column(
             children: [
-              Icon(Icons.cloud_upload_outlined,
-                  size: 40.r, color: AppColors.lightgrey),
+              Icon(
+                Icons.cloud_upload_outlined,
+                size: 40.r,
+                color: AppColors.lightgrey,
+              ),
               SizedBox(height: 12.h),
               Text(
                 'Click or drag file to this area to upload',
@@ -483,8 +275,10 @@ class _Step2AddSourcesState extends State<Step2AddSources>
               OutlinedButton(
                 onPressed: _pickFiles,
                 style: OutlinedButton.styleFrom(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28.w,
+                    vertical: 12.h,
+                  ),
                   side: BorderSide(color: AppColors.grey),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
@@ -504,117 +298,6 @@ class _Step2AddSourcesState extends State<Step2AddSources>
       ),
     );
   }
-
-  // ── Transcript Tab ───────────────────────────────────────────────────────
-
-  Widget _buildTranscriptTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Text area
-        TextFormField(
-          controller: _transcriptCtrl,
-          maxLines: 6,
-          decoration: InputDecoration(
-            hintText: 'What is this project about? Goals, users, constraints...',
-            hintStyle: regularStyle(
-              fontSize: FontSize.font13,
-              color: AppColors.lightgrey,
-            ),
-            filled: true,
-            fillColor: AppColors.white,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.lightgrey),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.lightgrey),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primary, width: 1.4.w),
-            ),
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        // Source Type label
-        Text(
-          'Source Type',
-          style: semiBoldStyle(
-            fontSize: FontSize.font13,
-            color: AppColors.darkgrey,
-          ),
-        ),
-        SizedBox(height: 8.h),
-
-        // Dropdown: PDF or DOCX only
-        DropdownButtonFormField<DocumentType>(
-          initialValue: _transcriptType,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.white,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.lightgrey),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.lightgrey),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primary, width: 1.4.w),
-            ),
-          ),
-          icon: Icon(Icons.keyboard_arrow_down, color: AppColors.grey),
-          borderRadius: BorderRadius.circular(12.r),
-          items: [DocumentType.pdf, DocumentType.docx]
-              .map((dt) => DropdownMenuItem<DocumentType>(
-                    value: dt,
-                    child: Text(
-                      dt.label,
-                      style: regularStyle(
-                        fontSize: FontSize.font14,
-                        color: AppColors.darkgrey,
-                      ),
-                    ),
-                  ))
-              .toList(),
-          onChanged: (v) {
-            if (v != null) setState(() => _transcriptType = v);
-          },
-        ),
-        SizedBox(height: 18.h),
-
-        // Save button
-        Center(
-          child: OutlinedButton(
-            onPressed: _saveTranscript,
-            style: OutlinedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
-              side: BorderSide(color: AppColors.primary, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: Text(
-              'Save Transcript',
-              style: semiBoldStyle(
-                fontSize: FontSize.font14,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// Custom painter for dashed border effect on the Documents upload zone.
@@ -632,4 +315,3 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

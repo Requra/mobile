@@ -4,6 +4,8 @@ import 'package:requra/features/add_project/data/datasource/add_project_remote_d
 import 'package:requra/features/add_project/data/repositories/add_project_repository_impl.dart';
 import 'package:requra/features/add_project/domain/repositories/add_project_repository.dart';
 import 'package:requra/features/add_project/domain/usecases/create_project_usecase.dart';
+import 'package:requra/features/add_project/domain/usecases/get_ai_run_progress_usecase.dart';
+import 'package:requra/features/add_project/domain/usecases/upload_and_generate_usecase.dart';
 import 'package:requra/features/add_project/presentation/cubit/add_project_cubit.dart';
 import 'package:requra/features/project_view/data/datasource/project_remote_data_source.dart';
 import 'package:requra/features/project_view/data/repositories/project_repository_impl.dart';
@@ -53,6 +55,8 @@ void initProjectDI() {
       
   sl.registerFactory(() => AddProjectCubit(
         createProjectUseCase: sl(),
+        uploadAndGenerateUseCase: sl(),
+        getAiRunProgressUseCase: sl(),
       ));
 
   sl.registerFactory(() => ProfileCubit(
@@ -82,6 +86,8 @@ void initProjectDI() {
   sl.registerLazySingleton(() => EditProjectUseCase(sl()));
   
   sl.registerLazySingleton(() => CreateProjectUseCase(sl()));
+  sl.registerLazySingleton(() => UploadAndGenerateUseCase(sl()));
+  sl.registerLazySingleton(() => GetAiRunProgressUseCase(sl()));
 
   sl.registerLazySingleton(() => GetProfileUseCase(sl()));
   sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));

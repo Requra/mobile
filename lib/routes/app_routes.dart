@@ -17,6 +17,9 @@ import 'package:requra/core/di/di_project.dart';
 import 'package:requra/screens/auth/signup_screen.dart';
 import 'package:requra/screens/auth/verification_screen.dart';
 import 'package:requra/features/meeting/presentation/pages/live_meeting_screen.dart';
+import 'package:requra/features/meeting/presentation/pages/meeting_finished_screen.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_finished_cubit.dart';
+import 'package:requra/features/meeting/domain/entities/meeting_summary.dart';
 import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/widgets/userstories_tabView.dart';
 import 'package:requra/features/main_layout/presentation/pages/main_navigation.dart';
@@ -40,6 +43,7 @@ class AppRoutes {
   static const String resetPassword = '/resetPassword';
   static const String passwordUpdated = '/passwordUpdated';
   static const String liveMeeting = '/liveMeeting';
+  static const String meetingFinished = '/meetingFinished';
   static const String addProject = '/addProject';
   static const String editProject = '/editProject';
 
@@ -72,6 +76,13 @@ class AppRoutes {
       resetPassword: (_) => const setNewPasswordScreen(),
       passwordUpdated: (_) => const UpdatepasswordScreen(),
       liveMeeting: (_) => const LiveMeetingScreen(),
+      meetingFinished: (context) {
+        final summary = ModalRoute.of(context)!.settings.arguments as MeetingSummary;
+        return BlocProvider(
+          create: (_) => MeetingFinishedCubit()..init(summary),
+          child: const MeetingFinishedScreen(),
+        );
+      },
       addProject: (_) => const AddProjectScreen(),
       editProject: (context) {
         final project = ModalRoute.of(context)!.settings.arguments as Project;

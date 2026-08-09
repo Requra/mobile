@@ -33,7 +33,7 @@ class AiResultsTab extends StatelessWidget {
       dashboard.metrics.userStories,
       dashboard.metrics.risksCount +
           dashboard.metrics.openQuestionsCount +
-          dashboard.metrics.warningsCount, // Review Queue
+          (dashboard.qualityReport?.highSeverityIssueCount ?? 0), // Review Queue
       -1, // Evidence
       -1, // Export
     ];

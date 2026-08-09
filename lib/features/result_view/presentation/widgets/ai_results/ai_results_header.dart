@@ -94,11 +94,12 @@ class AiResultsHeader extends StatelessWidget {
                           label:
                               '${(dashboard.relevanceScore * 100).toInt()}% relevant',
                         ),
-                        _buildChip(
-                          icon: Icons.access_time,
-                          label:
-                              '${dashboard.processingTimeMs / 1000}s processing',
-                        ),
+                        if (dashboard.qualityReport?.overallScore != null)
+                          _buildChip(
+                            icon: Icons.high_quality_outlined,
+                            label:
+                                '${(dashboard.qualityReport!.overallScore! * 100).toInt()}% quality',
+                          ),
                         if (dashboard.generatedAt != null)
                           _buildChip(
                             icon: Icons.calendar_today_outlined,
@@ -240,7 +241,9 @@ class AiResultsHeader extends StatelessWidget {
                   iconBgColor: const Color(0xFFDCFCE7),
                   title: 'Coverage',
                   subtitle: 'Requirement → story coverage',
-                  value: '60%', // This should be calculated or passed from API
+                  value: dashboard.qualityReport?.traceabilityCoverage != null
+                      ? '${(dashboard.qualityReport!.traceabilityCoverage! * 100).toInt()}%'
+                      : 'N/A',
                 ),
 
                 SizedBox(height: 16.h),

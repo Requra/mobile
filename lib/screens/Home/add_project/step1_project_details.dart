@@ -13,10 +13,7 @@ import 'package:requra/core/theme/style_manager.dart';
 ///
 /// Collects project name, client email, type, description, and team members.
 class Step1ProjectDetails extends StatefulWidget {
-  const Step1ProjectDetails({
-    super.key,
-    this.initialData,
-  });
+  const Step1ProjectDetails({super.key, this.initialData});
 
   /// Pre-fill the form when navigating back from Step 2.
   final ProjectDetails? initialData;
@@ -70,8 +67,8 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
       description: _descCtrl.text.trim(),
       teamMembers: _teamEmails,
     );
-    
-    context.read<AddProjectCubit>().setProjectDetails(details);
+
+    context.read<AddProjectCubit>().createProject(details);
   }
 
   void _onBack() {
@@ -81,10 +78,7 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
   }
 
   // ── Shared input decoration ──────────────────────────────────────────────
-  InputDecoration _inputDecoration({
-    required String hint,
-    Widget? suffixIcon,
-  }) {
+  InputDecoration _inputDecoration({required String hint, Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: regularStyle(
@@ -115,11 +109,7 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
         borderRadius: BorderRadius.circular(12.r),
         borderSide: const BorderSide(color: Colors.red, width: 1.4),
       ),
-      errorStyle: TextStyle(
-        color: Colors.red,
-        fontSize: 11.sp,
-        height: 1.2,
-      ),
+      errorStyle: TextStyle(color: Colors.red, fontSize: 11.sp, height: 1.2),
     );
   }
 
@@ -163,8 +153,9 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
             TextFormField(
               controller: _nameCtrl,
               decoration: _inputDecoration(hint: 'Ecommerce Platform'),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Project name is required' : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'Project name is required'
+                  : null,
             ),
             SizedBox(height: 18.h),
 
@@ -176,8 +167,10 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
               keyboardType: TextInputType.emailAddress,
               decoration: _inputDecoration(hint: 'client@company.com'),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Client email is required';
-                if (!_emailRegex.hasMatch(v.trim())) return 'Enter a valid email';
+                if (v == null || v.trim().isEmpty)
+                  return 'Client email is required';
+                if (!_emailRegex.hasMatch(v.trim()))
+                  return 'Enter a valid email';
                 return null;
               },
             ),
@@ -218,8 +211,12 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
               controller: _descCtrl,
               maxLines: 4,
               decoration: _inputDecoration(
-                hint: 'What is this project about? Goals, users, constraints...',
+                hint:
+                    'What is this project about? Goals, users, constraints...',
               ),
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'Description is required'
+                  : null,
             ),
             SizedBox(height: 18.h),
 
@@ -279,14 +276,18 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Continue',
+                                'Create Project',
                                 style: boldStyle(
                                   fontSize: FontSize.font14,
                                   color: Colors.white,
                                 ),
                               ),
                               SizedBox(width: 6.w),
-                              Icon(Icons.arrow_forward, color: Colors.white, size: 18.r),
+                              Icon(
+                                Icons.arrow_forward,
+                                color: Colors.white,
+                                size: 18.r,
+                              ),
                             ],
                           ),
                         ),

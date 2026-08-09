@@ -18,58 +18,79 @@ class AddProjectStep1 extends AddProjectState {
   List<Object?> get props => [details];
 }
 
+class AddProjectStep1Loading extends AddProjectState {
+  final ProjectDetails details;
+
+  const AddProjectStep1Loading({required this.details});
+
+  @override
+  List<Object?> get props => [details];
+}
+
 class AddProjectStep2 extends AddProjectState {
   final ProjectDetails details;
   final List<SourceItem> sources;
+  final String projectId;
 
   const AddProjectStep2({
     required this.details,
     required this.sources,
+    required this.projectId,
   });
 
   @override
-  List<Object?> get props => [details, sources];
+  List<Object?> get props => [details, sources, projectId];
 }
 
 class AddProjectCreating extends AddProjectState {
   final ProjectDetails details;
   final List<SourceItem> sources;
+  final String projectId;
+  final int progress;
+  final String statusMessage;
+  final String? aiJobId;
 
   const AddProjectCreating({
     required this.details,
     required this.sources,
+    required this.projectId,
+    this.progress = 0,
+    this.statusMessage = 'Starting AI...',
+    this.aiJobId,
   });
 
   @override
-  List<Object?> get props => [details, sources];
+  List<Object?> get props => [details, sources, projectId, progress, statusMessage, aiJobId];
 }
 
 class AddProjectSuccess extends AddProjectState {
-  final ProjectCreationResult result;
   final ProjectDetails details;
   final List<SourceItem> sources;
+  final String projectId;
 
   const AddProjectSuccess({
-    required this.result,
     required this.details,
     required this.sources,
+    required this.projectId,
   });
 
   @override
-  List<Object?> get props => [result, details, sources];
+  List<Object?> get props => [details, sources, projectId];
 }
 
 class AddProjectError extends AddProjectState {
   final String message;
   final ProjectDetails details;
   final List<SourceItem> sources;
+  final String? projectId;
 
   const AddProjectError({
     required this.message,
     required this.details,
     required this.sources,
+    this.projectId,
   });
 
   @override
-  List<Object?> get props => [message, details, sources];
+  List<Object?> get props => [message, details, sources, projectId];
 }

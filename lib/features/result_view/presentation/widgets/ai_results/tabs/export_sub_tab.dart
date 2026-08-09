@@ -69,10 +69,8 @@ class ExportSubTab extends StatelessWidget {
       _ReadinessCheck(
         icon: Icons.check_circle_outline,
         title: 'XLSX export supported',
-        subtitle: dashboard.exports.excel.available && dashboard.exports.excel.columns != null
-            ? '${dashboard.exports.excel.columns!.length} columns: ${dashboard.exports.excel.columns!.take(4).join(', ')}…'
-            : 'Not available',
-        isReady: dashboard.exports.excel.available,
+        subtitle: 'Standard requirement and user story columns',
+        isReady: dashboard.requirements.isNotEmpty,
       ),
       _ReadinessCheck(
         icon: Icons.check_circle_outline,
@@ -317,8 +315,8 @@ class ExportSubTab extends StatelessWidget {
 
   // ─── Download from this run ───
   Widget _buildDownloadSection() {
-    final int excelRows = dashboard.exports.excel.rows?.length ?? 0;
-    final int jiraIssues = dashboard.exports.jira.rows?.length ?? 0;
+    final int excelRows = dashboard.requirements.length;
+    final int jiraIssues = dashboard.userStories.length;
 
     return Container(
       width: double.infinity,

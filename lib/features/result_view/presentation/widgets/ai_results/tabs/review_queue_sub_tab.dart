@@ -29,7 +29,7 @@ class ReviewQueueSubTab extends StatelessWidget {
                 SizedBox(height: 16.h),
                 _buildActionItems(),
                 SizedBox(height: 16.h),
-                _buildQualityAndWarnings(),
+                _buildQualityReport(),
               ],
             )
           : Row(
@@ -50,7 +50,7 @@ class ReviewQueueSubTab extends StatelessWidget {
                     children: [
                       _buildOpenQuestions(),
                       SizedBox(height: 16.h),
-                      _buildQualityAndWarnings(),
+                      _buildQualityReport(),
                     ],
                   ),
                 ),
@@ -151,6 +151,7 @@ class ReviewQueueSubTab extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(child: Text(risk.title, style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.black))),
+                  SizedBox(width: 8.w),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                     decoration: BoxDecoration(
@@ -244,13 +245,20 @@ class ReviewQueueSubTab extends StatelessWidget {
                         children: [
                           Icon(Icons.person_outline, size: 14.sp, color: AppColors.grey),
                           SizedBox(width: 4.w),
-                          Text(item.owner!, style: regularStyle(fontSize: FontSize.font12, color: AppColors.grey)),
+                          Expanded(
+                            child: Text(
+                              item.owner!,
+                              style: regularStyle(fontSize: FontSize.font12, color: AppColors.grey),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ]
                   ],
                 ),
               ),
+              SizedBox(width: 8.w),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                 decoration: BoxDecoration(
@@ -266,48 +274,82 @@ class ReviewQueueSubTab extends StatelessWidget {
     );
   }
 
-  Widget _buildQualityAndWarnings() {
-    int totalCount = dashboard.qualityIssues.length + dashboard.warnings.length;
+  Widget _buildQualityReport() {
+    final report = dashboard.qualityReport;
+    if (report == null) return const SizedBox();
+
     return _buildSectionContainer(
-      icon: Icons.warning_amber_rounded,
+      icon: Icons.high_quality,
       iconColor: const Color(0xFFD97706),
       iconBgColor: const Color(0xFFFEF3C7),
-      title: 'Quality & Warnings',
-      count: totalCount,
+      title: 'Quality Report',
+      count: report.highSeverityIssueCount ?? 0,
       children: [
-        ...dashboard.qualityIssues.map((issue) {
-          return Container(
-            width: double.infinity,
-            margin: EdgeInsets.only(bottom: 8.h),
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFBEB),
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: const Color(0xFFFEF3C7)),
-            ),
-            child: Text(issue.message, style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.black)),
-          );
-        }),
-        ...dashboard.warnings.map((warning) {
-          return Container(
-            width: double.infinity,
-            margin: EdgeInsets.only(bottom: 8.h),
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
+        _buildQualityMetric(
+            'Overall Score', report.overallScore, Icons.score),
+        _buildQualityMetric('Traceability Coverage',
+            report.traceabilityCoverage, Icons.verified_user),
+        _buildQualityMetric('Groundedness Score', report.groundednessScore,
+            Icons.library_books),
+        _buildQualityMetric('Story Completeness', report.storyCompleteness,
+            Icons.done_all),
+        _buildQualityMetric('Acceptance Criteria Quality',
+            report.acceptanceCriteriaQuality, Icons.rule),
+        _buildQualityMetric(
+            'Duplicate Risk', report.duplicateRisk, Icons.copy,
+            invertColor: true),
+      ],
+    );
+  }
+
+  Widget _buildQualityMetric(String title, double? value, IconData icon,
+      {bool invertColor = false}) {
+    if (value == null) return const SizedBox();
+    
+    // For duplicate risk, lower is better. For others, higher is better.
+    Color valueColor;
+    if (invertColor) {
+      valueColor = value > 0.1 ? AppColors.error : AppColors.statusFinished;
+    } else {
+      valueColor = value >= 0.8
+          ? AppColors.statusFinished
+          : (value >= 0.6 ? const Color(0xFFD97706) : AppColors.error);
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
             child: Row(
               children: [
-                Icon(Icons.info_outline, size: 16.sp, color: AppColors.grey),
+                Icon(icon, size: 16.sp, color: AppColors.grey),
                 SizedBox(width: 8.w),
-                Expanded(child: Text(warning.message, style: regularStyle(fontSize: FontSize.font14, color: AppColors.black))),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: regularStyle(fontSize: FontSize.font14, color: AppColors.black),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
-          );
-        }),
-      ],
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            '${(value * 100).toInt()}%',
+            style: semiBoldStyle(fontSize: FontSize.font14, color: valueColor),
+          ),
+        ],
+      ),
     );
   }
 }

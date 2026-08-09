@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class AiResultsDashboard extends Equatable {
   final String projectId;
   final String analysisRunId;
-  final String status;
+  final String status; // corresponds to analysisRunStatus
   final DateTime? generatedAt;
   final String contractVersion;
   final bool isUseful;
@@ -13,13 +13,7 @@ class AiResultsDashboard extends Equatable {
   final AiMetrics metrics;
   final List<AiRequirement> requirements;
   final List<AiUserStory> userStories;
-  final List<AiRequirementCoverage> requirementCoverages;
-  final AiExports exports;
-  final AiArtifacts artifacts;
-  final List<AiQualityIssue> qualityIssues;
-  final List<AiWarning> warnings;
-  final AiError? error;
-  final int processingTimeMs;
+  final QualityReport? qualityReport;
 
   const AiResultsDashboard({
     required this.projectId,
@@ -34,13 +28,7 @@ class AiResultsDashboard extends Equatable {
     required this.metrics,
     required this.requirements,
     required this.userStories,
-    required this.requirementCoverages,
-    required this.exports,
-    required this.artifacts,
-    required this.qualityIssues,
-    required this.warnings,
-    this.error,
-    required this.processingTimeMs,
+    this.qualityReport,
   });
 
   @override
@@ -57,36 +45,30 @@ class AiResultsDashboard extends Equatable {
         metrics,
         requirements,
         userStories,
-        requirementCoverages,
-        exports,
-        artifacts,
-        qualityIssues,
-        warnings,
-        error,
-        processingTimeMs,
+        qualityReport,
       ];
 }
 
 class SourceDocument extends Equatable {
   final String id;
-  final String backendDocumentId;
   final String title;
-  final int type;
-  final int language;
+  final String? type;
+  final String? language;
   final String mimeType;
+  final String? fileUrl;
 
   const SourceDocument({
     required this.id,
-    required this.backendDocumentId,
     required this.title,
-    required this.type,
-    required this.language,
+    this.type,
+    this.language,
     required this.mimeType,
+    this.fileUrl,
   });
 
   @override
   List<Object?> get props =>
-      [id, backendDocumentId, title, type, language, mimeType];
+      [id, title, type, language, mimeType, fileUrl];
 }
 
 class AiSummary extends Equatable {
@@ -130,7 +112,7 @@ class AiOpenQuestion extends Equatable {
   final String id;
   final String question;
   final List<String> sourceDocumentIds;
-  final List<SourceRef> sourceRefs;
+  final List<SourceRef> sourceRefs; // Might not be returned based on JSON, but kept for compatibility if needed
 
   const AiOpenQuestion({
     required this.id,
@@ -148,18 +130,16 @@ class AiRisk extends Equatable {
   final String title;
   final String severity;
   final String description;
-  final List<SourceRef> sourceRefs;
 
   const AiRisk({
     required this.id,
     required this.title,
     required this.severity,
     required this.description,
-    required this.sourceRefs,
   });
 
   @override
-  List<Object?> get props => [id, title, severity, description, sourceRefs];
+  List<Object?> get props => [id, title, severity, description];
 }
 
 class AiActionItem extends Equatable {
@@ -167,38 +147,96 @@ class AiActionItem extends Equatable {
   final String title;
   final String? owner;
   final String priority;
-  final List<SourceRef> sourceRefs;
 
   const AiActionItem({
     required this.id,
     required this.title,
     this.owner,
     required this.priority,
-    required this.sourceRefs,
   });
 
   @override
-  List<Object?> get props => [id, title, owner, priority, sourceRefs];
+  List<Object?> get props => [id, title, owner, priority];
 }
 
 class SourceRef extends Equatable {
-  final String sourceDocumentId;
-  final String backendDocumentId;
-  final int page;
-  final String chunkId;
-  final String quote;
+  final String? documentId;
+  final String? sourceId;
+  final String? documentTitle;
+  final String? sourceType;
+  final String? chunkId;
+  final double? confidenceScore;
+  final String? fileUrl;
+  final String? quote;
 
   const SourceRef({
-    required this.sourceDocumentId,
-    required this.backendDocumentId,
-    required this.page,
-    required this.chunkId,
-    required this.quote,
+    this.documentId,
+    this.sourceId,
+    this.documentTitle,
+    this.sourceType,
+    this.chunkId,
+    this.confidenceScore,
+    this.fileUrl,
+    this.quote,
   });
 
   @override
   List<Object?> get props =>
-      [sourceDocumentId, backendDocumentId, page, chunkId, quote];
+      [documentId, sourceId, documentTitle, sourceType, chunkId, confidenceScore, fileUrl, quote];
+}
+
+class QualityInfo extends Equatable {
+  final double? score;
+  final String? level;
+  final List<String>? issues;
+  final List<String>? warnings;
+
+  const QualityInfo({
+    this.score,
+    this.level,
+    this.issues,
+    this.warnings,
+  });
+
+  @override
+  List<Object?> get props => [score, level, issues, warnings];
+}
+
+class QualityReport extends Equatable {
+  final double? overallScore;
+  final double? traceabilityCoverage;
+  final double? groundednessScore;
+  final double? storyCompleteness;
+  final double? acceptanceCriteriaQuality;
+  final double? duplicateRisk;
+  final int? highSeverityIssueCount;
+  final int? requirementCount;
+  final int? storyCount;
+
+  const QualityReport({
+    this.overallScore,
+    this.traceabilityCoverage,
+    this.groundednessScore,
+    this.storyCompleteness,
+    this.acceptanceCriteriaQuality,
+    this.duplicateRisk,
+    this.highSeverityIssueCount,
+    this.requirementCount,
+    this.storyCount,
+  });
+
+  @override
+  List<Object?> get props => [
+        overallScore,
+        traceabilityCoverage,
+        groundednessScore,
+        storyCompleteness,
+        acceptanceCriteriaQuality,
+        duplicateRisk,
+        highSeverityIssueCount,
+        requirementCount,
+        storyCount,
+      ];
 }
 
 class AiMetrics extends Equatable {
@@ -246,20 +284,32 @@ class AiRequirement extends Equatable {
   final String title;
   final String description;
   final String type;
+  final String? category;
   final String priority;
+  final String? actor;
   final double confidenceScore;
+  final QualityInfo? quality;
   final List<String> sourceDocumentIds;
   final List<SourceRef> sourceRefs;
+  final String? workflowStatus;
+  final int? version;
+  final String? qualityStatus;
 
   const AiRequirement({
     required this.id,
     required this.title,
     required this.description,
     required this.type,
+    this.category,
     required this.priority,
+    this.actor,
     required this.confidenceScore,
+    this.quality,
     required this.sourceDocumentIds,
     required this.sourceRefs,
+    this.workflowStatus,
+    this.version,
+    this.qualityStatus,
   });
 
   @override
@@ -268,10 +318,16 @@ class AiRequirement extends Equatable {
         title,
         description,
         type,
+        category,
         priority,
+        actor,
         confidenceScore,
+        quality,
         sourceDocumentIds,
         sourceRefs,
+        workflowStatus,
+        version,
+        qualityStatus,
       ];
 }
 
@@ -280,10 +336,17 @@ class AiUserStory extends Equatable {
   final String title;
   final String description;
   final String userStory;
-  final List<AiAcceptanceCriteria> acceptanceCriteria;
+  final List<String> acceptanceCriteria;
   final String priority;
+  final String? type;
   final String requirementId;
+  final QualityInfo? quality;
   final List<SourceRef> sourceRefs;
+  final String? workflowStatus;
+  final int? version;
+  final String? qualityStatus;
+  final int? revisionNumber;
+  final String? revisionSource;
 
   const AiUserStory({
     required this.id,
@@ -292,8 +355,15 @@ class AiUserStory extends Equatable {
     required this.userStory,
     required this.acceptanceCriteria,
     required this.priority,
+    this.type,
     required this.requirementId,
+    this.quality,
     required this.sourceRefs,
+    this.workflowStatus,
+    this.version,
+    this.qualityStatus,
+    this.revisionNumber,
+    this.revisionSource,
   });
 
   @override
@@ -304,138 +374,14 @@ class AiUserStory extends Equatable {
         userStory,
         acceptanceCriteria,
         priority,
+        type,
         requirementId,
+        quality,
         sourceRefs,
+        workflowStatus,
+        version,
+        qualityStatus,
+        revisionNumber,
+        revisionSource,
       ];
-}
-
-class AiAcceptanceCriteria extends Equatable {
-  final String id;
-  final String text;
-  final String format;
-
-  const AiAcceptanceCriteria({
-    required this.id,
-    required this.text,
-    required this.format,
-  });
-
-  @override
-  List<Object?> get props => [id, text, format];
-}
-
-class AiRequirementCoverage extends Equatable {
-  final String requirementId;
-  final List<String> userStoryIds;
-  final String coverageStatus;
-
-  const AiRequirementCoverage({
-    required this.requirementId,
-    required this.userStoryIds,
-    required this.coverageStatus,
-  });
-
-  @override
-  List<Object?> get props => [requirementId, userStoryIds, coverageStatus];
-}
-
-class AiExports extends Equatable {
-  final AiExportData excel;
-  final AiExportData jira;
-
-  const AiExports({
-    required this.excel,
-    required this.jira,
-  });
-
-  @override
-  List<Object?> get props => [excel, jira];
-}
-
-class AiExportData extends Equatable {
-  final bool available;
-  final List<String>? columns;
-  final List<Map<String, dynamic>>? rows;
-  final String? issueType;
-
-  const AiExportData({
-    required this.available,
-    this.columns,
-    this.rows,
-    this.issueType,
-  });
-
-  @override
-  List<Object?> get props => [available, columns, rows, issueType];
-}
-
-class AiArtifacts extends Equatable {
-  final AiArtifactFile excelFile;
-
-  const AiArtifacts({required this.excelFile});
-
-  @override
-  List<Object?> get props => [excelFile];
-}
-
-class AiArtifactFile extends Equatable {
-  final bool available;
-  final String fileUrl;
-  final String fileName;
-  final String mimeType;
-
-  const AiArtifactFile({
-    required this.available,
-    required this.fileUrl,
-    required this.fileName,
-    required this.mimeType,
-  });
-
-  @override
-  List<Object?> get props => [available, fileUrl, fileName, mimeType];
-}
-
-class AiQualityIssue extends Equatable {
-  final String id;
-  final String severity;
-  final String message;
-  final String targetId;
-
-  const AiQualityIssue({
-    required this.id,
-    required this.severity,
-    required this.message,
-    required this.targetId,
-  });
-
-  @override
-  List<Object?> get props => [id, severity, message, targetId];
-}
-
-class AiWarning extends Equatable {
-  final String code;
-  final String message;
-
-  const AiWarning({
-    required this.code,
-    required this.message,
-  });
-
-  @override
-  List<Object?> get props => [code, message];
-}
-
-class AiError extends Equatable {
-  final String code;
-  final String message;
-  final Map<String, dynamic>? details;
-
-  const AiError({
-    required this.code,
-    required this.message,
-    this.details,
-  });
-
-  @override
-  List<Object?> get props => [code, message, details];
 }

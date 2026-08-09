@@ -111,13 +111,17 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                widget.req.id,
-                style: semiBoldStyle(
-                  fontSize: FontSize.font12,
-                  color: AppColors.grey,
+              Expanded(
+                child: Text(
+                  widget.req.id,
+                  style: semiBoldStyle(
+                    fontSize: FontSize.font12,
+                    color: AppColors.grey,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              SizedBox(width: 8.w),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                 decoration: BoxDecoration(
@@ -197,7 +201,9 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
           ),
           SizedBox(height: 12.h),
           // Tags
-          Row(
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
             children: [
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -213,45 +219,111 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
                   ),
                 ),
               ),
-              // Mock tags for design
-              SizedBox(width: 8.w),
+              if (widget.req.workflowStatus != null)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    widget.req.workflowStatus!,
+                    style: semiBoldStyle(
+                      fontSize: FontSize.font10,
+                      color: AppColors.grey,
+                    ),
+                  ),
+                ),
             ],
           ),
+          if (widget.req.category != null || widget.req.actor != null) ...[
+            SizedBox(height: 12.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 4.h,
+              children: [
+                if (widget.req.category != null)
+                  Text(
+                    'Category: ${widget.req.category}',
+                    style: regularStyle(fontSize: FontSize.font12, color: AppColors.grey),
+                  ),
+                if (widget.req.category != null && widget.req.actor != null)
+                  Text(
+                    '•',
+                    style: regularStyle(fontSize: FontSize.font12, color: AppColors.grey),
+                  ),
+                if (widget.req.actor != null)
+                  Text(
+                    'Actor: ${widget.req.actor}',
+                    style: regularStyle(fontSize: FontSize.font12, color: AppColors.grey),
+                  ),
+              ],
+            ),
+          ],
           SizedBox(height: 16.h),
           Divider(height: 1, color: const Color(0xFFE5E7EB)),
           SizedBox(height: 12.h),
           // Footer: Confidence and Evidence
-          Row(
+          Wrap(
+            spacing: 16.w,
+            runSpacing: 8.h,
             children: [
-              Text(
-                'CONFIDENCE',
-                style: semiBoldStyle(
-                  fontSize: FontSize.font10,
-                  color: AppColors.grey,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4.r),
-                  child: LinearProgressIndicator(
-                    value: widget.req.confidenceScore,
-                    backgroundColor: const Color(0xFFE5E7EB),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      const Color(0xFFF59E0B),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'CONFIDENCE',
+                    style: semiBoldStyle(
+                      fontSize: FontSize.font10,
+                      color: AppColors.grey,
                     ),
-                    minHeight: 4.h,
                   ),
-                ),
+                  SizedBox(width: 8.w),
+                  SizedBox(
+                    width: 60.w,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        value: widget.req.confidenceScore,
+                        backgroundColor: const Color(0xFFE5E7EB),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          const Color(0xFFF59E0B),
+                        ),
+                        minHeight: 4.h,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '${(widget.req.confidenceScore * 100).toInt()}%',
+                    style: semiBoldStyle(
+                      fontSize: FontSize.font12,
+                      color: AppColors.grey,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 8.w),
-              Text(
-                '${(widget.req.confidenceScore * 100).toInt()}%',
-                style: semiBoldStyle(
-                  fontSize: FontSize.font12,
-                  color: AppColors.grey,
+              if (widget.req.quality?.score != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'QUALITY',
+                      style: semiBoldStyle(
+                        fontSize: FontSize.font10,
+                        color: AppColors.grey,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '${(widget.req.quality!.score! * 100).toInt()}%',
+                      style: semiBoldStyle(
+                        fontSize: FontSize.font12,
+                        color: AppColors.statusFinished,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
             ],
           ),
         ],

@@ -61,9 +61,11 @@ class EvidenceSubTab extends StatelessWidget {
                             ),
                             SizedBox(height: 2.h),
                             Text(
-                              doc.mimeType.isNotEmpty
-                                  ? doc.mimeType
-                                  : 'application/pdf',
+                              [
+                                if (doc.type != null) doc.type!,
+                                if (doc.language != null) doc.language!,
+                                doc.mimeType.isNotEmpty ? doc.mimeType : 'application/pdf'
+                              ].join(' • '),
                               style: regularStyle(
                                 fontSize: FontSize.font12,
                                 color: AppColors.grey,
@@ -154,25 +156,16 @@ class EvidenceSubTab extends StatelessWidget {
                         ),
 
                         // Table rows
-                        ...dashboard.requirementCoverages.map((cov) {
-                          // Find the requirement title
-                          final req = dashboard.requirements
-                              .where((r) => r.id == cov.requirementId)
-                              .firstOrNull;
-                          final reqTitle = req?.title ?? cov.requirementId;
+                        ...dashboard.requirements.map((req) {
+                          final reqTitle = req.title;
 
-                          // Find linked user stories
-                          final linkedStories = cov.userStoryIds
-                              .map((sid) {
-                                final us = dashboard.userStories
-                                    .where((s) => s.id == sid)
-                                    .firstOrNull;
-                                return us?.title ?? sid;
-                              })
+                          // Find linked user stories by requirementId
+                          final linkedStories = dashboard.userStories
+                              .where((s) => s.requirementId == req.id)
+                              .map((s) => s.title)
                               .toList();
 
-                          final isCovered =
-                              cov.coverageStatus.toLowerCase() == 'covered';
+                          final isCovered = linkedStories.isNotEmpty;
                           final coveragePercent = isCovered ? '100%' : '0%';
 
                           return Container(
@@ -195,7 +188,7 @@ class EvidenceSubTab extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        cov.requirementId,
+                                        req.id,
                                         style: regularStyle(
                                           fontSize: FontSize.font10,
                                           color: AppColors.grey,

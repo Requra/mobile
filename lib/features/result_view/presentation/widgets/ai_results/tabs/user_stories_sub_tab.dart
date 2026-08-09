@@ -92,6 +92,23 @@ class UserStoriesSubTab extends StatelessWidget {
                   ),
                 ),
               ),
+              if (story.workflowStatus != null) ...[
+                SizedBox(width: 8.w),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    story.workflowStatus!,
+                    style: semiBoldStyle(
+                      fontSize: FontSize.font10,
+                      color: AppColors.grey,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           SizedBox(height: 8.h),
@@ -143,7 +160,7 @@ class UserStoriesSubTab extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      ac.text,
+                      ac,
                       style: regularStyle(
                         fontSize: FontSize.font14,
                         color: AppColors.grey,
@@ -169,6 +186,24 @@ class UserStoriesSubTab extends StatelessWidget {
                   color: AppColors.grey,
                 ),
               ),
+              if (story.quality?.score != null) ...[
+                const Spacer(),
+                Text(
+                  'QUALITY',
+                  style: semiBoldStyle(
+                    fontSize: FontSize.font10,
+                    color: AppColors.grey,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '${(story.quality!.score! * 100).toInt()}%',
+                  style: semiBoldStyle(
+                    fontSize: FontSize.font12,
+                    color: AppColors.statusFinished,
+                  ),
+                ),
+              ],
             ],
           ),
         ],

@@ -6,7 +6,6 @@ import 'package:requra/features/add_project/presentation/cubit/add_project_cubit
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
-import 'package:requra/features/project/data/models/project_creation_result.dart';
 
 class Step3AiGenerate extends StatefulWidget {
   final VoidCallback onViewResults;
@@ -88,16 +87,21 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
 
   Widget _buildStateContent(BuildContext context, AddProjectState state) {
     if (state is AddProjectCreating) {
-      return _buildLoadingState();
+      return _buildLoadingState(state);
     } else if (state is AddProjectSuccess) {
-      return _buildSuccessState(state.result);
+      return _buildSuccessState();
     } else if (state is AddProjectError) {
       return _buildErrorState(context, state.message);
     }
     return const SizedBox.shrink();
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(AddProjectCreating state) {
+    // If progress > 0, we can show it, otherwise just show the message
+    String displayMessage = state.statusMessage.isNotEmpty 
+        ? state.statusMessage 
+        : _loadingMessages[_currentMessageIndex];
+
     return SingleChildScrollView(
       key: const ValueKey('loading_state'),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
@@ -133,9 +137,36 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
             fit: BoxFit.contain,
           ),
 
-          SizedBox(height: 40.h),
+          SizedBox(height: 30.h),
 
-          // Rotating Loading Pill
+          // Progress Bar
+          if (state.progress > 0)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40.w),
+              child: Column(
+                children: [
+                  LinearProgressIndicator(
+                    value: state.progress / 100,
+                    backgroundColor: const Color(0xFFEBEBEB),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    borderRadius: BorderRadius.circular(10.r),
+                    minHeight: 8.h,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '${state.progress}%',
+                    style: semiBoldStyle(
+                      fontSize: FontSize.font12,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+          SizedBox(height: 20.h),
+
+          // Message Pill
           Container(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
             decoration: BoxDecoration(
@@ -171,10 +202,8 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
                         return FadeTransition(opacity: animation, child: child);
                       },
                   child: Text(
-                    _loadingMessages[_currentMessageIndex],
-                    key: ValueKey<String>(
-                      _loadingMessages[_currentMessageIndex],
-                    ),
+                    displayMessage,
+                    key: ValueKey<String>(displayMessage),
                     style: semiBoldStyle(
                       fontSize: FontSize.font13,
                       color: AppColors.primary,
@@ -189,7 +218,7 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
     );
   }
 
-  Widget _buildSuccessState(ProjectCreationResult result) {
+  Widget _buildSuccessState() {
     return SingleChildScrollView(
       key: const ValueKey('success_state'),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
@@ -228,45 +257,6 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
                 fit: BoxFit.contain,
               ),
             ],
-          ),
-
-          SizedBox(height: 32.h),
-
-          // Summary Cards Row (Horizontally Scrollable)
-          SizedBox(
-            height: 120.h,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              children: [
-                _buildSummaryCard(
-                  icon: Icons.person_outline,
-                  iconColor: AppColors.primary,
-                  iconBgColor: const Color(0xFFEBE6F5),
-                  count: result.actorsCount,
-                  title: 'Actors Identified',
-                  subtitle: result.actorsSummary,
-                ),
-                SizedBox(width: 16.w),
-                _buildSummaryCard(
-                  icon: Icons.checklist_rtl,
-                  iconColor: Colors.green,
-                  iconBgColor: const Color(0xFFE8F5E9),
-                  count: result.requirementsCount,
-                  title: 'Requirements Generated',
-                  subtitle: result.requirementsSummary,
-                ),
-                SizedBox(width: 16.w),
-                _buildSummaryCard(
-                  icon: Icons.assignment_outlined,
-                  iconColor: Colors.orange,
-                  iconBgColor: const Color(0xFFFFF3E0),
-                  count: result.userStoriesCount,
-                  title: 'User Stories Created',
-                  subtitle: result.userStoriesSummary,
-                ),
-              ],
-            ),
           ),
 
           SizedBox(height: 40.h),
@@ -363,72 +353,6 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
     );
   }
 
-  Widget _buildSummaryCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBgColor,
-    required int count,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      width: 260.w, // Fixed width for horizontal scrolling
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFF0F0F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48.r,
-                height: 48.r,
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 24.r),
-              ),
-              SizedBox(width: 16.w),
-              Text(
-                count.toString(),
-                style: boldStyle(fontSize: 28.sp, color: AppColors.darkgrey),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            title,
-            style: semiBoldStyle(
-              fontSize: FontSize.font13,
-              color: const Color(0xFF51525C), // grey
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            subtitle,
-            style: regularStyle(
-              fontSize: FontSize.font11,
-              color: AppColors.lightgrey,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 

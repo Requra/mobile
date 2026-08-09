@@ -10,9 +10,11 @@ import 'package:requra/features/meeting/presentation/widgets/live_meeting/invite
 import 'package:requra/features/meeting/presentation/widgets/live_meeting/meeting_bottom_action_bar.dart';
 import 'package:requra/features/meeting/presentation/widgets/live_meeting/pending_invitations_sheet.dart';
 import 'package:requra/features/meeting/presentation/widgets/live_meeting/remove_participant_sheet.dart';
+import 'package:requra/features/meeting/domain/entities/meeting_summary.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/routes/app_routes.dart';
 
 /// The live meeting screen shown when a meeting has status LIVE or RECORDING.
 ///
@@ -471,8 +473,17 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
 
   void _navigateAway() {
     if (!mounted) return;
-    // Navigate back — in production this would go to a summary screen.
-    Navigator.of(context).pop();
+    
+    final summary = MeetingSummary(
+      meetingTitle: _meeting?.title ?? 'Meeting',
+      projectId: _meeting?.projectId ?? '',
+      projectName: _meeting?.projectName ?? '',
+    );
+    
+    Navigator.of(context).pushReplacementNamed(
+      AppRoutes.meetingFinished,
+      arguments: summary,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

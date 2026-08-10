@@ -10,11 +10,19 @@ import 'package:requra/features/result_view/presentation/widgets/ai_results/tabs
 import 'package:requra/features/result_view/presentation/widgets/ai_results/tabs/review_queue_sub_tab.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/tabs/summary_sub_tab.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/tabs/user_stories_sub_tab.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/tabs/stakeholder_feedback_sub_tab.dart';
 
 class AiResultsTab extends StatelessWidget {
   final AiResultsDashboard dashboard;
+  final String projectId;
+  final String projectName;
 
-  const AiResultsTab({super.key, required this.dashboard});
+  const AiResultsTab({
+    super.key,
+    required this.dashboard,
+    required this.projectId,
+    required this.projectName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +31,7 @@ class AiResultsTab extends StatelessWidget {
       'Requirements',
       'User Stories',
       'Review Queue',
+      'Feedback',
       'Evidence',
       'Export',
     ];
@@ -33,7 +42,8 @@ class AiResultsTab extends StatelessWidget {
       dashboard.metrics.userStories,
       dashboard.metrics.risksCount +
           dashboard.metrics.openQuestionsCount +
-          (dashboard.qualityReport?.highSeverityIssueCount ?? 0), // Review Queue
+          (dashboard.qualityReport?.highSeverityIssueCount ??
+              0), // Review Queue
       -1, // Evidence
       -1, // Export
     ];
@@ -43,7 +53,9 @@ class AiResultsTab extends StatelessWidget {
       child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
-            SliverToBoxAdapter(child: AiResultsHeader(dashboard: dashboard)),
+            SliverToBoxAdapter(
+                child: AiResultsHeader(
+                    dashboard: dashboard, projectName: projectName)),
             SliverAppBar(
               pinned: true,
               automaticallyImplyLeading: false,
@@ -69,6 +81,10 @@ class AiResultsTab extends StatelessWidget {
               RequirementsSubTab(dashboard: dashboard),
               UserStoriesSubTab(dashboard: dashboard),
               ReviewQueueSubTab(dashboard: dashboard),
+              StakeholderFeedbackSubTab(
+                dashboard: dashboard,
+                projectId: projectId,
+              ),
               EvidenceSubTab(dashboard: dashboard),
               ExportSubTab(dashboard: dashboard),
             ],

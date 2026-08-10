@@ -6,6 +6,8 @@ import 'package:requra/features/result_view/data/datasource/result_view_remote_d
 import 'package:requra/features/result_view/domain/entities/project_details.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
+import 'package:requra/features/result_view/domain/entities/stakeholder_feedback.dart';
+import 'package:requra/features/result_view/domain/entities/review_invitation.dart';
 import 'package:requra/features/result_view/domain/repositories/result_view_repository.dart';
 
 class ResultViewRepositoryImpl implements ResultViewRepository {
@@ -76,4 +78,81 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       return Left(ServerFailure('An unexpected error occurred.'));
     }
   }
+
+  @override
+  Future<Either<Failure, StakeholderFeedbackResponse>> getStakeholderFeedback(String projectId) async {
+    try {
+      final result = await remoteDataSource.getStakeholderFeedback(projectId);
+      return Right(result);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'A network error occurred.'));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resolveFeedback(String projectId, String feedbackId, String? resolutionNote) async {
+    try {
+      await remoteDataSource.resolveFeedback(projectId, feedbackId, resolutionNote);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'A network error occurred.'));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ReviewInvitationResponse>> getReviewInvitations(String projectId) async {
+    try {
+      final response = await remoteDataSource.getReviewInvitations(projectId);
+      return Right(response);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt) async {
+    try {
+      await remoteDataSource.sendReviewInvitation(projectId, displayName, email, permission, expiresAt);
+      return const Right(null);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resendReviewInvitation(String projectId, String invitationId) async {
+    try {
+      await remoteDataSource.resendReviewInvitation(projectId, invitationId);
+      return const Right(null);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> revokeReviewInvitation(String projectId, String invitationId) async {
+    try {
+      await remoteDataSource.revokeReviewInvitation(projectId, invitationId);
+      return const Right(null);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
+

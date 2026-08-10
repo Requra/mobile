@@ -8,22 +8,51 @@ import 'package:requra/features/result_view/domain/entities/ai_results_dashboard
 import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
 
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:requra/features/result_view/domain/entities/project_details.dart';
+import 'package:requra/features/result_view/domain/entities/document.dart';
+import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
+import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
+
 class ResultViewCubit extends Cubit<ResultViewState> {
   final GetProjectDetailsUseCase _getProjectDetails;
   final GetProjectDocumentsUseCase _getProjectDocuments;
   final GetAiResultsDashboardUseCase _getAiResultsDashboard;
   final UploadDocumentUseCase _uploadDocument;
 
+  final GetStakeholderFeedbackUseCase _getStakeholderFeedback;
+  final ResolveFeedbackUseCase _resolveFeedback;
+  final GetReviewInvitationsUseCase _getReviewInvitations;
+  final SendReviewInvitationUseCase _sendReviewInvitation;
+  final ResendReviewInvitationUseCase _resendReviewInvitation;
+  final RevokeReviewInvitationUseCase _revokeReviewInvitation;
+
   ResultViewCubit({
     required GetProjectDetailsUseCase getProjectDetailsUseCase,
     required GetProjectDocumentsUseCase getProjectDocumentsUseCase,
     required GetAiResultsDashboardUseCase getAiResultsDashboardUseCase,
     required UploadDocumentUseCase uploadDocumentUseCase,
+    required GetStakeholderFeedbackUseCase getStakeholderFeedbackUseCase,
+    required ResolveFeedbackUseCase resolveFeedbackUseCase,
+    required GetReviewInvitationsUseCase getReviewInvitationsUseCase,
+    required SendReviewInvitationUseCase sendReviewInvitationUseCase,
+    required ResendReviewInvitationUseCase resendReviewInvitationUseCase,
+    required RevokeReviewInvitationUseCase revokeReviewInvitationUseCase,
   }) : _getProjectDetails = getProjectDetailsUseCase,
        _getProjectDocuments = getProjectDocumentsUseCase,
        _getAiResultsDashboard = getAiResultsDashboardUseCase,
        _uploadDocument = uploadDocumentUseCase,
-       super(ResultViewInitial());
+        _getStakeholderFeedback = getStakeholderFeedbackUseCase,
+        _resolveFeedback = resolveFeedbackUseCase,
+        _getReviewInvitations = getReviewInvitationsUseCase,
+        _sendReviewInvitation = sendReviewInvitationUseCase,
+        _resendReviewInvitation = resendReviewInvitationUseCase,
+        _revokeReviewInvitation = revokeReviewInvitationUseCase,
+        super(ResultViewInitial());
 
   /// Fetches project details and meetings in parallel.
   /// [totalRequirements] comes from the Project entity already available
@@ -176,6 +205,176 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     } catch (e) {
       return e.toString();
     }
+  }
+
+  Future<void> fetchStakeholderFeedback(String projectId) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return;
+
+    emit(
+      ResultViewLoaded(
+        projectDetails: currentState.projectDetails,
+        documents: currentState.documents,
+        totalRequirements: currentState.totalRequirements,
+        aiDashboard: currentState.aiDashboard,
+        feedbackResponse: currentState.feedbackResponse,
+        feedbackLoading: true,
+      ),
+    );
+
+    final result = await _getStakeholderFeedback(projectId);
+
+    result.fold(
+      (failure) {
+        // Just stop loading on error for now
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: false,
+            ),
+          );
+        }
+      },
+      (feedbackResponse) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              feedbackResponse: feedbackResponse,
+              feedbackLoading: false,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<String?> resolveFeedback(String projectId, String feedbackId, String? resolutionNote) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return 'State not loaded';
+
+    final result = await _resolveFeedback(projectId, feedbackId, resolutionNote);
+
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        // Refetch feedback on success
+        fetchStakeholderFeedback(projectId);
+        return null; // Success
+      },
+    );
+  }
+
+  Future<void> fetchReviewInvitations(String projectId) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return;
+
+    emit(
+      ResultViewLoaded(
+        projectDetails: currentState.projectDetails,
+        documents: currentState.documents,
+        totalRequirements: currentState.totalRequirements,
+        aiDashboard: currentState.aiDashboard,
+        feedbackResponse: currentState.feedbackResponse,
+        feedbackLoading: currentState.feedbackLoading,
+        reviewInvitations: currentState.reviewInvitations,
+        invitationsLoading: true,
+      ),
+    );
+
+    final result = await _getReviewInvitations(projectId);
+
+    result.fold(
+      (failure) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: curr.feedbackLoading,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: false,
+            ),
+          );
+        }
+      },
+      (reviewInvitations) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: curr.feedbackLoading,
+              reviewInvitations: reviewInvitations,
+              invitationsLoading: false,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<String?> sendReviewInvitation({
+    required String projectId,
+    required String displayName,
+    required String email,
+    required String permission,
+    String? expiresAt,
+  }) async {
+    final result = await _sendReviewInvitation(projectId, displayName, email, permission, expiresAt);
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        fetchReviewInvitations(projectId);
+        return null;
+      },
+    );
+  }
+
+  Future<String?> resendReviewInvitation({
+    required String projectId,
+    required String invitationId,
+  }) async {
+    final result = await _resendReviewInvitation(projectId, invitationId);
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        fetchReviewInvitations(projectId);
+        return null;
+      },
+    );
+  }
+
+  Future<String?> revokeReviewInvitation({
+    required String projectId,
+    required String invitationId,
+  }) async {
+    final result = await _revokeReviewInvitation(projectId, invitationId);
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        fetchReviewInvitations(projectId);
+        return null;
+      },
+    );
   }
 }
 

@@ -5,6 +5,8 @@ import 'package:requra/features/result_view/data/models/project_details_model.da
 import 'package:dio/dio.dart';
 import 'package:requra/features/result_view/data/models/document_model.dart';
 import 'package:requra/features/result_view/data/models/ai_results_dashboard_model.dart';
+import 'package:requra/features/result_view/data/models/stakeholder_feedback_model.dart';
+import 'package:requra/features/result_view/data/models/review_invitation_model.dart';
 
 abstract class ResultViewRemoteDataSource {
   Future<ProjectDetailsModel> getProjectDetails(String id);
@@ -18,6 +20,12 @@ abstract class ResultViewRemoteDataSource {
     String? meetingId,
   });
   Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId);
+  Future<StakeholderFeedbackResponseModel> getStakeholderFeedback(String projectId);
+  Future<void> resolveFeedback(String projectId, String feedbackId, String? resolutionNote);
+  Future<ReviewInvitationResponseModel> getReviewInvitations(String projectId);
+  Future<void> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt);
+  Future<void> resendReviewInvitation(String projectId, String invitationId);
+  Future<void> revokeReviewInvitation(String projectId, String invitationId);
 }
 
 class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
@@ -135,4 +143,91 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
       rethrow;
     }
   }
+
+  @override
+  Future<StakeholderFeedbackResponseModel> getStakeholderFeedback(String projectId) async {
+    try {
+      final response = await apiClient.dio.get(
+        ApiConstants.feedback(projectId),
+      );
+
+      Map<String, dynamic> data;
+      if (response.data['data'] != null) {
+        data = response.data['data'];
+      } else {
+        data = response.data;
+      }
+
+      return StakeholderFeedbackResponseModel.fromJson(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> resolveFeedback(String projectId, String feedbackId, String? resolutionNote) async {
+    try {
+      await apiClient.dio.patch(
+        ApiConstants.resolveFeedback(projectId, feedbackId),
+        data: {
+          "status": "RESOLVED",
+          if (resolutionNote != null && resolutionNote.isNotEmpty) "resolutionNote": resolutionNote,
+          "isRead": true,
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ReviewInvitationResponseModel> getReviewInvitations(String projectId) async {
+    try {
+      final response = await apiClient.dio.get(ApiConstants.reviewInvitations(projectId));
+      return ReviewInvitationResponseModel.fromJson(response.data['data']);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt) async {
+    try {
+      await apiClient.dio.post(
+        ApiConstants.reviewInvitations(projectId),
+        data: {
+          "stakeholders": [
+            {
+              "displayName": displayName,
+              "email": email,
+            }
+          ],
+          "permission": permission,
+          if (expiresAt != null) "expiresAt": expiresAt,
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> resendReviewInvitation(String projectId, String invitationId) async {
+    try {
+      await apiClient.dio.post(ApiConstants.resendInvitation(projectId, invitationId));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> revokeReviewInvitation(String projectId, String invitationId) async {
+    try {
+      // It's a DELETE endpoint
+      await apiClient.dio.delete('${ApiConstants.reviewInvitations(projectId)}/$invitationId');
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
+

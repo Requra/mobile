@@ -7,11 +7,15 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/ai_results_metric_card.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/share_stakeholders_dialog.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 
 class AiResultsHeader extends StatelessWidget {
   final AiResultsDashboard dashboard;
+  final String projectName;
 
-  const AiResultsHeader({super.key, required this.dashboard});
+  const AiResultsHeader({super.key, required this.dashboard, required this.projectName});
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +125,18 @@ class AiResultsHeader extends StatelessWidget {
               // but keeping it here for tablet/desktop view as per screenshot.
               if (MediaQuery.of(context).size.width > 600) ...[
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<ResultViewCubit>(),
+                        child: ShareStakeholdersDialog(
+                          projectId: dashboard.projectId,
+                          projectName: projectName,
+                        ),
+                      ),
+                    );
+                  },
                   icon: Icon(
                     Icons.person_add_alt,
                     size: 18.sp,
@@ -181,7 +196,18 @@ class AiResultsHeader extends StatelessWidget {
             Column(
               children: [
                 CustomButton(
-                  onTap: () {},
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<ResultViewCubit>(),
+                        child: ShareStakeholdersDialog(
+                          projectId: dashboard.projectId,
+                          projectName: projectName,
+                        ),
+                      ),
+                    );
+                  },
                   icon: Icons.person_add_alt,
                   text: 'Share with Stakeholders',
                   iconColor: AppColors.white,

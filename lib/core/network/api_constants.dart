@@ -36,11 +36,9 @@ class ApiConstants {
       'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
 
   // ── Meetings (real API base) ──
-  static const String realMeetingsBase =
-      'https://requra-ai.runasp.net/api';
+  static const String realMeetingsBase = 'https://requra-ai.runasp.net/api';
 
-  static const String meetings =
-      'https://requra-ai.runasp.net/api/Meetings';
+  static const String meetings = 'https://requra-ai.runasp.net/api/Meetings';
 
   // ── Meeting endpoint helpers (real API) ──
 
@@ -97,5 +95,17 @@ class ApiConstants {
 
   static String aiResultsDashboard(String projectId) =>
       '/api/projects/$projectId/ai/results-dashboard';
-  //   'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';
+
+  static String feedback(String projectId) =>
+      'https://requra-ai.runasp.net/api/project-review/$projectId/feedback';
+
+  static String resolveFeedback(String projectId, String feedbackId) =>
+      'https://requra-ai.runasp.net/api/project-review/$projectId/feedback/$feedbackId';
+
+  // ── Review Invitations ──
+  static String reviewInvitations(String projectId) =>
+      '/api/projects/$projectId/review-invitations';
+
+  static String resendInvitation(String projectId, String invitationId) =>
+      '/api/projects/$projectId/review-invitations/$invitationId/resend';
 }

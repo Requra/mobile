@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
+import 'package:requra/features/result_view/domain/entities/stakeholder_feedback.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
 
 class StakeholderFeedbackSubTab extends StatefulWidget {
   final AiResultsDashboard dashboard;
+  final String projectId;
 
-  const StakeholderFeedbackSubTab({super.key, required this.dashboard});
+  const StakeholderFeedbackSubTab({
+    super.key,
+    required this.dashboard,
+    required this.projectId,
+  });
 
   @override
   State<StakeholderFeedbackSubTab> createState() =>
@@ -17,170 +27,391 @@ class StakeholderFeedbackSubTab extends StatefulWidget {
 
 class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
   int _selectedFilter = 0; // 0=All, 1=Open, 2=Resolved
-
-  // Mock feedback data — the API doesn't provide this yet,
-  // so we synthesise it from what we know about the run.
-  List<_FeedbackItem> get _feedbackItems => [
-        _FeedbackItem(
-          status: 'RESOLVED',
-          target: 'Summary',
-          context: 'Executive summary',
-          body: 'The scope section looks complete to me.',
-          author: 'Amy Accepted',
-          email: 'amy.accepted@example.com',
-          date: 'Jun 3, 2026 · 02:00 PM',
-          resolution: 'Confirmed scope with the client.',
-          resolutionDate: 'JUN 4, 2026 · 12:00 PM',
-        ),
-        _FeedbackItem(
-          status: 'OPEN',
-          target: 'Requirement',
-          context: 'Generate user stories with acceptance criteria',
-          body:
-              'Acceptance criteria should follow Given/When/Then consistently.',
-          author: 'Amy Accepted',
-          email: 'amy.accepted@example.com',
-          date: 'Jun 3, 2026 · 01:00 PM',
-        ),
-        _FeedbackItem(
-          status: 'OPEN',
-          target: 'User Story',
-          context: 'Extract requirements from notes',
-          body:
-              'Can we add a confidence indicator to each extracted requirement?',
-          author: 'Amy Accepted',
-          email: 'amy.accepted@example.com',
-          date: 'Jun 3, 2026 · 12:00 PM',
-        ),
-      ];
-
-  List<_FeedbackItem> get _filtered {
-    if (_selectedFilter == 1) {
-      return _feedbackItems.where((e) => e.status == 'OPEN').toList();
-    }
-    if (_selectedFilter == 2) {
-      return _feedbackItems.where((e) => e.status == 'RESOLVED').toList();
-    }
-    return _feedbackItems;
-  }
-
-  int get _openCount =>
-      _feedbackItems.where((e) => e.status == 'OPEN').length;
-  int get _resolvedCount =>
-      _feedbackItems.where((e) => e.status == 'RESOLVED').length;
+  String _selectedTarget = '';
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header card
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ResultViewCubit>().fetchStakeholderFeedback(
+        widget.projectId,
+      );
+    });
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    return DateFormat('MMM d, yyyy · hh:mm a').format(date);
+  }
+
+  void _showResolveDialog(StakeholderFeedbackItem item) {
+    final noteController = TextEditingController();
+    bool isSubmitting = false;
+    final cubit = context.read<ResultViewCubit>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (builderContext, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              backgroundColor: AppColors.white,
+              child: Container(
+                width: 500.w,
+                padding: EdgeInsets.all(24.w),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.chat_bubble_outline,
-                        size: 24.sp, color: AppColors.black),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Stakeholder feedback',
-                            style: boldStyle(
-                              fontSize: FontSize.font18,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Mark feedback resolved',
+                          style: boldStyle(
+                            fontSize: FontSize.font18,
+                            color: AppColors.black,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          icon: Icon(
+                            Icons.close,
+                            size: 20.sp,
+                            color: AppColors.grey,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Optionally leave a short note about how this feedback was addressed.',
+                      style: regularStyle(
+                        fontSize: FontSize.font14,
+                        color: AppColors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Text(
+                        item.content,
+                        style: regularStyle(
+                          fontSize: FontSize.font14,
+                          color: AppColors.black,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Resolution note (optional)',
+                      style: semiBoldStyle(
+                        fontSize: FontSize.font12,
+                        color: AppColors.black,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextField(
+                      controller: noteController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'What changed in response to this feedback?',
+                        hintStyle: regularStyle(
+                          fontSize: FontSize.font14,
+                          color: AppColors.grey,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isSubmitting
+                              ? null
+                              : () => Navigator.pop(dialogContext),
+                          child: Text(
+                            'Cancel',
+                            style: semiBoldStyle(
+                              fontSize: FontSize.font14,
                               color: AppColors.black,
                             ),
                           ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'Comments shared by stakeholders reviewing this project. The AI Review Queue is unchanged — this is the human feedback inbox.',
-                            style: regularStyle(
-                              fontSize: FontSize.font12,
-                              color: AppColors.grey,
+                        ),
+                        SizedBox(width: 12.w),
+                        ElevatedButton.icon(
+                          onPressed: isSubmitting
+                              ? null
+                              : () async {
+                                  setDialogState(() => isSubmitting = true);
+                                  final error = await cubit.resolveFeedback(
+                                    widget.projectId,
+                                    item.id,
+                                    noteController.text,
+                                  );
+                                  setDialogState(() => isSubmitting = false);
+                                  if (error == null && builderContext.mounted) {
+                                    Navigator.pop(dialogContext);
+                                  } else if (error != null && builderContext.mounted) {
+                                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                      SnackBar(content: Text(error)),
+                                    );
+                                  }
+                                },
+                          icon: isSubmitting
+                              ? SizedBox(
+                                  width: 16.sp,
+                                  height: 16.sp,
+                                  child: const CircularProgressIndicator(
+                                    color: AppColors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.check_circle_outline,
+                                  size: 16.sp,
+                                  color: AppColors.white,
+                                ),
+                          label: Text(
+                            'Mark resolved',
+                            style: semiBoldStyle(
+                              fontSize: FontSize.font14,
+                              color: AppColors.white,
                             ),
                           ),
-                        ],
-                      ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                SizedBox(height: 12.h),
-                // Badges
-                Row(
+              ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ResultViewCubit, ResultViewState>(
+      builder: (context, state) {
+        if (state is! ResultViewLoaded) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        final response = state.feedbackResponse;
+
+        if (state.feedbackLoading && response == null) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        if (response == null) {
+          return const Center(child: Text('No feedback available.'));
+        }
+
+        List<StakeholderFeedbackItem> filtered = response.items;
+        if (_selectedFilter == 1) {
+          filtered = filtered.where((e) => e.status == 'OPEN').toList();
+        } else if (_selectedFilter == 2) {
+          filtered = filtered.where((e) => e.status == 'RESOLVED').toList();
+        }
+
+        if (_selectedTarget.isNotEmpty) {
+          filtered = filtered
+              .where((e) => e.targetType == _selectedTarget)
+              .toList();
+        }
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header card
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCountBadge(
-                        '$_openCount OPEN', const Color(0xFFD97706)),
-                    SizedBox(width: 8.w),
-                    _buildCountBadge(
-                        '$_resolvedCount RESOLVED', AppColors.statusFinished),
-                    SizedBox(width: 8.w),
-                    _buildCountBadge(
-                        '${_feedbackItems.length} UNREAD',
-                        AppColors.primary),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 24.sp,
+                          color: AppColors.black,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Stakeholder feedback',
+                                style: boldStyle(
+                                  fontSize: FontSize.font18,
+                                  color: AppColors.black,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                'Comments shared by stakeholders reviewing this project. The AI Review Queue is unchanged — this is the human feedback inbox.',
+                                style: regularStyle(
+                                  fontSize: FontSize.font12,
+                                  color: AppColors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    // Badges
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: [
+                        _buildCountBadge(
+                          '${response.openCount} OPEN',
+                          const Color(0xFFD97706),
+                        ),
+                        _buildCountBadge(
+                          '${response.resolvedCount} RESOLVED',
+                          AppColors.statusFinished,
+                        ),
+                        _buildCountBadge(
+                          '${response.unreadCount} UNREAD',
+                          AppColors.primary,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
 
-          // Filter row
-          Row(
-            children: [
-              // All / Open / Resolved tabs
-              _buildFilterTab('All', 0),
-              SizedBox(width: 4.w),
-              _buildFilterTab('Open', 1),
-              SizedBox(width: 4.w),
-              _buildFilterTab('Resolved', 2),
-              const Spacer(),
-              // Target chips
-              Row(
+              // Filters
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.filter_alt_outlined,
-                      size: 14.sp, color: AppColors.grey),
-                  SizedBox(width: 4.w),
-                  Text(
-                    'TARGET',
-                    style: semiBoldStyle(
-                      fontSize: FontSize.font10,
-                      color: AppColors.grey,
+                  // All / Open / Resolved tabs
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterTab('All', 0),
+                        SizedBox(width: 4.w),
+                        _buildFilterTab('Open', 1),
+                        SizedBox(width: 4.w),
+                        _buildFilterTab('Resolved', 2),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  _buildTargetChip('Summary'),
-                  SizedBox(width: 4.w),
-                  _buildTargetChip('Requirement'),
-                  SizedBox(width: 4.w),
-                  _buildTargetChip('User Story'),
+                  SizedBox(height: 12.h),
+                  // Target chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.filter_alt_outlined,
+                          size: 14.sp,
+                          color: AppColors.grey,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          'TARGET',
+                          style: semiBoldStyle(
+                            fontSize: FontSize.font10,
+                            color: AppColors.grey,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        _buildTargetChip('SUMMARY'),
+                        SizedBox(width: 4.w),
+                        _buildTargetChip('REQUIREMENT'),
+                        SizedBox(width: 4.w),
+                        _buildTargetChip('USER STORY'),
+                      ],
+                    ),
+                  ),
                 ],
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Feedback cards
+              if (state.feedbackLoading && response.items.isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16.0),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ),
+              ...filtered.map(
+                (item) => Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: _buildFeedbackCard(item),
+                ),
               ),
             ],
           ),
-
-          SizedBox(height: 16.h),
-
-          // Feedback cards
-          ..._filtered.map((item) => Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: _buildFeedbackCard(item),
-              )),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -208,9 +439,7 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
         decoration: BoxDecoration(
           color: isActive ? AppColors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(8.r),
-          border: isActive
-              ? Border.all(color: const Color(0xFFE5E7EB))
-              : null,
+          border: isActive ? Border.all(color: const Color(0xFFE5E7EB)) : null,
         ),
         child: Text(
           label,
@@ -224,33 +453,50 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
   }
 
   Widget _buildTargetChip(String label) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Text(
-        label,
-        style: regularStyle(fontSize: FontSize.font12, color: AppColors.black),
+    final isActive = _selectedTarget == label;
+    return InkWell(
+      onTap: () => setState(() {
+        if (_selectedTarget == label) {
+          _selectedTarget = '';
+        } else {
+          _selectedTarget = label;
+        }
+      }),
+      borderRadius: BorderRadius.circular(8.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.lightButton : AppColors.white,
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(
+            color: isActive ? AppColors.primary : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Text(
+          label,
+          style: regularStyle(
+            fontSize: FontSize.font12,
+            color: isActive ? AppColors.primary : AppColors.black,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildFeedbackCard(_FeedbackItem item) {
+  Widget _buildFeedbackCard(StakeholderFeedbackItem item) {
     final isResolved = item.status == 'RESOLVED';
 
-    Color statusColor =
-        isResolved ? AppColors.statusFinished : const Color(0xFFD97706);
+    Color statusColor = isResolved
+        ? AppColors.statusFinished
+        : const Color(0xFFD97706);
     Color statusBg = isResolved
         ? const Color(0xFFDCFCE7)
         : const Color(0xFFFEF3C7);
 
     Color targetColor;
-    if (item.target == 'Summary') {
+    if (item.targetType == 'SUMMARY') {
       targetColor = AppColors.primary;
-    } else if (item.target == 'Requirement') {
+    } else if (item.targetType == 'REQUIREMENT') {
       targetColor = const Color(0xFFD97706);
     } else {
       targetColor = const Color(0xFF0284C7);
@@ -278,8 +524,10 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
                 ),
                 child: Text(
                   item.status,
-                  style:
-                      boldStyle(fontSize: FontSize.font10, color: statusColor),
+                  style: boldStyle(
+                    fontSize: FontSize.font10,
+                    color: statusColor,
+                  ),
                 ),
               ),
               SizedBox(width: 8.w),
@@ -290,17 +538,21 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
-                  item.target,
-                  style:
-                      boldStyle(fontSize: FontSize.font10, color: targetColor),
+                  item.targetType,
+                  style: boldStyle(
+                    fontSize: FontSize.font10,
+                    color: targetColor,
+                  ),
                 ),
               ),
               SizedBox(width: 8.w),
               Expanded(
                 child: Text(
-                  '· ${item.context}',
+                  '· ${item.targetTitle ?? item.targetId ?? 'No Title'}',
                   style: regularStyle(
-                      fontSize: FontSize.font12, color: AppColors.grey),
+                    fontSize: FontSize.font12,
+                    color: AppColors.grey,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -311,60 +563,83 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
 
           // Body
           Text(
-            item.body,
-            style:
-                regularStyle(fontSize: FontSize.font14, color: AppColors.black),
+            item.content,
+            style: regularStyle(
+              fontSize: FontSize.font14,
+              color: AppColors.black,
+            ),
           ),
 
           SizedBox(height: 8.h),
 
           // Author + date
-          Text(
-            '${item.author} · ${item.email} · ${item.date}',
-            style:
-                regularStyle(fontSize: FontSize.font12, color: AppColors.grey),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${item.author?.displayName ?? 'Unknown'} · ${item.author?.email ?? 'No email'}',
+                style: regularStyle(
+                  fontSize: FontSize.font12,
+                  color: AppColors.grey,
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                _formatDate(item.createdAt),
+                style: regularStyle(
+                  fontSize: FontSize.font12,
+                  color: AppColors.grey,
+                ),
+              ),
+            ],
           ),
 
           // Resolution block or Mark resolved button
-          if (isResolved && item.resolution != null) ...[
-            SizedBox(height: 12.h),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: const Color(0xFFBBF7D0)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'RESOLUTION · ${item.resolutionDate ?? ''}',
-                    style: boldStyle(
-                      fontSize: FontSize.font10,
-                      color: AppColors.statusFinished,
+          if (isResolved) ...[
+            if (item.resolutionNote != null &&
+                item.resolutionNote!.isNotEmpty) ...[
+              SizedBox(height: 12.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: const Color(0xFFBBF7D0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RESOLUTION · ${_formatDate(item.resolvedAt)}',
+                      style: boldStyle(
+                        fontSize: FontSize.font10,
+                        color: AppColors.statusFinished,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    item.resolution!,
-                    style: regularStyle(
-                      fontSize: FontSize.font14,
-                      color: AppColors.statusFinished,
+                    SizedBox(height: 4.h),
+                    Text(
+                      item.resolutionNote!,
+                      style: regularStyle(
+                        fontSize: FontSize.font14,
+                        color: AppColors.statusFinished,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ] else if (!isResolved) ...[
+            ],
+          ] else ...[
             SizedBox(height: 12.h),
             Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: Icon(Icons.check_circle_outline,
-                    size: 16.sp, color: AppColors.grey),
+                onPressed: () => _showResolveDialog(item),
+                icon: Icon(
+                  Icons.check_circle_outline,
+                  size: 16.sp,
+                  color: AppColors.grey,
+                ),
                 label: Text(
                   'Mark resolved',
                   style: semiBoldStyle(
@@ -378,7 +653,9 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   padding: EdgeInsets.symmetric(
-                      horizontal: 12.w, vertical: 8.h),
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
                 ),
               ),
             ),
@@ -388,28 +665,3 @@ class _StakeholderFeedbackSubTabState extends State<StakeholderFeedbackSubTab> {
     );
   }
 }
-
-class _FeedbackItem {
-  final String status;
-  final String target;
-  final String context;
-  final String body;
-  final String author;
-  final String email;
-  final String date;
-  final String? resolution;
-  final String? resolutionDate;
-
-  const _FeedbackItem({
-    required this.status,
-    required this.target,
-    required this.context,
-    required this.body,
-    required this.author,
-    required this.email,
-    required this.date,
-    this.resolution,
-    this.resolutionDate,
-  });
-}
-

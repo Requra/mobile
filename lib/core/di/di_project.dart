@@ -84,6 +84,12 @@ void initProjectDI() {
         getProjectDocumentsUseCase: sl(),
         getAiResultsDashboardUseCase: sl(),
         uploadDocumentUseCase: sl(),
+        getStakeholderFeedbackUseCase: sl(),
+        resolveFeedbackUseCase: sl(),
+        getReviewInvitationsUseCase: sl(),
+        sendReviewInvitationUseCase: sl(),
+        resendReviewInvitationUseCase: sl(),
+        revokeReviewInvitationUseCase: sl(),
       ));
 
   sl.registerFactory(() => MeetingCubit(
@@ -126,6 +132,12 @@ void initProjectDI() {
   sl.registerLazySingleton(() => GetProjectDocumentsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiResultsDashboardUseCase(sl()));
   sl.registerLazySingleton(() => UploadDocumentUseCase(sl()));
+  sl.registerLazySingleton(() => GetStakeholderFeedbackUseCase(sl()));
+  sl.registerLazySingleton(() => ResolveFeedbackUseCase(sl()));
+  sl.registerLazySingleton(() => GetReviewInvitationsUseCase(sl()));
+  sl.registerLazySingleton(() => SendReviewInvitationUseCase(sl()));
+  sl.registerLazySingleton(() => ResendReviewInvitationUseCase(sl()));
+  sl.registerLazySingleton(() => RevokeReviewInvitationUseCase(sl()));
 
   sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));
   sl.registerLazySingleton(() => GetMeetingDetailsUseCase(sl()));

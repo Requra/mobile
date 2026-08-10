@@ -129,7 +129,11 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
 
                         /// AI Results tab
                         state.aiDashboard != null
-                            ? AiResultsTab(dashboard: state.aiDashboard!)
+                            ? AiResultsTab(
+                                dashboard: state.aiDashboard!,
+                                projectId: state.projectDetails.id,
+                                projectName: state.projectDetails.name,
+                              )
                             : Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,

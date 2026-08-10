@@ -31,13 +31,58 @@ class ApiConstants {
       'https://requra-ai.runasp.net/api/Auth/otp/resend';
   static const String logout = 'https://requra-ai.runasp.net/api/Auth/logout';
 
-  // ── Meeting (v1 API) ──
+  // ── Meeting (v1 mock API — kept for backward compatibility) ──
   static const String meetingsBase =
       'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
 
-  // ── Meetings (real API) ──
+  // ── Meetings (real API base) ──
+  static const String realMeetingsBase =
+      'https://requra-ai.runasp.net/api';
+
   static const String meetings =
       'https://requra-ai.runasp.net/api/Meetings';
+
+  // ── Meeting endpoint helpers (real API) ──
+
+  /// GET /api/meetings/{meetingId}
+  static String meetingDetails(String meetingId) =>
+      '$realMeetingsBase/meetings/$meetingId';
+
+  /// POST /api/meetings/{meetingId}/join
+  static String joinMeeting(String meetingId) =>
+      '$realMeetingsBase/meetings/$meetingId/join';
+
+  /// POST /api/meetings/{meetingId}/leave
+  static String leaveMeeting(String meetingId) =>
+      '$realMeetingsBase/meetings/$meetingId/leave';
+
+  /// POST /api/meetings/{meetingId}/end
+  static String endMeeting(String meetingId) =>
+      '$realMeetingsBase/meetings/$meetingId/end';
+
+  /// GET /api/meetings/{meetingId}/participants
+  static String meetingParticipants(String meetingId) =>
+      '$realMeetingsBase/meetings/$meetingId/participants';
+
+  /// POST /api/meetings/{meetingId}/participants/{participantId}/consent
+  static String participantConsent(String meetingId, String participantId) =>
+      '$realMeetingsBase/meetings/$meetingId/participants/$participantId/consent';
+
+  /// POST /api/meetings/{meetingId}/recordings/start
+  static String startRecording(String meetingId) =>
+      '$realMeetingsBase/meetings/$meetingId/recordings/start';
+
+  /// POST /api/recordings/{recordingId}/stop
+  static String stopRecording(String recordingId) =>
+      '$realMeetingsBase/recordings/$recordingId/stop';
+
+  /// GET /api/recordings/{recordingId}
+  static String getRecording(String recordingId) =>
+      '$realMeetingsBase/recordings/$recordingId';
+
+  /// POST /api/recordings/{recordingId}/chunks
+  static String uploadChunk(String recordingId) =>
+      '$realMeetingsBase/recordings/$recordingId/chunks';
 
   // ── Projects ──
   static const String projects = 'https://requra-ai.runasp.net/api/projects';

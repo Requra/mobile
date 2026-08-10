@@ -98,6 +98,8 @@ enum InvitationStatus {
 /// Role of a participant in a meeting.
 enum ParticipantRole {
   host,
+  participant,
+  viewer,
   member,
   stakeholder,
   guest;
@@ -106,6 +108,10 @@ enum ParticipantRole {
     switch (value?.toUpperCase()) {
       case 'HOST':
         return ParticipantRole.host;
+      case 'PARTICIPANT':
+        return ParticipantRole.participant;
+      case 'VIEWER':
+        return ParticipantRole.viewer;
       case 'MEMBER':
         return ParticipantRole.member;
       case 'STAKEHOLDER':
@@ -113,7 +119,7 @@ enum ParticipantRole {
       case 'GUEST':
         return ParticipantRole.guest;
       default:
-        return ParticipantRole.guest;
+        return ParticipantRole.participant;
     }
   }
 
@@ -123,7 +129,8 @@ enum ParticipantRole {
 /// Participant connection status.
 enum ParticipantConnectionStatus {
   joined,
-  left;
+  left,
+  removed;
 
   static ParticipantConnectionStatus fromString(String? value) {
     switch (value?.toUpperCase()) {
@@ -131,6 +138,8 @@ enum ParticipantConnectionStatus {
         return ParticipantConnectionStatus.joined;
       case 'LEFT':
         return ParticipantConnectionStatus.left;
+      case 'REMOVED':
+        return ParticipantConnectionStatus.removed;
       default:
         return ParticipantConnectionStatus.left;
     }
@@ -152,6 +161,10 @@ class MeetingDetails {
     this.startedAt,
     this.recordingStatus,
     required this.participantCount,
+    this.currentUserRole,
+    this.activeRecordingId,
+    this.joinUrl,
+    this.hostParticipantId,
   });
 
   final String id;
@@ -164,6 +177,10 @@ class MeetingDetails {
   final DateTime? startedAt;
   final RecordingStatus? recordingStatus;
   final int participantCount;
+  final String? currentUserRole;
+  final String? activeRecordingId;
+  final String? joinUrl;
+  final String? hostParticipantId;
 
   factory MeetingDetails.fromJson(Map<String, dynamic> json) {
     return MeetingDetails(
@@ -175,12 +192,16 @@ class MeetingDetails {
       projectId: (json['projectId'] ?? '').toString(),
       projectName: (json['projectName'] ?? json['project']?['name'] ?? '').toString(),
       hostName: (json['hostName'] ?? json['host']?['displayName'] ?? '').toString(),
-      hostId: (json['hostId'] ?? json['host']?['id'] ?? '').toString(),
+      hostId: (json['hostId'] ?? json['host']?['id'] ?? json['createdById'] ?? '').toString(),
       startedAt: _parseDateTime(json['startedAt']),
       recordingStatus: json['recordingStatus'] != null
           ? RecordingStatus.fromString(json['recordingStatus'].toString())
           : null,
-      participantCount: _parseInt(json['participantCount']),
+      participantCount: _parseInt(json['participantsCount'] ?? json['participantCount']),
+      currentUserRole: json['currentUserRole']?.toString(),
+      activeRecordingId: json['activeRecordingId']?.toString(),
+      joinUrl: json['joinUrl']?.toString(),
+      hostParticipantId: json['hostParticipantId']?.toString(),
     );
   }
 
@@ -195,6 +216,10 @@ class MeetingDetails {
     DateTime? startedAt,
     RecordingStatus? recordingStatus,
     int? participantCount,
+    String? currentUserRole,
+    String? activeRecordingId,
+    String? joinUrl,
+    String? hostParticipantId,
   }) {
     return MeetingDetails(
       id: id ?? this.id,
@@ -207,6 +232,10 @@ class MeetingDetails {
       startedAt: startedAt ?? this.startedAt,
       recordingStatus: recordingStatus ?? this.recordingStatus,
       participantCount: participantCount ?? this.participantCount,
+      currentUserRole: currentUserRole ?? this.currentUserRole,
+      activeRecordingId: activeRecordingId ?? this.activeRecordingId,
+      joinUrl: joinUrl ?? this.joinUrl,
+      hostParticipantId: hostParticipantId ?? this.hostParticipantId,
     );
   }
 }
@@ -230,6 +259,13 @@ class Participant {
   final bool recordingConsent;
 
   factory Participant.fromJson(Map<String, dynamic> json) {
+    // The real API returns consent as a nested object:
+    // { "consent": { "recordingConsent": true, "consentedAt": "..." } }
+    final dynamic consent = json['consent'];
+    final bool hasConsent = consent is Map<String, dynamic>
+        ? consent['recordingConsent'] == true
+        : json['recordingConsent'] == true;
+
     return Participant(
       id: (json['id'] ?? json['participantId'] ?? '').toString(),
       userId: (json['userId'] ?? '').toString(),
@@ -240,7 +276,7 @@ class Participant {
       connectionStatus: ParticipantConnectionStatus.fromString(
         (json['status'] ?? json['connectionStatus'] ?? '').toString(),
       ),
-      recordingConsent: json['recordingConsent'] == true,
+      recordingConsent: hasConsent,
     );
   }
 

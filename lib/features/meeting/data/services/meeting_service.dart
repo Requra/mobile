@@ -18,53 +18,67 @@ class MeetingService {
 
   // ── Meeting ───────────────────────────────────────────────────────────────
 
-  /// GET /api/v1/meetings/:meetingId
+  /// GET /api/meetings/{meetingId}  (Spec #4)
   Future<AuthResponse> getMeeting(String meetingId) {
-    return _get(endpoint: '${ApiConstants.meetingsBase}/meetings/$meetingId');
+    return _get(endpoint: ApiConstants.meetingDetails(meetingId));
   }
 
-  /// POST /api/v1/meetings/:meetingId/leave
+  /// POST /api/meetings/{meetingId}/join  (Spec #14)
+  Future<AuthResponse> joinMeeting(
+    String meetingId, {
+    required String displayName,
+    required String email,
+  }) {
+    return _post(
+      endpoint: ApiConstants.joinMeeting(meetingId),
+      body: <String, dynamic>{
+        'displayName': displayName,
+        'email': email,
+      },
+    );
+  }
+
+  /// POST /api/meetings/{meetingId}/leave  (Spec #15)
   Future<AuthResponse> leaveMeeting(String meetingId, String participantId) {
     return _post(
-      endpoint: '${ApiConstants.meetingsBase}/meetings/$meetingId/leave',
+      endpoint: ApiConstants.leaveMeeting(meetingId),
       body: <String, dynamic>{'participantId': participantId},
     );
   }
 
-  /// POST /api/v1/meetings/:meetingId/end
+  /// POST /api/meetings/{meetingId}/end  (Spec #17)
   Future<AuthResponse> endMeeting(String meetingId) {
     return _post(
-      endpoint: '${ApiConstants.meetingsBase}/meetings/$meetingId/end',
+      endpoint: ApiConstants.endMeeting(meetingId),
       body: <String, dynamic>{},
     );
   }
 
   // ── Participants ──────────────────────────────────────────────────────────
 
-  /// GET /api/v1/meetings/:meetingId/participants
+  /// GET /api/meetings/{meetingId}/participants  (Spec #18)
   Future<AuthResponse> getParticipants(String meetingId) {
     return _get(
-      endpoint: '${ApiConstants.meetingsBase}/meetings/$meetingId/participants',
+      endpoint: ApiConstants.meetingParticipants(meetingId),
     );
   }
 
-  /// POST /api/v1/meetings/:meetingId/participants/:participantId/consent
+  /// POST /api/meetings/{meetingId}/participants/{participantId}/consent  (Spec #20)
   Future<AuthResponse> giveConsent(String meetingId, String participantId) {
     return _post(
-      endpoint:
-          '${ApiConstants.meetingsBase}/meetings/$meetingId/participants/$participantId/consent',
+      endpoint: ApiConstants.participantConsent(meetingId, participantId),
       body: <String, dynamic>{'recordingConsent': true},
     );
   }
 
-  /// DELETE /api/v1/meetings/:meetingId/participants/:participantId
+  /// DELETE /api/meetings/{meetingId}/participants/{participantId}  (Spec #19)
   Future<AuthResponse> removeParticipant(
     String meetingId,
     String participantId,
   ) {
     return _delete(
       endpoint:
-          '${ApiConstants.meetingsBase}/meetings/$meetingId/participants/$participantId',
+          '${ApiConstants.realMeetingsBase}/meetings/$meetingId/participants/$participantId',
     );
   }
 
@@ -155,26 +169,25 @@ class MeetingService {
 
   // ── Recording ─────────────────────────────────────────────────────────────
 
-  /// POST /api/v1/meetings/:meetingId/recordings/start
+  /// POST /api/meetings/{meetingId}/recordings/start  (Spec #21)
   Future<AuthResponse> startRecording(String meetingId) {
     return _post(
-      endpoint:
-          '${ApiConstants.meetingsBase}/meetings/$meetingId/recordings/start',
+      endpoint: ApiConstants.startRecording(meetingId),
       body: <String, dynamic>{
-        'uploadMode': 'CHUNKED',
-        'mimeType': 'audio/webm',
+        'uploadMode': 'Chunked',
+        'mimeType': 'audio/webm;codecs=opus',
       },
     );
   }
 
-  /// POST /api/v1/recordings/:recordingId/stop
+  /// POST /api/recordings/{recordingId}/stop  (Spec #24)
   Future<AuthResponse> stopRecording(
     String recordingId,
     int durationSeconds,
     int lastChunkIndex,
   ) {
     return _post(
-      endpoint: '${ApiConstants.meetingsBase}/recordings/$recordingId/stop',
+      endpoint: ApiConstants.stopRecording(recordingId),
       body: <String, dynamic>{
         'durationSeconds': durationSeconds,
         'lastChunkIndex': lastChunkIndex,
@@ -182,24 +195,21 @@ class MeetingService {
     );
   }
 
-  /// GET /api/v1/recordings/:recordingId
+  /// GET /api/recordings/{recordingId}  (Spec #25)
   Future<AuthResponse> getRecording(String recordingId) {
     return _get(
-      endpoint: '${ApiConstants.meetingsBase}/recordings/$recordingId',
+      endpoint: ApiConstants.getRecording(recordingId),
     );
   }
 
-  /// POST /api/v1/recordings/:recordingId/chunks  (multipart/form-data)
-  Future<AuthResponse> uploadChunk({
-    required String recordingId,
-    required int chunkIndex,
-    required List<int> audioBytes,
-    required int startedAtMs,
-    required int endedAtMs,
-  }) async {
-    final Uri uri = Uri.parse(
-      '${ApiConstants.baseUrl}${ApiConstants.meetingsBase}/recordings/$recordingId/chunks',
-    );
+  /// POST /api/recordings/{recordingId}/chunks  (Spec #26)
+  Future<AuthResponse> uploadChunk(
+    String recordingId,
+    String filePath,
+    int startedAtMs,
+    int endedAtMs,
+  ) async {
+    final Uri uri = Uri.parse(ApiConstants.uploadChunk(recordingId));
 
     try {
       final String? token = await _tokenStorage.readAccessToken();
@@ -212,16 +222,12 @@ class MeetingService {
 
       final http.MultipartRequest request = http.MultipartRequest('POST', uri)
         ..headers.addAll(headers)
-        ..fields['chunkIndex'] = chunkIndex.toString()
         ..fields['startedAtMs'] = startedAtMs.toString()
         ..fields['endedAtMs'] = endedAtMs.toString()
-        ..files.add(
-          http.MultipartFile.fromBytes(
-            'audioChunk',
-            audioBytes,
-            filename: 'chunk_$chunkIndex.webm',
-          ),
-        );
+        ..files.add(await http.MultipartFile.fromPath(
+          'audioChunk',
+          filePath,
+        ));
 
       final http.StreamedResponse streamed = await request.send();
       final http.Response response = await http.Response.fromStream(streamed);

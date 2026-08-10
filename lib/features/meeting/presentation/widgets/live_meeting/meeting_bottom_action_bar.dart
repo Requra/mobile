@@ -11,10 +11,11 @@ class MeetingBottomActionBar extends StatelessWidget {
   const MeetingBottomActionBar({
     super.key,
     required this.isMuted,
+    required this.isCameraEnabled,
     required this.isHost,
     required this.recordingStatus,
     required this.onMuteToggle,
-    required this.onPeopleTap,
+    required this.onCameraTap,
     required this.onRecordTap,
     required this.onInviteTap,
     required this.onLeaveOrEndTap,
@@ -22,10 +23,11 @@ class MeetingBottomActionBar extends StatelessWidget {
   });
 
   final bool isMuted;
+  final bool isCameraEnabled;
   final bool isHost;
   final RecordingStatus? recordingStatus;
   final VoidCallback onMuteToggle;
-  final VoidCallback onPeopleTap;
+  final VoidCallback onCameraTap;
   final VoidCallback onRecordTap;
   final VoidCallback onInviteTap;
   final VoidCallback onLeaveOrEndTap;
@@ -65,14 +67,20 @@ class MeetingBottomActionBar extends StatelessWidget {
                   onTap: onMuteToggle,
                 ),
 
-                // ── People ──
+                // ── Camera ──
                 _ActionBtn(
-                  icon: Icons.people_outline_rounded,
-                  label: 'People',
-                  bgColor: AppColors.meetingBg,
-                  iconColor: Colors.white70,
-                  borderColor: AppColors.meetingCardBorder,
-                  onTap: onPeopleTap,
+                  icon: isCameraEnabled
+                      ? Icons.videocam_rounded
+                      : Icons.videocam_off_rounded,
+                  label: isCameraEnabled ? 'Stop Video' : 'Start Video',
+                  bgColor: !isCameraEnabled
+                      ? AppColors.liveRed.withValues(alpha: 0.15)
+                      : AppColors.meetingBg,
+                  iconColor: !isCameraEnabled ? AppColors.liveRed : Colors.white70,
+                  borderColor: !isCameraEnabled
+                      ? AppColors.liveRed.withValues(alpha: 0.4)
+                      : AppColors.meetingCardBorder,
+                  onTap: onCameraTap,
                 ),
 
                 // ── Record / Stop (center, larger) ──

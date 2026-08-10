@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:camera/camera.dart';
 
 import 'package:requra/features/meeting/data/models/meeting_models.dart';
 import 'package:requra/features/meeting/data/services/meeting_service.dart';
-import 'package:requra/features/meeting/presentation/widgets/live_meeting/confirmation_sheet.dart';
-import 'package:requra/features/meeting/presentation/widgets/live_meeting/invite_sheet.dart';
+import 'package:requra/features/meeting/data/services/recording_service.dart';
+import 'package:requra/features/meeting/presentation/widgets/live_meeting/leave_end_session_sheet.dart';
+import 'package:requra/features/meeting/presentation/widgets/live_meeting/consent_dialog.dart';
+import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_invite_sheet.dart';
 import 'package:requra/features/meeting/presentation/widgets/live_meeting/meeting_bottom_action_bar.dart';
 import 'package:requra/features/meeting/presentation/widgets/live_meeting/pending_invitations_sheet.dart';
 import 'package:requra/features/meeting/presentation/widgets/live_meeting/remove_participant_sheet.dart';
@@ -30,17 +33,20 @@ class LiveMeetingScreen extends StatefulWidget {
 }
 
 class _LiveMeetingScreenState extends State<LiveMeetingScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // ── Services ──
   final MeetingService _service = const MeetingService();
+  late final RecordingService _recordingService;
 
   // ── State ──
   MeetingDetails? _meeting;
   List<Participant> _participants = [];
   List<Invitation> _invitations = [];
   RecordingInfo? _recording;
-  final Map<int, bool> _chunkMap = {};
   bool _isMuted = false;
+  bool _isCameraEnabled = false;
+  CameraController? _cameraController;
+  Offset _cameraOffset = Offset(16.w, 500.h); // Initial position for PIP
   String _currentParticipantId = '';
   bool _isHost = false;
   bool _consentGiven = false;
@@ -73,6 +79,13 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   @override
   void initState() {
     super.initState();
+    _recordingService = RecordingService(_service);
+    _recordingService.stateStream.listen((isRecording) {
+      if (!mounted) return;
+      // You can update UI based on isRecording state here if needed
+    });
+    
+    WidgetsBinding.instance.addObserver(this);
     _livePulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -85,14 +98,32 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     if (!_isInit) {
       _isInit = true;
       final args = ModalRoute.of(context)?.settings.arguments;
-      // Use fallback ID '1' so it loads even if opened directly as the initial route without arguments
-      _meetingId = args is String ? args : '1';
+      if (args is Map<String, dynamic>) {
+        // New format: Map with meetingId and participantId from join API
+        _meetingId = args['meetingId'] ?? '1';
+        _currentParticipantId = args['participantId'] ?? '';
+        _isMuted = !(args['isMicEnabled'] ?? true); // If mic is enabled, not muted
+        _isCameraEnabled = args['isCameraEnabled'] ?? false;
+      } else if (args is String) {
+        // Legacy format: just meetingId string
+        _meetingId = args;
+      } else {
+        _meetingId = '1';
+      }
+      
+      if (_isCameraEnabled) {
+        _initCamera();
+      }
+      
       _loadInitialData();
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraController?.dispose();
+    _recordingService.dispose();
     _pollTimer?.cancel();
     _elapsedTimer?.cancel();
     _recordingElapsedTimer?.cancel();
@@ -100,6 +131,22 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     _livePulse.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Pause/resume polling based on app lifecycle (Section 4.3).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      // App going to background — stop polling to save resources
+      _pollTimer?.cancel();
+      _pollTimer = null;
+    } else if (state == AppLifecycleState.resumed) {
+      // App coming to foreground — refresh data and resume polling
+      _fetchMeeting();
+      _fetchParticipants();
+      _startPolling();
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -127,16 +174,28 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       final meeting = MeetingDetails.fromJson(
         response.data as Map<String, dynamic>,
       );
-      setState(() => _meeting = meeting);
+      setState(() {
+        _meeting = meeting;
+        // Determine host status from currentUserRole (Section 4 / Spec #4)
+        if (meeting.currentUserRole != null) {
+          _isHost = meeting.currentUserRole!.toUpperCase() == 'HOST';
+        }
+        // If meeting has an active recording, update local state
+        if (meeting.activeRecordingId != null &&
+            meeting.activeRecordingId!.isNotEmpty &&
+            _recording == null) {
+          _recording = RecordingInfo(
+            id: meeting.activeRecordingId!,
+            status: RecordingStatus.active,
+          );
+        }
+      });
 
-      // For testing with the mock API (which returns ENDED), we disable the auto-redirect
-      // so you can actually see the screen instead of being kicked out.
-      /*
+      // Auto-kick: redirect if meeting ended or cancelled (Section 4.3)
       if (meeting.status == MeetingStatus.ended ||
           meeting.status == MeetingStatus.cancelled) {
         _navigateAway();
       }
-      */
     } else {
       _handleApiError(response.message, response.data);
     }
@@ -189,30 +248,40 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   }
 
   void _resolveCurrentUser() {
-    // Try to identify current user. The first HOST participant, or the
-    // one whose userId matches the stored profile. For now we use a
-    // heuristic: the first participant with role HOST is "us" if we are
-    // the host; otherwise the first JOINED participant is "us".
-    // In production this would come from the JWT or user profile.
     if (_participants.isEmpty) return;
 
-    // If we already identified, skip.
-    if (_currentParticipantId.isNotEmpty) return;
+    // If participantId was already set from the join API response, use it.
+    if (_currentParticipantId.isNotEmpty) {
+      final me = _participants.where((p) => p.id == _currentParticipantId);
+      if (me.isNotEmpty) {
+        _consentGiven = me.first.recordingConsent;
+      }
+      return;
+    }
 
-    // Simple heuristic: first participant in the list is current user.
+    // Fallback: first participant in the list is current user.
     final me = _participants.first;
     _currentParticipantId = me.id;
 
-    // For testing with mock API: Force the user to be the host so all features (like remove participant) are visible.
-    // In production: _isHost = me.role == ParticipantRole.host;
-    _isHost = true;
+    // Determine host from meeting details currentUserRole if available,
+    // otherwise fall back to participant role.
+    if (_meeting?.currentUserRole != null) {
+      _isHost = _meeting!.currentUserRole!.toUpperCase() == 'HOST';
+    } else {
+      _isHost = me.role == ParticipantRole.host;
+    }
 
     _consentGiven = me.recordingConsent;
   }
 
+  /// Poll participants every 5 seconds and meeting status to detect
+  /// state changes (Section 4.3).
   void _startPolling() {
     _pollTimer?.cancel();
-    // Removed polling every 15 seconds as requested by user
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _fetchParticipants();
+      _fetchMeeting();
+    });
   }
 
   void _startElapsedTimer() {
@@ -231,13 +300,65 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   // ── Actions ───────────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════
 
+  Future<void> _initCamera() async {
+    try {
+      // Wait for the previous screen to fully dispose its camera instance
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        if (mounted) setState(() => _isCameraEnabled = false);
+        return;
+      }
+      
+      // Default to front camera for meeting
+      final frontCamera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Failed to init camera: $e');
+      if (mounted) {
+        setState(() {
+          _isCameraEnabled = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleCamera() async {
+    if (_isCameraEnabled) {
+      setState(() {
+        _isCameraEnabled = false;
+      });
+      // We do not call stopImageStream unless we called startImageStream
+      await _cameraController?.dispose();
+      _cameraController = null;
+    } else {
+      setState(() {
+        _isCameraEnabled = true;
+      });
+      await _initCamera();
+    }
+  }
+
   // §2 — Recording Consent
-  Future<void> _giveConsent() async {
+  Future<bool> _giveConsent() async {
     final response = await _service.giveConsent(
       _meetingId,
       _currentParticipantId,
     );
-    if (!mounted) return;
+    if (!mounted) return false;
     if (response.isSuccess) {
       setState(() {
         _consentGiven = true;
@@ -250,16 +371,23 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
           return p;
         }).toList();
       });
+      _showToast('Consent recorded');
+      return true;
     } else {
-      _showToast(response.message);
+      _handleApiError(response.message, response.data);
+      return false;
     }
   }
 
   // §7 — Start Recording
   Future<void> _startRecording() async {
     if (!_consentGiven) {
-      setState(() => _consentBannerDismissed = false);
-      _showToast('Please consent to recording first');
+      ConsentDialog.show(context, onAgree: () async {
+        final success = await _giveConsent();
+        if (success && mounted) {
+          _startRecording();
+        }
+      });
       return;
     }
 
@@ -275,7 +403,13 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         _recordingElapsedSeconds = 0;
       });
       _startRecordingElapsedTimer();
-      // Audio capture would start here with a recording plugin.
+      
+      try {
+        await _recordingService.start(_meetingId, rec.id);
+      } catch (e) {
+        _showToast('Could not start microphone: $e');
+        _stopRecording(); // Fallback to stop the server side if mic failed
+      }
     } else {
       setState(() => _recordingLoading = false);
       _handleApiError(response.message, response.data);
@@ -287,9 +421,9 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     if (_recording == null) return;
 
     setState(() => _recordingLoading = true);
-    final int lastChunk = _chunkMap.isEmpty
-        ? 0
-        : _chunkMap.keys.reduce((a, b) => a > b ? a : b);
+    
+    // Stop local audio capture and flush the upload queue
+    final int lastChunk = await _recordingService.stop();
 
     final response = await _service.stopRecording(
       _recording!.id,
@@ -310,10 +444,17 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       final data = response.data;
       if (data is Map<String, dynamic> &&
           data['code']?.toString() == 'MISSING_CHUNKS') {
-        // Retry missing chunks then stop again.
+        
         _showToast('Retrying missing chunks…');
-        // In production: re-upload missing chunks, then call stop again.
+        
+        // Parse missing chunks if the server returns them, otherwise just trigger a retry
+        // Since our service just tries to upload whatever is in the queue, we'll just trigger it
+        await _recordingService.retryChunks([]);
+        
         setState(() => _recordingLoading = false);
+        
+        // Retry stop
+        _stopRecording();
       } else {
         setState(() => _recordingLoading = false);
         _handleApiError(response.message, response.data);
@@ -352,62 +493,47 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     });
   }
 
-  // §9 — Leave Meeting
-  Future<void> _leaveMeeting() async {
-    final confirmed = await ConfirmationSheet.show(
+  // §9/§10 — Leave or End Meeting
+  Future<void> _showLeaveOrEndDialog() async {
+    final result = await LeaveEndSessionSheet.show(
       context,
-      title: 'Leave this meeting?',
-      subtitle: 'You can rejoin later if the meeting is still active.',
-      confirmLabel: 'Leave',
-      confirmColor: AppColors.liveRed,
-      icon: Icons.call_end_rounded,
+      isHost: _isHost,
     );
-    if (!confirmed || !mounted) return;
+    if (result == null || !mounted) return;
 
-    setState(() => _leavingOrEnding = true);
-    final response = await _service.leaveMeeting(
-      _meetingId,
-      _currentParticipantId,
-    );
-    if (!mounted) return;
-    setState(() => _leavingOrEnding = false);
+    switch (result) {
+      case LeaveEndResult.leaveOnly:
+        setState(() => _leavingOrEnding = true);
+        final response = await _service.leaveMeeting(
+          _meetingId,
+          _currentParticipantId,
+        );
+        if (!mounted) return;
+        setState(() => _leavingOrEnding = false);
+        if (response.isSuccess) {
+          Navigator.of(context).pop();
+        } else {
+          _showToast(response.message);
+        }
+        break;
 
-    if (response.isSuccess) {
-      Navigator.of(context).pop();
-    } else {
-      _showToast(response.message);
-    }
-  }
-
-  // §10 — End Meeting (host only)
-  Future<void> _endMeeting() async {
-    final confirmed = await ConfirmationSheet.show(
-      context,
-      title: 'End meeting for everyone?',
-      subtitle: 'All participants will be disconnected.',
-      confirmLabel: 'End Meeting',
-      confirmColor: AppColors.liveRed,
-      icon: Icons.call_end_rounded,
-    );
-    if (!confirmed || !mounted) return;
-
-    setState(() => _leavingOrEnding = true);
-
-    // If recording is active, stop it first.
-    if (_recording?.status == RecordingStatus.active) {
-      await _stopRecording();
-      // Wait briefly for finalizing.
-      await Future.delayed(const Duration(milliseconds: 500));
-    }
-
-    final response = await _service.endMeeting(_meetingId);
-    if (!mounted) return;
-    setState(() => _leavingOrEnding = false);
-
-    if (response.isSuccess) {
-      _navigateAway();
-    } else {
-      _showToast(response.message);
+      case LeaveEndResult.endForAll:
+        setState(() => _leavingOrEnding = true);
+        // If recording is active, stop it first.
+        if (_recording?.status == RecordingStatus.active) {
+          await _stopRecording();
+          // Wait briefly for finalizing.
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+        final response = await _service.endMeeting(_meetingId);
+        if (!mounted) return;
+        setState(() => _leavingOrEnding = false);
+        if (response.isSuccess) {
+          _navigateAway();
+        } else {
+          _showToast(response.message);
+        }
+        break;
     }
   }
 
@@ -512,6 +638,10 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     switch (role) {
       case ParticipantRole.host:
         return AppColors.roleHost;
+      case ParticipantRole.participant:
+        return AppColors.roleMember;
+      case ParticipantRole.viewer:
+        return AppColors.roleGuest;
       case ParticipantRole.member:
         return AppColors.roleMember;
       case ParticipantRole.stakeholder:
@@ -542,69 +672,102 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   }
 
   Widget _buildBody() {
-    return Column(
+    return Stack(
       children: [
-        // ── Scrollable content ──
-        Expanded(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 8.h),
-                  _buildHeader(),
-                  SizedBox(height: 16.h),
-                  if (_showConsentBanner) ...[
-                    _buildConsentBanner(),
-                    SizedBox(height: 16.h),
-                  ],
-                  _buildStatsRow(),
-                  SizedBox(height: 20.h),
-                  _buildParticipantsSection(),
-                ],
+        Column(
+          children: [
+            // ── Scrollable content ──
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 8.h),
+                      _buildHeader(),
+                      SizedBox(height: 16.h),
+                      if (_showConsentBanner) ...[
+                        _buildConsentBanner(),
+                        SizedBox(height: 16.h),
+                      ],
+                      _buildStatsRow(),
+                      SizedBox(height: 20.h),
+                      _buildParticipantsSection(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // ── Bottom action bar ──
+            MeetingBottomActionBar(
+              isMuted: _isMuted,
+              isCameraEnabled: _isCameraEnabled,
+              isHost: _isHost,
+              recordingStatus: _recording?.status ?? _meeting?.recordingStatus,
+              isRecordingLoading: _recordingLoading,
+              onMuteToggle: () => setState(() => _isMuted = !_isMuted),
+              onCameraTap: _toggleCamera,
+              onRecordTap: () {
+                final status = _recording?.status ?? _meeting?.recordingStatus;
+                if (status == RecordingStatus.active) {
+                  _stopRecording();
+                } else {
+                  _startRecording();
+                }
+              },
+              onInviteTap: () {
+                MeetingInviteSheet.show(
+                  context,
+                  meetingId: _meetingId,
+                  projectId: _meeting?.projectId ?? '',
+                  joinUrl: _meeting?.joinUrl ?? '',
+                );
+              },
+              onLeaveOrEndTap: _showLeaveOrEndDialog,
+            ),
+          ],
+        ),
+        
+        // ── Draggable Camera PIP ──
+        if (_isCameraEnabled && _cameraController != null && _cameraController!.value.isInitialized)
+          Positioned(
+            left: _cameraOffset.dx,
+            top: _cameraOffset.dy,
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _cameraOffset = Offset(
+                    _cameraOffset.dx + details.delta.dx,
+                    _cameraOffset.dy + details.delta.dy,
+                  );
+                  
+                  // Keep PIP within screen bounds
+                  final screen = MediaQuery.of(context).size;
+                  final pipWidth = 100.w;
+                  final pipHeight = 150.h;
+                  
+                  _cameraOffset = Offset(
+                    _cameraOffset.dx.clamp(0, screen.width - pipWidth),
+                    _cameraOffset.dy.clamp(0, screen.height - pipHeight - 100.h), // 100.h padding for bottom bar
+                  );
+                });
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
+                child: SizedBox(
+                  width: 100.w,
+                  height: 150.h,
+                  child: AspectRatio(
+                    aspectRatio: _cameraController!.value.aspectRatio,
+                    child: CameraPreview(_cameraController!),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        // ── Bottom action bar ──
-        MeetingBottomActionBar(
-          isMuted: _isMuted,
-          isHost: _isHost,
-          recordingStatus: _recording?.status ?? _meeting?.recordingStatus,
-          isRecordingLoading: _recordingLoading,
-          onMuteToggle: () => setState(() => _isMuted = !_isMuted),
-          onPeopleTap: () {
-            // Scroll to participants section reliably
-            if (_participantsKey.currentContext != null) {
-              Scrollable.ensureVisible(
-                _participantsKey.currentContext!,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-              );
-            }
-          },
-          onRecordTap: () {
-            final status = _recording?.status ?? _meeting?.recordingStatus;
-            if (status == RecordingStatus.active) {
-              _stopRecording();
-            } else {
-              _startRecording();
-            }
-          },
-          onInviteTap: () {
-            InviteSheet.show(
-              context,
-              meetingId: _meetingId,
-              projectId: _meeting?.projectId ?? '',
-              onInvited: _fetchInvitations,
-            );
-          },
-          onLeaveOrEndTap: _isHost ? _endMeeting : _leaveMeeting,
-        ),
       ],
     );
   }
@@ -897,11 +1060,11 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
               const Spacer(),
               GestureDetector(
                 onTap: () {
-                  InviteSheet.show(
+                  MeetingInviteSheet.show(
                     context,
                     meetingId: _meetingId,
                     projectId: _meeting?.projectId ?? '',
-                    onInvited: _fetchInvitations,
+                    joinUrl: '',
                   );
                 },
                 child: Container(

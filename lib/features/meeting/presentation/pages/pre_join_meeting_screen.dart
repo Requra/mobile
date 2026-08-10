@@ -4,7 +4,9 @@ import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/storage/secure_token_storage.dart';
 import 'package:requra/features/meeting/domain/entities/meeting.dart';
+import 'package:requra/features/meeting/data/services/meeting_service.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:record/record.dart';
@@ -31,8 +33,12 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
   bool _isCameraEnabled = false;
   bool _isMicEnabled = false;
   bool _cameraPermissionGranted = false;
-  bool _micPermissionGranted = false;
   String _errorMessage = '';
+
+  // ── Join API state ──
+  final MeetingService _meetingService = const MeetingService();
+  static const SecureTokenStorage _tokenStorage = SecureTokenStorage();
+  bool _isJoining = false;
 
   @override
   void initState() {
@@ -47,7 +53,6 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
     if (mounted) {
       setState(() {
         _cameraPermissionGranted = cameraStatus.isGranted;
-        _micPermissionGranted = micStatus.isGranted;
 
         _isCameraEnabled = cameraStatus.isGranted;
         _isMicEnabled = micStatus.isGranted;
@@ -218,7 +223,6 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
     final status = await Permission.microphone.request();
     if (status.isGranted) {
       setState(() {
-        _micPermissionGranted = true;
         _isMicEnabled = true;
       });
       _startMicMeter();
@@ -227,13 +231,60 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
     }
   }
 
-  void _joinMeeting() {
-    // Currently liveMeeting expects meetingId
-    Navigator.pushReplacementNamed(
-      context,
-      '/liveMeeting',
-      arguments: widget.meeting.id,
-    );
+  Future<void> _joinMeeting() async {
+    if (_isJoining) return;
+    setState(() => _isJoining = true);
+
+    try {
+      // Read user profile from JWT token
+      final displayName = await _tokenStorage.readDisplayName() ?? 'User';
+      final email = await _tokenStorage.readEmail() ?? '';
+
+      final response = await _meetingService.joinMeeting(
+        widget.meeting.id,
+        displayName: displayName,
+        email: email,
+      );
+
+      if (!mounted) return;
+
+      if (response.isSuccess && response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        final participantId = (data['id'] ?? data['participantId'] ?? '').toString();
+
+        // Navigate to live meeting with both meetingId and participantId
+        Navigator.pushReplacementNamed(
+          context,
+          '/liveMeeting',
+          arguments: <String, dynamic>{
+            'meetingId': widget.meeting.id,
+            'participantId': participantId,
+            'isMicEnabled': _isMicEnabled,
+            'isCameraEnabled': _isCameraEnabled,
+          },
+        );
+      } else {
+        setState(() => _isJoining = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isJoining = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to join meeting: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -380,11 +431,20 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                   ),
-                  onPressed: _joinMeeting,
-                  child: Text(
-                    'Join Meeting',
-                    style: boldStyle(fontSize: 16.sp, color: Colors.white),
-                  ),
+                  onPressed: _isJoining ? null : _joinMeeting,
+                  child: _isJoining
+                      ? SizedBox(
+                          width: 24.r,
+                          height: 24.r,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Join Meeting',
+                          style: boldStyle(fontSize: 16.sp, color: Colors.white),
+                        ),
                 ),
               ),
               SizedBox(height: 32.h),

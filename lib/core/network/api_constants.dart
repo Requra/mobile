@@ -46,6 +46,10 @@ class ApiConstants {
   static String meetingDetails(String meetingId) =>
       '$realMeetingsBase/meetings/$meetingId';
 
+  /// POST /api/meetings/{meetingId}/agora-token
+  static String agoraToken(String meetingId) =>
+      'https://mock.apidog.com/m1/1240855-1237660-default/api/meetings/1/agora-token';
+
   /// POST /api/meetings/{meetingId}/join
   static String joinMeeting(String meetingId) =>
       '$realMeetingsBase/meetings/$meetingId/join';

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:requra/features/meeting/data/services/meeting_service.dart';
 
 class PendingChunk {
@@ -39,9 +40,15 @@ class PendingChunk {
 class RecordingService {
   final AudioRecorder _audioRecorder = AudioRecorder();
   final MeetingService _meetingService;
+  RtcEngine? _agoraEngine;
+
+  void setAgoraEngine(RtcEngine? engine) {
+    _agoraEngine = engine;
+  }
 
   Timer? _chunkTimer;
   String? _currentRecordingId;
+  String? _currentChunkPath;
 
   int _chunkIndex = 0;
   int _chunkStartTimeMs = 0;
@@ -109,21 +116,38 @@ class RecordingService {
   Future<void> _startNewChunk() async {
     final tempDir = await getTemporaryDirectory();
     final filePath =
-        '${tempDir.path}/rec_${_currentRecordingId}_${_chunkIndex}.m4a';
+        '${tempDir.path}/rec_${_currentRecordingId}_${_chunkIndex}.aac';
 
+    _currentChunkPath = filePath;
     _chunkStartTimeMs = DateTime.now().millisecondsSinceEpoch;
-    await _audioRecorder.start(
-      const RecordConfig(
-        encoder: AudioEncoder.aacLc, // Use aacLc for broader support on both iOS and Android if webm/opus is not fully supported by the plugin
-      ),
-      path: filePath,
-    );
+    
+    if (_agoraEngine != null) {
+      await _agoraEngine!.startAudioRecording(
+        AudioRecordingConfiguration(
+          filePath: filePath,
+          fileRecordingType: AudioFileRecordingType.audioFileRecordingMixed,
+        ),
+      );
+    } else {
+      await _audioRecorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc, // Use aacLc for broader support on both iOS and Android if webm/opus is not fully supported by the plugin
+        ),
+        path: filePath,
+      );
+    }
   }
 
   Future<void> _rotateChunk() async {
     if (!_isRecording) return;
 
-    final path = await _audioRecorder.stop();
+    String? path;
+    if (_agoraEngine != null) {
+      await _agoraEngine!.stopAudioRecording();
+      path = _currentChunkPath;
+    } else {
+      path = await _audioRecorder.stop();
+    }
     final endTimeMs = DateTime.now().millisecondsSinceEpoch;
 
     if (path != null) {
@@ -147,7 +171,13 @@ class RecordingService {
     _chunkTimer?.cancel();
     _stateController.add(_isRecording);
 
-    final path = await _audioRecorder.stop();
+    String? path;
+    if (_agoraEngine != null) {
+      await _agoraEngine!.stopAudioRecording();
+      path = _currentChunkPath;
+    } else {
+      path = await _audioRecorder.stop();
+    }
     final endTimeMs = DateTime.now().millisecondsSinceEpoch;
 
     if (path != null) {

@@ -23,6 +23,29 @@ class MeetingService {
     return _get(endpoint: ApiConstants.meetingDetails(meetingId));
   }
 
+  /// POST /api/meetings/{meetingId}/agora-token
+  /// Future<AuthResponse> getAgoraToken(String meetingId) {
+  // return _post(
+  //   endpoint: ApiConstants.agoraToken(meetingId),
+  //   body: <String, dynamic>{}, // Provide empty body or necessary payload if any
+  Future<AuthResponse> getAgoraToken(String meetingId) async {
+    // HARDCODED MOCK FOR TESTING AGORA INTEGRATION
+    return AuthResponse(
+      isSuccess: true,
+      statusCode: 200,
+      message: "ok",
+      data: {
+        "appId": "b3616adc01654052b8b7ba4f97e0a12e",
+        "channelName": "tmp3",
+        "uid": 0,
+        "token": "007eJxTYNBgfBh+3n2Tx3EuTY34kI2/MnaaN2pvu73+4WK7rs2K4UoKDEnGZoZmiSnJBoZmpiYGpkZJFknmSYkmaZbmqQaJhkapAvursxoCGRle+5uxMDJAIIjPwlCSW2DMwAAA8tMeFg==",
+        "role": "PUBLISHER",
+        "expiresAt": "2026-08-11T15:30:00Z",
+      },
+      errors: [],
+    );
+  }
+
   /// POST /api/meetings/{meetingId}/join  (Spec #14)
   Future<AuthResponse> joinMeeting(
     String meetingId, {
@@ -31,10 +54,7 @@ class MeetingService {
   }) {
     return _post(
       endpoint: ApiConstants.joinMeeting(meetingId),
-      body: <String, dynamic>{
-        'displayName': displayName,
-        'email': email,
-      },
+      body: <String, dynamic>{'displayName': displayName, 'email': email},
     );
   }
 
@@ -58,9 +78,7 @@ class MeetingService {
 
   /// GET /api/meetings/{meetingId}/participants  (Spec #18)
   Future<AuthResponse> getParticipants(String meetingId) {
-    return _get(
-      endpoint: ApiConstants.meetingParticipants(meetingId),
-    );
+    return _get(endpoint: ApiConstants.meetingParticipants(meetingId));
   }
 
   /// POST /api/meetings/{meetingId}/participants/{participantId}/consent  (Spec #20)
@@ -145,10 +163,7 @@ class MeetingService {
   }
 
   /// POST /api/v1/meetings/:meetingId/invitations/:invitationId/resend
-  Future<AuthResponse> resendInvitation(
-    String meetingId,
-    String invitationId,
-  ) {
+  Future<AuthResponse> resendInvitation(String meetingId, String invitationId) {
     return _post(
       endpoint:
           '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId/resend',
@@ -157,10 +172,7 @@ class MeetingService {
   }
 
   /// DELETE /api/v1/meetings/:meetingId/invitations/:invitationId
-  Future<AuthResponse> revokeInvitation(
-    String meetingId,
-    String invitationId,
-  ) {
+  Future<AuthResponse> revokeInvitation(String meetingId, String invitationId) {
     return _delete(
       endpoint:
           '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId',
@@ -197,9 +209,7 @@ class MeetingService {
 
   /// GET /api/recordings/{recordingId}  (Spec #25)
   Future<AuthResponse> getRecording(String recordingId) {
-    return _get(
-      endpoint: ApiConstants.getRecording(recordingId),
-    );
+    return _get(endpoint: ApiConstants.getRecording(recordingId));
   }
 
   /// POST /api/recordings/{recordingId}/chunks  (Spec #26)
@@ -224,10 +234,7 @@ class MeetingService {
         ..headers.addAll(headers)
         ..fields['startedAtMs'] = startedAtMs.toString()
         ..fields['endedAtMs'] = endedAtMs.toString()
-        ..files.add(await http.MultipartFile.fromPath(
-          'audioChunk',
-          filePath,
-        ));
+        ..files.add(await http.MultipartFile.fromPath('audioChunk', filePath));
 
       final http.StreamedResponse streamed = await request.send();
       final http.Response response = await http.Response.fromStream(streamed);
@@ -263,8 +270,7 @@ class MeetingService {
   /// GET /api/v1/projects/:projectId/stakeholders
   Future<AuthResponse> getProjectStakeholders(String projectId) {
     return _get(
-      endpoint:
-          '${ApiConstants.meetingsBase}/projects/$projectId/stakeholders',
+      endpoint: '${ApiConstants.meetingsBase}/projects/$projectId/stakeholders',
     );
   }
 
@@ -279,8 +285,9 @@ class MeetingService {
     final Uri uri = _resolveUri(endpoint);
 
     try {
-      final Map<String, String> headers =
-          await _buildHeaders(includeAuth: includeAuthHeader);
+      final Map<String, String> headers = await _buildHeaders(
+        includeAuth: includeAuthHeader,
+      );
       http.Response response = await http
           .get(uri, headers: headers)
           .timeout(_timeout);
@@ -290,11 +297,10 @@ class MeetingService {
       if (includeAuthHeader && _isUnauthorized(response.statusCode)) {
         final bool refreshed = await _tryRefreshTokens();
         if (refreshed) {
-          final Map<String, String> newHeaders =
-              await _buildHeaders(includeAuth: true);
-          response = await http
-              .get(uri, headers: newHeaders)
-              .timeout(_timeout);
+          final Map<String, String> newHeaders = await _buildHeaders(
+            includeAuth: true,
+          );
+          response = await http.get(uri, headers: newHeaders).timeout(_timeout);
           parsed = _buildResponse(response);
         }
       }
@@ -315,8 +321,9 @@ class MeetingService {
     final Uri uri = _resolveUri(endpoint);
 
     try {
-      final Map<String, String> headers =
-          await _buildHeaders(includeAuth: includeAuthHeader);
+      final Map<String, String> headers = await _buildHeaders(
+        includeAuth: includeAuthHeader,
+      );
       http.Response response = await http
           .post(uri, headers: headers, body: jsonEncode(body))
           .timeout(_timeout);
@@ -326,8 +333,9 @@ class MeetingService {
       if (includeAuthHeader && _isUnauthorized(response.statusCode)) {
         final bool refreshed = await _tryRefreshTokens();
         if (refreshed) {
-          final Map<String, String> newHeaders =
-              await _buildHeaders(includeAuth: true);
+          final Map<String, String> newHeaders = await _buildHeaders(
+            includeAuth: true,
+          );
           response = await http
               .post(uri, headers: newHeaders, body: jsonEncode(body))
               .timeout(_timeout);
@@ -350,8 +358,9 @@ class MeetingService {
     final Uri uri = _resolveUri(endpoint);
 
     try {
-      final Map<String, String> headers =
-          await _buildHeaders(includeAuth: includeAuthHeader);
+      final Map<String, String> headers = await _buildHeaders(
+        includeAuth: includeAuthHeader,
+      );
       http.Response response = await http
           .delete(uri, headers: headers)
           .timeout(_timeout);
@@ -361,8 +370,9 @@ class MeetingService {
       if (includeAuthHeader && _isUnauthorized(response.statusCode)) {
         final bool refreshed = await _tryRefreshTokens();
         if (refreshed) {
-          final Map<String, String> newHeaders =
-              await _buildHeaders(includeAuth: true);
+          final Map<String, String> newHeaders = await _buildHeaders(
+            includeAuth: true,
+          );
           response = await http
               .delete(uri, headers: newHeaders)
               .timeout(_timeout);
@@ -408,7 +418,9 @@ class MeetingService {
     }
 
     try {
-      final Uri uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.refreshToken}');
+      final Uri uri = Uri.parse(
+        '${ApiConstants.baseUrl}${ApiConstants.refreshToken}',
+      );
       final http.Response response = await http
           .post(
             uri,
@@ -431,8 +443,9 @@ class MeetingService {
       final dynamic data = parsed.data;
       if (data is Map<String, dynamic>) {
         final String newAccess = (data['token'] ?? '').toString().trim();
-        final String newRefresh =
-            (data['refreshToken'] ?? '').toString().trim();
+        final String newRefresh = (data['refreshToken'] ?? '')
+            .toString()
+            .trim();
         if (newAccess.isNotEmpty && newRefresh.isNotEmpty) {
           await _tokenStorage.saveTokens(
             accessToken: newAccess,
@@ -464,10 +477,9 @@ class MeetingService {
     try {
       final dynamic parsed = jsonDecode(body);
       if (parsed is Map<String, dynamic>) {
-        final int statusCode =
-            parsed['statusCode'] is int
-                ? parsed['statusCode'] as int
-                : response.statusCode;
+        final int statusCode = parsed['statusCode'] is int
+            ? parsed['statusCode'] as int
+            : response.statusCode;
         final bool isSuccess =
             parsed['isSuccess'] == true ||
             parsed['success'] == true ||

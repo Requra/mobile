@@ -18,6 +18,8 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/routes/app_routes.dart';
+import 'package:requra/features/meeting/data/services/agora_service.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 
 /// The live meeting screen shown when a meeting has status LIVE or RECORDING.
 ///
@@ -37,6 +39,20 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   // ── Services ──
   final MeetingService _service = const MeetingService();
   late final RecordingService _recordingService;
+  late final AgoraService _agoraService;
+
+  // ── Agora State ──
+  String? _agoraAppId;
+  String? _agoraChannelName;
+  int? _agoraUid;
+  String? _agoraUserAccount;
+  String? _agoraToken;
+  ConnectionStateType _connectionState =
+      ConnectionStateType.connectionStateDisconnected;
+  StreamSubscription? _connectionSub;
+  StreamSubscription? _eventSub;
+  StreamSubscription? _tokenSub;
+  StreamSubscription? _activeSpeakersSub;
 
   // ── State ──
   MeetingDetails? _meeting;
@@ -45,12 +61,14 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   RecordingInfo? _recording;
   bool _isMuted = false;
   bool _isCameraEnabled = false;
+  Set<int> _activeSpeakers = {};
   CameraController? _cameraController;
   Offset _cameraOffset = Offset(16.w, 500.h); // Initial position for PIP
   String _currentParticipantId = '';
   bool _isHost = false;
   bool _consentGiven = false;
   bool _consentBannerDismissed = false;
+  bool _isSpeakerphone = true;
 
   // ── Loading flags ──
   bool _initialLoading = true;
@@ -79,12 +97,40 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   @override
   void initState() {
     super.initState();
+    _agoraService = AgoraService();
     _recordingService = RecordingService(_service);
     _recordingService.stateStream.listen((isRecording) {
       if (!mounted) return;
       // You can update UI based on isRecording state here if needed
     });
-    
+
+    _connectionSub = _agoraService.connectionStateStream.listen((state) {
+      if (!mounted) return;
+      setState(() => _connectionState = state);
+      if (state == ConnectionStateType.connectionStateReconnecting) {
+        _showToast('Reconnecting to audio...');
+      } else if (state == ConnectionStateType.connectionStateFailed) {
+        _showToast('Failed to connect to audio.');
+      }
+    });
+
+    _eventSub = _agoraService.participantEventStream.listen((event) {
+      // Handle user joined/offline if needed
+    });
+
+    _tokenSub = _agoraService.tokenExpireStream.listen((_) async {
+      final response = await _service.getAgoraToken(_meetingId);
+      if (response.isSuccess && response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        await _agoraService.renewToken(data['token']);
+      }
+    });
+
+    _activeSpeakersSub = _agoraService.activeSpeakersStream.listen((speakers) {
+      if (!mounted) return;
+      setState(() => _activeSpeakers = speakers);
+    });
+
     WidgetsBinding.instance.addObserver(this);
     _livePulse = AnimationController(
       vsync: this,
@@ -102,19 +148,28 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         // New format: Map with meetingId and participantId from join API
         _meetingId = args['meetingId'] ?? '1';
         _currentParticipantId = args['participantId'] ?? '';
-        _isMuted = !(args['isMicEnabled'] ?? true); // If mic is enabled, not muted
+        _isMuted =
+            !(args['isMicEnabled'] ?? true); // If mic is enabled, not muted
         _isCameraEnabled = args['isCameraEnabled'] ?? false;
+
+        // Agora args
+        _agoraAppId = args['appId'];
+        _agoraChannelName = args['channelName'];
+        _agoraUid = args['uid'];
+        _agoraUserAccount = args['userAccount'];
+        _agoraToken = args['token'];
       } else if (args is String) {
         // Legacy format: just meetingId string
         _meetingId = args;
       } else {
         _meetingId = '1';
       }
-      
+
       if (_isCameraEnabled) {
         _initCamera();
       }
-      
+
+      _initAgora();
       _loadInitialData();
     }
   }
@@ -124,6 +179,11 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
     _recordingService.dispose();
+    _agoraService.dispose();
+    _connectionSub?.cancel();
+    _eventSub?.cancel();
+    _tokenSub?.cancel();
+    _activeSpeakersSub?.cancel();
     _pollTimer?.cancel();
     _elapsedTimer?.cancel();
     _recordingElapsedTimer?.cancel();
@@ -131,6 +191,27 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     _livePulse.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initAgora() async {
+    if (_agoraAppId == null ||
+        _agoraToken == null ||
+        _agoraChannelName == null) return;
+    try {
+      await _agoraService.initialize(_agoraAppId!);
+      _recordingService.setAgoraEngine(_agoraService.engine);
+
+      await _agoraService.joinChannel(
+        token: _agoraToken!,
+        channelName: _agoraChannelName!,
+        uid: _agoraUid,
+        userAccount: _agoraUserAccount,
+      );
+      await _agoraService.muteLocalAudio(_isMuted);
+      await _agoraService.setSpeakerphoneEnabled(_isSpeakerphone);
+    } catch (e) {
+      debugPrint('Agora init error: $e');
+    }
   }
 
   /// Pause/resume polling based on app lifecycle (Section 4.3).
@@ -141,8 +222,11 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       // App going to background — stop polling to save resources
       _pollTimer?.cancel();
       _pollTimer = null;
+      _agoraService.engine?.disableAudio();
     } else if (state == AppLifecycleState.resumed) {
       // App coming to foreground — refresh data and resume polling
+      _agoraService.engine?.enableAudio();
+      _agoraService.muteLocalAudio(_isMuted);
       _fetchMeeting();
       _fetchParticipants();
       _startPolling();
@@ -217,8 +301,16 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         final parsed = list
             .map((e) => Participant.fromJson(e as Map<String, dynamic>))
             .toList();
+        // Remove participants who left or were removed, except the current user
+        final activeParticipants = parsed
+            .where(
+              (p) =>
+                  p.connectionStatus == ParticipantConnectionStatus.joined ||
+                  p.id == _currentParticipantId,
+            )
+            .toList();
         setState(() {
-          _participants = parsed;
+          _participants = activeParticipants;
           _resolveCurrentUser();
         });
       }
@@ -311,7 +403,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         if (mounted) setState(() => _isCameraEnabled = false);
         return;
       }
-      
+
       // Default to front camera for meeting
       final frontCamera = cameras.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.front,
@@ -382,12 +474,15 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   // §7 — Start Recording
   Future<void> _startRecording() async {
     if (!_consentGiven) {
-      ConsentDialog.show(context, onAgree: () async {
-        final success = await _giveConsent();
-        if (success && mounted) {
-          _startRecording();
-        }
-      });
+      ConsentDialog.show(
+        context,
+        onAgree: () async {
+          final success = await _giveConsent();
+          if (success && mounted) {
+            _startRecording();
+          }
+        },
+      );
       return;
     }
 
@@ -403,7 +498,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         _recordingElapsedSeconds = 0;
       });
       _startRecordingElapsedTimer();
-      
+
       try {
         await _recordingService.start(_meetingId, rec.id);
       } catch (e) {
@@ -421,7 +516,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     if (_recording == null) return;
 
     setState(() => _recordingLoading = true);
-    
+
     // Stop local audio capture and flush the upload queue
     final int lastChunk = await _recordingService.stop();
 
@@ -444,15 +539,14 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       final data = response.data;
       if (data is Map<String, dynamic> &&
           data['code']?.toString() == 'MISSING_CHUNKS') {
-        
         _showToast('Retrying missing chunks…');
-        
+
         // Parse missing chunks if the server returns them, otherwise just trigger a retry
         // Since our service just tries to upload whatever is in the queue, we'll just trigger it
         await _recordingService.retryChunks([]);
-        
+
         setState(() => _recordingLoading = false);
-        
+
         // Retry stop
         _stopRecording();
       } else {
@@ -495,15 +589,13 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
 
   // §9/§10 — Leave or End Meeting
   Future<void> _showLeaveOrEndDialog() async {
-    final result = await LeaveEndSessionSheet.show(
-      context,
-      isHost: _isHost,
-    );
+    final result = await LeaveEndSessionSheet.show(context, isHost: _isHost);
     if (result == null || !mounted) return;
 
     switch (result) {
       case LeaveEndResult.leaveOnly:
         setState(() => _leavingOrEnding = true);
+        await _agoraService.leaveChannel();
         final response = await _service.leaveMeeting(
           _meetingId,
           _currentParticipantId,
@@ -525,6 +617,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
           // Wait briefly for finalizing.
           await Future.delayed(const Duration(milliseconds: 500));
         }
+        await _agoraService.leaveChannel();
         final response = await _service.endMeeting(_meetingId);
         if (!mounted) return;
         setState(() => _leavingOrEnding = false);
@@ -599,17 +692,16 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
 
   void _navigateAway() {
     if (!mounted) return;
-    
+
     final summary = MeetingSummary(
       meetingTitle: _meeting?.title ?? 'Meeting',
       projectId: _meeting?.projectId ?? '',
       projectName: _meeting?.projectName ?? '',
     );
-    
-    Navigator.of(context).pushReplacementNamed(
-      AppRoutes.meetingFinished,
-      arguments: summary,
-    );
+
+    Navigator.of(
+      context,
+    ).pushReplacementNamed(AppRoutes.meetingFinished, arguments: summary);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -708,7 +800,12 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
               isHost: _isHost,
               recordingStatus: _recording?.status ?? _meeting?.recordingStatus,
               isRecordingLoading: _recordingLoading,
-              onMuteToggle: () => setState(() => _isMuted = !_isMuted),
+              localVolumeStream: _agoraService.localVolumeStream,
+              onMuteToggle: () {
+                final newMuted = !_isMuted;
+                setState(() => _isMuted = newMuted);
+                _agoraService.muteLocalAudio(newMuted);
+              },
               onCameraTap: _toggleCamera,
               onRecordTap: () {
                 final status = _recording?.status ?? _meeting?.recordingStatus;
@@ -727,12 +824,15 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                 );
               },
               onLeaveOrEndTap: _showLeaveOrEndDialog,
+              onMoreTap: _showMoreOptionsSheet,
             ),
           ],
         ),
-        
+
         // ── Draggable Camera PIP ──
-        if (_isCameraEnabled && _cameraController != null && _cameraController!.value.isInitialized)
+        if (_isCameraEnabled &&
+            _cameraController != null &&
+            _cameraController!.value.isInitialized)
           Positioned(
             left: _cameraOffset.dx,
             top: _cameraOffset.dy,
@@ -743,15 +843,18 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                     _cameraOffset.dx + details.delta.dx,
                     _cameraOffset.dy + details.delta.dy,
                   );
-                  
+
                   // Keep PIP within screen bounds
                   final screen = MediaQuery.of(context).size;
                   final pipWidth = 100.w;
                   final pipHeight = 150.h;
-                  
+
                   _cameraOffset = Offset(
                     _cameraOffset.dx.clamp(0, screen.width - pipWidth),
-                    _cameraOffset.dy.clamp(0, screen.height - pipHeight - 100.h), // 100.h padding for bottom bar
+                    _cameraOffset.dy.clamp(
+                      0,
+                      screen.height - pipHeight - 100.h,
+                    ), // 100.h padding for bottom bar
                   );
                 });
               },
@@ -769,6 +872,68 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
             ),
           ),
       ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ── More Options Sheet ────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _showMoreOptionsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.meetingCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'More Options',
+                      style: semiBoldStyle(
+                        fontSize: FontSize.font18,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    ListTile(
+                      leading: Icon(
+                        _isSpeakerphone
+                            ? Icons.volume_up_rounded
+                            : Icons.phone_in_talk_rounded,
+                        color: Colors.white,
+                      ),
+                      title: Text(
+                        _isSpeakerphone ? 'Speakerphone' : 'Earpiece',
+                        style: regularStyle(
+                          fontSize: FontSize.font14,
+                          color: Colors.white,
+                        ),
+                      ),
+                      trailing: Switch(
+                        value: _isSpeakerphone,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setSheetState(() => _isSpeakerphone = val);
+                          setState(() => _isSpeakerphone = val);
+                          _agoraService.setSpeakerphoneEnabled(val);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -820,8 +985,8 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: AppColors.liveRed.withValues(alpha: 
-                        0.5 + _livePulse.value * 0.5,
+                      color: AppColors.liveRed.withValues(
+                        alpha: 0.5 + _livePulse.value * 0.5,
                       ),
                       width: 1.5,
                     ),
@@ -833,8 +998,8 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                         width: 8.r,
                         height: 8.r,
                         decoration: BoxDecoration(
-                          color: AppColors.liveRed.withValues(alpha: 
-                            0.6 + _livePulse.value * 0.4,
+                          color: AppColors.liveRed.withValues(
+                            alpha: 0.6 + _livePulse.value * 0.4,
                           ),
                           shape: BoxShape.circle,
                         ),
@@ -1121,6 +1286,10 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     final bool isJoined =
         p.connectionStatus == ParticipantConnectionStatus.joined;
     final Color roleCol = _roleColor(p.role);
+    final bool isTalking =
+        isMe &&
+        (_activeSpeakers.contains(0) ||
+            (_agoraUid != null && _activeSpeakers.contains(_agoraUid)));
 
     return Padding(
       padding: EdgeInsets.only(bottom: 4.h),
@@ -1129,7 +1298,12 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         decoration: BoxDecoration(
           color: AppColors.meetingCard,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.meetingCardBorder, width: 1),
+          border: Border.all(
+            color: isTalking
+                ? AppColors.timerGreen
+                : AppColors.meetingCardBorder,
+            width: isTalking ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
@@ -1392,7 +1566,9 @@ class _PulsingDotState extends State<_PulsingDot>
           width: 8.r,
           height: 8.r,
           decoration: BoxDecoration(
-            color: widget.color.withValues(alpha: 0.5 + _controller.value * 0.5),
+            color: widget.color.withValues(
+              alpha: 0.5 + _controller.value * 0.5,
+            ),
             shape: BoxShape.circle,
           ),
         );
@@ -1400,5 +1576,3 @@ class _PulsingDotState extends State<_PulsingDot>
     );
   }
 }
-
-

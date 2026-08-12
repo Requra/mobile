@@ -252,6 +252,35 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
         final data = response.data as Map<String, dynamic>;
         final participantId = (data['id'] ?? data['participantId'] ?? '').toString();
 
+        // Fetch Agora Token
+        final tokenResponse = await _meetingService.getAgoraToken(widget.meeting.id);
+        String? appId;
+        String? channelName;
+        String? userAccount;
+        int? uid;
+        String? token;
+
+        if (tokenResponse.isSuccess && tokenResponse.data is Map<String, dynamic>) {
+          final tData = tokenResponse.data as Map<String, dynamic>;
+          appId = tData['appId']?.toString();
+          channelName = tData['channelName']?.toString();
+          
+          final rawUid = tData['uid']?.toString() ?? '';
+          if (int.tryParse(rawUid) != null) {
+            uid = int.parse(rawUid);
+          } else if (rawUid.isNotEmpty) {
+            userAccount = rawUid;
+            uid = 0;
+          }
+          token = tData['token']?.toString();
+        }
+
+        if (!mounted) return;
+
+        await _stopMicMeter();
+
+        if (!mounted) return;
+
         // Navigate to live meeting with both meetingId and participantId
         Navigator.pushReplacementNamed(
           context,
@@ -261,6 +290,11 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
             'participantId': participantId,
             'isMicEnabled': _isMicEnabled,
             'isCameraEnabled': _isCameraEnabled,
+            if (appId != null) 'appId': appId,
+            if (channelName != null) 'channelName': channelName,
+            if (uid != null) 'uid': uid,
+            if (userAccount != null) 'userAccount': userAccount,
+            if (token != null) 'token': token,
           },
         );
       } else {

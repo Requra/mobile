@@ -19,6 +19,8 @@ class MeetingBottomActionBar extends StatelessWidget {
     required this.onRecordTap,
     required this.onInviteTap,
     required this.onLeaveOrEndTap,
+    required this.onMoreTap,
+    this.localVolumeStream,
     this.isRecordingLoading = false,
   });
 
@@ -31,6 +33,8 @@ class MeetingBottomActionBar extends StatelessWidget {
   final VoidCallback onRecordTap;
   final VoidCallback onInviteTap;
   final VoidCallback onLeaveOrEndTap;
+  final VoidCallback onMoreTap;
+  final Stream<int>? localVolumeStream;
   final bool isRecordingLoading;
 
   bool get _isRecordingActive => recordingStatus == RecordingStatus.active;
@@ -54,17 +58,25 @@ class MeetingBottomActionBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 // ── Mute ──
-                _ActionBtn(
-                  icon: isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                  label: isMuted ? 'Unmute' : 'Mute',
-                  bgColor: isMuted
-                      ? AppColors.liveRed.withValues(alpha: 0.15)
-                      : AppColors.meetingBg,
-                  iconColor: isMuted ? AppColors.liveRed : Colors.white70,
-                  borderColor: isMuted
-                      ? AppColors.liveRed.withValues(alpha: 0.4)
-                      : AppColors.meetingCardBorder,
-                  onTap: onMuteToggle,
+                StreamBuilder<int>(
+                  stream: localVolumeStream,
+                  initialData: 0,
+                  builder: (context, snapshot) {
+                    final int vol = snapshot.data ?? 0;
+                    return _ActionBtn(
+                      icon: isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                      label: isMuted ? 'Unmute' : 'Mute',
+                      bgColor: isMuted
+                          ? AppColors.liveRed.withValues(alpha: 0.15)
+                          : AppColors.meetingBg,
+                      iconColor: isMuted ? AppColors.liveRed : Colors.white70,
+                      borderColor: isMuted
+                          ? AppColors.liveRed.withValues(alpha: 0.4)
+                          : AppColors.meetingCardBorder,
+                      onTap: onMuteToggle,
+                      amplitude: !isMuted ? vol : 0, // only animate if unmuted
+                    );
+                  }
                 ),
 
                 // ── Camera ──
@@ -109,6 +121,16 @@ class MeetingBottomActionBar extends StatelessWidget {
                   borderColor: AppColors.liveRed.withValues(alpha: 0.4),
                   onTap: onLeaveOrEndTap,
                 ),
+
+                // ── More ──
+                _ActionBtn(
+                  icon: Icons.more_horiz_rounded,
+                  label: 'More',
+                  bgColor: AppColors.meetingBg,
+                  iconColor: Colors.white70,
+                  borderColor: AppColors.meetingCardBorder,
+                  onTap: onMoreTap,
+                ),
               ],
             ),
 
@@ -140,6 +162,7 @@ class _ActionBtn extends StatelessWidget {
     required this.iconColor,
     required this.borderColor,
     required this.onTap,
+    this.amplitude = 0,
   });
 
   final IconData icon;
@@ -148,6 +171,7 @@ class _ActionBtn extends StatelessWidget {
   final Color iconColor;
   final Color borderColor;
   final VoidCallback onTap;
+  final int amplitude;
 
   @override
   Widget build(BuildContext context) {
@@ -156,15 +180,30 @@ class _ActionBtn extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 46.r,
-            height: 46.r,
-            decoration: BoxDecoration(
-              color: bgColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: borderColor, width: 1.5),
-            ),
-            child: Icon(icon, color: iconColor, size: 22.r),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              if (amplitude > 0)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  width: 46.r + (amplitude.clamp(0, 255) / 255.0) * 30.r,
+                  height: 46.r + (amplitude.clamp(0, 255) / 255.0) * 30.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.timerGreen.withValues(alpha: 0.3),
+                  ),
+                ),
+              Container(
+                width: 46.r,
+                height: 46.r,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: borderColor, width: 1.5),
+                ),
+                child: Icon(icon, color: iconColor, size: 22.r),
+              ),
+            ],
           ),
           SizedBox(height: 5.h),
           Text(

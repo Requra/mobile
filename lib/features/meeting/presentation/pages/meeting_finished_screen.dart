@@ -7,6 +7,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_finished_cubit.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_finished_state.dart';
 import 'package:requra/features/meeting/presentation/widgets/meeting_finished/session_recording_card.dart';
+import 'package:requra/features/meeting/presentation/pages/ai_analysis_screen.dart';
 import 'package:requra/routes/app_routes.dart';
 
 class MeetingFinishedScreen extends StatelessWidget {
@@ -104,18 +105,19 @@ class MeetingFinishedScreen extends StatelessWidget {
                   
                   SizedBox(height: 32.h),
                   
-                  // Go to Project Dashboard Button
+                  // Process Meeting Button
                   SizedBox(
                     width: double.infinity,
                     height: 56.h,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Navigate with Project object instead of just projectId
-                        // For now we just pop until home because we need the Project object 
-                        // for the resultView route in app_routes.dart
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          AppRoutes.main,
-                          (route) => false,
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AiAnalysisScreen(
+                              projectId: summary.projectId,
+                              meetingId: summary.meetingId,
+                            ),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -126,7 +128,7 @@ class MeetingFinishedScreen extends StatelessWidget {
                         elevation: 0,
                       ),
                       child: Text(
-                        'Go to Project Dashboard →',
+                        'Process Meeting →',
                         style: boldStyle(
                           fontSize: FontSize.font16,
                           color: Colors.white,

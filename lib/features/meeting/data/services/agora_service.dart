@@ -43,6 +43,11 @@ class AgoraService {
           debugPrint('Agora connection state changed: state=$state, reason=$reason');
           _connectionStateController.add(state);
         },
+        onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid, RemoteVideoState state, RemoteVideoStateReason reason, int elapsed) {
+          final enabled = state == RemoteVideoState.remoteVideoStateStarting || 
+                          state == RemoteVideoState.remoteVideoStateDecoding;
+          _participantEventController.add(RemoteVideoStateChanged(remoteUid, enabled));
+        },
         onTokenPrivilegeWillExpire: (RtcConnection connection, String token) {
           _tokenExpireController.add(null);
         },
@@ -70,9 +75,9 @@ class AgoraService {
 
     await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
     await _engine!.enableAudio();
+    await _engine!.enableVideo(); // Enabled Video!
     await _engine!.setDefaultAudioRouteToSpeakerphone(true);
     await _engine!.enableAudioVolumeIndication(interval: 200, smooth: 3, reportVad: true);
-    await _engine!.disableVideo();
   }
 
   Future<void> joinChannel({
@@ -124,6 +129,16 @@ class AgoraService {
       await _engine!.enableLocalAudio(!mute);
     } catch (e) {
       debugPrint('Failed to mute/unmute local audio: $e');
+    }
+  }
+
+  Future<void> setLocalVideoEnabled(bool enabled) async {
+    if (_engine == null) return;
+    try {
+      await _engine!.enableLocalVideo(enabled);
+      await _engine!.muteLocalVideoStream(!enabled);
+    } catch (e) {
+      debugPrint('Failed to set local video: $e');
     }
   }
 

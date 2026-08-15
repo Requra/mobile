@@ -7,6 +7,7 @@ enum ProcessingStatus {
 }
 
 class MeetingSummary extends Equatable {
+  final String meetingId;
   final String meetingTitle;
   final String projectId;
   final String projectName;
@@ -14,6 +15,7 @@ class MeetingSummary extends Equatable {
   final ProcessingStatus aiExtractionStatus;
 
   const MeetingSummary({
+    required this.meetingId,
     required this.meetingTitle,
     required this.projectId,
     required this.projectName,
@@ -23,6 +25,7 @@ class MeetingSummary extends Equatable {
 
   @override
   List<Object?> get props => [
+        meetingId,
         meetingTitle,
         projectId,
         projectName,
@@ -31,6 +34,7 @@ class MeetingSummary extends Equatable {
       ];
 
   MeetingSummary copyWith({
+    String? meetingId,
     String? meetingTitle,
     String? projectId,
     String? projectName,
@@ -38,6 +42,7 @@ class MeetingSummary extends Equatable {
     ProcessingStatus? aiExtractionStatus,
   }) {
     return MeetingSummary(
+      meetingId: meetingId ?? this.meetingId,
       meetingTitle: meetingTitle ?? this.meetingTitle,
       projectId: projectId ?? this.projectId,
       projectName: projectName ?? this.projectName,

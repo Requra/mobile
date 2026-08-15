@@ -25,28 +25,32 @@ class MeetingService {
   }
 
   /// POST /api/meetings/{meetingId}/agora-token
-  /// Future<AuthResponse> getAgoraToken(String meetingId) {
-  // return _post(
-  //   endpoint: ApiConstants.agoraToken(meetingId),
-  //   body: <String, dynamic>{}, // Provide empty body or necessary payload if any
-  Future<AuthResponse> getAgoraToken(String meetingId) async {
-    // HARDCODED MOCK FOR TESTING AGORA INTEGRATION
-    return AuthResponse(
-      isSuccess: true,
-      statusCode: 200,
-      message: "ok",
-      data: {
-        "appId": "b3616adc01654052b8b7ba4f97e0a12e",
-        "channelName": "tmp3",
-        "uid": 0,
-        "token":
-            "007eJxTYNj70E3Ifp2lX+yWSYv+H/l0I2l+34LV696t9jhfK70+cnWSAkOSsZmhWWJKsoGhmamJgalRkkWSeVKiSZqleapBoqFRqr1fQ1ZDICPDUzUBRkYGCATxWRhKcguMGRgA+eUg1A==",
-        "role": "PUBLISHER",
-        "expiresAt": "2026-08-15T23:17:47Z",
-      },
-      errors: [],
+  Future<AuthResponse> getAgoraToken(String meetingId) {
+    return _post(
+      endpoint: ApiConstants.agoraToken(meetingId),
+      body:
+          <String, dynamic>{}, // Provide empty body or necessary payload if any
     );
   }
+
+  // Future<AuthResponse> getAgoraToken(String meetingId) async {
+  //   // HARDCODED MOCK FOR TESTING AGORA INTEGRATION
+  //   return AuthResponse(
+  //     isSuccess: true,
+  //     statusCode: 200,
+  //     message: "ok",
+  //     data: {
+  //       "appId": "b3616adc01654052b8b7ba4f97e0a12e",
+  //       "channelName": "tmp3",
+  //       "uid": 0,
+  //       "token":
+  //           "007eJxTYNj70E3Ifp2lX+yWSYv+H/l0I2l+34LV696t9jhfK70+cnWSAkOSsZmhWWJKsoGhmamJgalRkkWSeVKiSZqleapBoqFRqr1fQ1ZDICPDUzUBRkYGCATxWRhKcguMGRgA+eUg1A==",
+  //       "role": "PUBLISHER",
+  //       "expiresAt": "2026-08-15T23:17:47Z",
+  //     },
+  //     errors: [],
+  //   );
+  // }
 
   /// POST /api/meetings/{meetingId}/join  (Spec #14)
   Future<AuthResponse> joinMeeting(
@@ -239,13 +243,17 @@ class MeetingService {
         ..fields['ChunkIndex'] = chunkIndex.toString()
         ..fields['StartedAtMs'] = startedAtMs.toString()
         ..fields['EndedAtMs'] = endedAtMs.toString()
-        ..files.add(await http.MultipartFile.fromPath(
-          'AudioChunk',
-          filePath,
-          contentType: MediaType('audio', 'webm'),
-        ));
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'AudioChunk',
+            filePath,
+            contentType: MediaType('audio', 'webm'),
+          ),
+        );
 
-      final http.StreamedResponse streamed = await request.send().timeout(_timeout);
+      final http.StreamedResponse streamed = await request.send().timeout(
+        _timeout,
+      );
       final http.Response response = await http.Response.fromStream(streamed);
       return _buildResponse(response);
     } on TimeoutException {
@@ -395,6 +403,36 @@ class MeetingService {
     } catch (e) {
       return _errorResponse(e);
     }
+  }
+
+  // ── AI Runs (Meeting Analysis) ───────────────────────────────────────────
+
+  /// POST /api/projects/{projectId}/ai/runs
+  Future<AuthResponse> startAiRun({
+    required String projectId,
+    String? meetingId,
+  }) async {
+    final payload = {
+      "documentIds": [],
+      "meetingId": meetingId,
+      "analysisType": "project_results_dashboard",
+      "language": "En",
+    };
+
+    return _post(
+      endpoint: ApiConstants.startAiRun(projectId),
+      body: payload,
+    );
+  }
+
+  /// GET /api/projects/{projectId}/ai/runs/{runId}
+  Future<AuthResponse> getAiRunProgress({
+    required String projectId,
+    required String runId,
+  }) async {
+    return _get(
+      endpoint: ApiConstants.getAiRunProgress(projectId, runId),
+    );
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

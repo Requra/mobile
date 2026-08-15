@@ -51,3 +51,11 @@ class UserOffline extends AgoraParticipantEvent {
   @override
   List<Object?> get props => [uid];
 }
+
+class RemoteVideoStateChanged extends AgoraParticipantEvent {
+  final int uid;
+  final bool enabled;
+  const RemoteVideoStateChanged(this.uid, this.enabled);
+  @override
+  List<Object?> get props => [uid, enabled];
+}

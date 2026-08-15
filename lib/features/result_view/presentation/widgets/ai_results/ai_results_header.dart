@@ -8,6 +8,7 @@ import 'package:requra/features/result_view/domain/entities/ai_results_dashboard
 import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/ai_results_metric_card.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/share_stakeholders_dialog.dart';
+import 'package:requra/features/meeting/presentation/pages/ai_analysis_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 
@@ -162,7 +163,16 @@ class AiResultsHeader extends StatelessWidget {
                 ),
                 SizedBox(width: 12.w),
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AiAnalysisScreen(
+                          projectId: dashboard.projectId,
+                          isRegenerating: true,
+                        ),
+                      ),
+                    );
+                  },
                   icon: Icon(
                     Icons.refresh,
                     size: 18.sp,
@@ -220,6 +230,16 @@ class AiResultsHeader extends StatelessWidget {
                 SizedBox(height: 12.h),
 
                 CustomButton(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AiAnalysisScreen(
+                          projectId: dashboard.projectId,
+                          isRegenerating: true,
+                        ),
+                      ),
+                    );
+                  },
                   text: 'Regenerate',
                   icon: Icons.refresh,
                   iconColor: AppColors.primary,

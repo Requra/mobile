@@ -194,9 +194,8 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   }
 
   Future<void> _initAgora() async {
-    if (_agoraAppId == null ||
-        _agoraToken == null ||
-        _agoraChannelName == null) return;
+    if (_agoraAppId == null || _agoraToken == null || _agoraChannelName == null)
+      return;
     try {
       await _agoraService.initialize(_agoraAppId!);
       _recordingService.setAgoraEngine(_agoraService.engine);
@@ -522,7 +521,8 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
 
     // 2. Query backend status to check for missing chunks BEFORE stopping
     final statusResponse = await _service.getRecording(_recording!.id);
-    if (statusResponse.isSuccess && statusResponse.data is Map<String, dynamic>) {
+    if (statusResponse.isSuccess &&
+        statusResponse.data is Map<String, dynamic>) {
       final data = statusResponse.data as Map<String, dynamic>;
       final missingList = data['missingChunkIndexes'] as List<dynamic>?;
       if (missingList != null && missingList.isNotEmpty) {
@@ -558,7 +558,9 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       if (response.statusCode == 409 && response.errors.isNotEmpty) {
         if (retryCount >= 3) {
           setState(() => _recordingLoading = false);
-          _showToast('Failed to finalize recording: some chunks are permanently lost.');
+          _showToast(
+            'Failed to finalize recording: some chunks are permanently lost.',
+          );
           return;
         }
 
@@ -727,6 +729,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     if (!mounted) return;
 
     final summary = MeetingSummary(
+      meetingId: _meetingId,
       meetingTitle: _meeting?.title ?? 'Meeting',
       projectId: _meeting?.projectId ?? '',
       projectName: _meeting?.projectName ?? '',
@@ -1256,47 +1259,6 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () {
-                  MeetingInviteSheet.show(
-                    context,
-                    meetingId: _meetingId,
-                    projectId: _meeting?.projectId ?? '',
-                    joinUrl: '',
-                  );
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: AppColors.meetingCardBorder,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.person_add_alt_1_outlined,
-                        color: Colors.white60,
-                        size: 16.r,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Invite',
-                        style: semiBoldStyle(
-                          fontSize: FontSize.font12,
-                          color: Colors.white60,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
           SizedBox(height: 12.h),

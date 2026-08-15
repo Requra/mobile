@@ -48,7 +48,7 @@ class ApiConstants {
 
   /// POST /api/meetings/{meetingId}/agora-token
   static String agoraToken(String meetingId) =>
-      'https://mock.apidog.com/m1/1240855-1237660-default/api/meetings/1/agora-token';
+      '$realMeetingsBase/meetings/$meetingId/agora-token';
 
   /// POST /api/meetings/{meetingId}/join
   static String joinMeeting(String meetingId) =>
@@ -99,6 +99,12 @@ class ApiConstants {
 
   static String aiResultsDashboard(String projectId) =>
       '/api/projects/$projectId/ai/results-dashboard';
+
+  static String startAiRun(String projectId) =>
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs';
+
+  static String getAiRunProgress(String projectId, String runId) =>
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs/$runId';
 
   static String feedback(String projectId) =>
       'https://requra-ai.runasp.net/api/project-review/$projectId/feedback';

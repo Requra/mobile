@@ -11,11 +11,9 @@ class MeetingBottomActionBar extends StatelessWidget {
   const MeetingBottomActionBar({
     super.key,
     required this.isMuted,
-    required this.isCameraEnabled,
     required this.isHost,
     required this.recordingStatus,
     required this.onMuteToggle,
-    required this.onCameraTap,
     required this.onRecordTap,
     required this.onInviteTap,
     required this.onLeaveOrEndTap,
@@ -25,11 +23,9 @@ class MeetingBottomActionBar extends StatelessWidget {
   });
 
   final bool isMuted;
-  final bool isCameraEnabled;
   final bool isHost;
   final RecordingStatus? recordingStatus;
   final VoidCallback onMuteToggle;
-  final VoidCallback onCameraTap;
   final VoidCallback onRecordTap;
   final VoidCallback onInviteTap;
   final VoidCallback onLeaveOrEndTap;
@@ -57,7 +53,17 @@ class MeetingBottomActionBar extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // ── Mute ──
+                // ── More ──
+                _ActionBtn(
+                  icon: Icons.more_horiz_rounded,
+                  label: 'More',
+                  bgColor: AppColors.meetingBg,
+                  iconColor: Colors.white70,
+                  borderColor: AppColors.meetingCardBorder,
+                  onTap: onMoreTap,
+                ),
+
+                // ── Mic ──
                 StreamBuilder<int>(
                   stream: localVolumeStream,
                   initialData: 0,
@@ -77,22 +83,6 @@ class MeetingBottomActionBar extends StatelessWidget {
                       amplitude: !isMuted ? vol : 0, // only animate if unmuted
                     );
                   }
-                ),
-
-                // ── Camera ──
-                _ActionBtn(
-                  icon: isCameraEnabled
-                      ? Icons.videocam_rounded
-                      : Icons.videocam_off_rounded,
-                  label: isCameraEnabled ? 'Stop Video' : 'Start Video',
-                  bgColor: !isCameraEnabled
-                      ? AppColors.liveRed.withValues(alpha: 0.15)
-                      : AppColors.meetingBg,
-                  iconColor: !isCameraEnabled ? AppColors.liveRed : Colors.white70,
-                  borderColor: !isCameraEnabled
-                      ? AppColors.liveRed.withValues(alpha: 0.4)
-                      : AppColors.meetingCardBorder,
-                  onTap: onCameraTap,
                 ),
 
                 // ── Record / Stop (center, larger) ──
@@ -120,16 +110,6 @@ class MeetingBottomActionBar extends StatelessWidget {
                   iconColor: AppColors.liveRed,
                   borderColor: AppColors.liveRed.withValues(alpha: 0.4),
                   onTap: onLeaveOrEndTap,
-                ),
-
-                // ── More ──
-                _ActionBtn(
-                  icon: Icons.more_horiz_rounded,
-                  label: 'More',
-                  bgColor: AppColors.meetingBg,
-                  iconColor: Colors.white70,
-                  borderColor: AppColors.meetingCardBorder,
-                  onTap: onMoreTap,
                 ),
               ],
             ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:camera/camera.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
@@ -23,16 +23,12 @@ class PreJoinMeetingScreen extends StatefulWidget {
 }
 
 class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
-  CameraController? _cameraController;
   final AudioRecorder _audioRecorder = AudioRecorder();
   StreamSubscription<Amplitude>? _amplitudeSubscription;
   StreamSubscription<Uint8List>? _micStreamSubscription;
   double _currentAmplitude = -50.0; // Min value usually around -50 or -160
 
-  bool _isCameraInitialized = false;
-  bool _isCameraEnabled = false;
   bool _isMicEnabled = false;
-  bool _cameraPermissionGranted = false;
   String _errorMessage = '';
 
   // ── Join API state ──
@@ -47,75 +43,23 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
   }
 
   Future<void> _requestPermissionsAndInitCamera() async {
-    final cameraStatus = await Permission.camera.request();
     final micStatus = await Permission.microphone.request();
 
     if (mounted) {
       setState(() {
-        _cameraPermissionGranted = cameraStatus.isGranted;
-
-        _isCameraEnabled = cameraStatus.isGranted;
         _isMicEnabled = micStatus.isGranted;
       });
     }
 
-    if (cameraStatus.isGranted) {
-      _initCamera();
-    } else {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Camera access is required for video.';
-        });
-      }
-      if (cameraStatus.isPermanentlyDenied || micStatus.isPermanentlyDenied) {
-        _showPermissionDialog('Camera and Microphone');
-      }
-    }
-
     if (micStatus.isGranted) {
       _startMicMeter();
-    }
-  }
-
-  Future<void> _initCamera() async {
-    try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) {
-        if (mounted) {
-          setState(() => _errorMessage = 'No cameras found.');
-        }
-        return;
-      }
-      
-      final frontCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
-      );
-
-      _cameraController = CameraController(
-        frontCamera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
-      await _cameraController!.initialize();
-      if (mounted) {
-        setState(() {
-          _isCameraInitialized = true;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Error initializing camera: $e';
-        });
-      }
+    } else if (micStatus.isPermanentlyDenied) {
+      _showPermissionDialog('Microphone');
     }
   }
 
   @override
   void dispose() {
-    _cameraController?.dispose();
     _amplitudeSubscription?.cancel();
     _micStreamSubscription?.cancel();
     try {
@@ -148,26 +92,6 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _toggleCamera() async {
-    if (_isCameraEnabled) {
-      setState(() => _isCameraEnabled = false);
-      return;
-    }
-
-    final status = await Permission.camera.request();
-    if (status.isGranted) {
-      setState(() {
-        _cameraPermissionGranted = true;
-        _isCameraEnabled = true;
-      });
-      if (!_isCameraInitialized) {
-        _initCamera();
-      }
-    } else {
-      _showPermissionDialog('Camera');
-    }
   }
 
   Future<void> _startMicMeter() async {
@@ -289,7 +213,6 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
             'meetingId': widget.meeting.id,
             'participantId': participantId,
             'isMicEnabled': _isMicEnabled,
-            'isCameraEnabled': _isCameraEnabled,
             if (appId != null) 'appId': appId,
             if (channelName != null) 'channelName': channelName,
             if (uid != null) 'uid': uid,
@@ -378,38 +301,19 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Video feed
-                      if (_isCameraInitialized && _isCameraEnabled)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(18.r),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width: _cameraController!.value.previewSize!.height,
-                                height: _cameraController!.value.previewSize!.width,
-                                child: CameraPreview(_cameraController!),
-                              ),
-                            ),
+                      // Video placeholder
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.mic, color: Colors.white38, size: 64.sp),
+                          SizedBox(height: 12.h),
+                          Text(
+                            _errorMessage.isNotEmpty ? _errorMessage : 'MIC ONLY',
+                            style: semiBoldStyle(fontSize: 14.sp, color: Colors.white38),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      
-                      // Disabled state
-                      if (!_isCameraEnabled || !_cameraPermissionGranted)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.videocam_off, color: Colors.white38, size: 64.sp),
-                            SizedBox(height: 12.h),
-                            Text(
-                              _errorMessage.isNotEmpty ? _errorMessage : 'CAMERA IS DISABLED',
-                              style: semiBoldStyle(fontSize: 14.sp, color: Colors.white38),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                        ],
+                      ),
 
                       // Toggles at bottom
                       Positioned(
@@ -437,12 +341,6 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
                                   onTap: _toggleMic,
                                 ),
                               ],
-                            ),
-                            SizedBox(width: 24.w),
-                            _buildToggle(
-                              icon: _isCameraEnabled ? Icons.videocam : Icons.videocam_off,
-                              isActive: _isCameraEnabled,
-                              onTap: _toggleCamera,
                             ),
                           ],
                         ),

@@ -263,14 +263,24 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         if (meeting.currentUserRole != null) {
           _isHost = meeting.currentUserRole!.toUpperCase() == 'HOST';
         }
-        // If meeting has an active recording, update local state
+        // Sync recording state with server
         if (meeting.activeRecordingId != null &&
-            meeting.activeRecordingId!.isNotEmpty &&
-            _recording == null) {
-          _recording = RecordingInfo(
-            id: meeting.activeRecordingId!,
-            status: RecordingStatus.active,
-          );
+            meeting.activeRecordingId!.isNotEmpty) {
+          if (_recording == null ||
+              _recording!.id != meeting.activeRecordingId) {
+            _recording = RecordingInfo(
+              id: meeting.activeRecordingId!,
+              status: meeting.recordingStatus ?? RecordingStatus.active,
+            );
+          } else if (meeting.recordingStatus != null &&
+              _recording!.status != meeting.recordingStatus) {
+            _recording = _recording!.copyWith(status: meeting.recordingStatus);
+          }
+        } else {
+          if (_recording != null &&
+              _recording!.status != RecordingStatus.finalizing) {
+            _recording = null;
+          }
         }
       });
 
@@ -832,7 +842,6 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
             // ── Bottom action bar ──
             MeetingBottomActionBar(
               isMuted: _isMuted,
-              isCameraEnabled: _isCameraEnabled,
               isHost: _isHost,
               recordingStatus: _recording?.status ?? _meeting?.recordingStatus,
               isRecordingLoading: _recordingLoading,
@@ -842,8 +851,11 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                 setState(() => _isMuted = newMuted);
                 _agoraService.muteLocalAudio(newMuted);
               },
-              onCameraTap: _toggleCamera,
               onRecordTap: () {
+                if (!_isHost) {
+                  _showToast('Not allowed to stop or start record');
+                  return;
+                }
                 final status = _recording?.status ?? _meeting?.recordingStatus;
                 if (status == RecordingStatus.active) {
                   _stopRecording();

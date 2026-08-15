@@ -7,6 +7,7 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
+import 'package:requra/features/meeting/presentation/pages/meeting_details_screen.dart' as requra_meeting_details;
 
 class CreateMeetingScreen extends StatefulWidget {
   final String projectId;
@@ -108,12 +109,32 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         scheduledAt: formattedDate,
       );
     } else {
-      error = await cubit.createMeeting(
+      final result = await cubit.createMeeting(
         projectId: widget.projectId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         scheduledAt: formattedDate,
       );
+      if (result is String) {
+        error = result;
+      } else {
+        // It's a Meeting object
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Meeting created successfully')),
+          );
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (ctx) => BlocProvider.value(
+                value: context.read<MeetingCubit>(),
+                child: requra_meeting_details.MeetingDetailsScreen(meeting: result),
+              ),
+            ),
+          );
+          return;
+        }
+      }
     }
 
     if (mounted) {
@@ -123,13 +144,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
       if (error == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isEditMode
-                  ? 'Meeting updated successfully'
-                  : 'Meeting created successfully',
-            ),
-          ),
+          const SnackBar(content: Text('Meeting updated successfully')),
         );
         Navigator.of(context).pop(true);
       } else {

@@ -512,14 +512,32 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
   }
 
   // §7 — Stop Recording
-  Future<void> _stopRecording() async {
+  Future<void> _stopRecording([int retryCount = 0]) async {
     if (_recording == null) return;
 
     setState(() => _recordingLoading = true);
 
-    // Stop local audio capture and flush the upload queue
+    // 1. Stop local audio capture and flush the upload queue
     final int lastChunk = await _recordingService.stop();
 
+    // 2. Query backend status to check for missing chunks BEFORE stopping
+    final statusResponse = await _service.getRecording(_recording!.id);
+    if (statusResponse.isSuccess && statusResponse.data is Map<String, dynamic>) {
+      final data = statusResponse.data as Map<String, dynamic>;
+      final missingList = data['missingChunkIndexes'] as List<dynamic>?;
+      if (missingList != null && missingList.isNotEmpty) {
+        final missingIndexes = missingList
+            .map((e) => int.tryParse(e.toString()) ?? -1)
+            .where((e) => e != -1)
+            .toList();
+        if (missingIndexes.isNotEmpty) {
+          _showToast('Uploading missing chunks before finalization…');
+          await _recordingService.retryChunks(missingIndexes);
+        }
+      }
+    }
+
+    // 3. Call POST /recordings/{id}/stop
     final response = await _service.stopRecording(
       _recording!.id,
       _recordingElapsedSeconds,
@@ -535,20 +553,35 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       });
       _startFinalizingPoll();
     } else {
-      // Check for MISSING_CHUNKS error.
-      final data = response.data;
-      if (data is Map<String, dynamic> &&
-          data['code']?.toString() == 'MISSING_CHUNKS') {
-        _showToast('Retrying missing chunks…');
+      // 4. Handle 409 Conflict (MISSING_CHUNKS)
+      // The API spec states missing indexes are in the `errors` array
+      if (response.statusCode == 409 && response.errors.isNotEmpty) {
+        if (retryCount >= 3) {
+          setState(() => _recordingLoading = false);
+          _showToast('Failed to finalize recording: some chunks are permanently lost.');
+          return;
+        }
 
-        // Parse missing chunks if the server returns them, otherwise just trigger a retry
-        // Since our service just tries to upload whatever is in the queue, we'll just trigger it
-        await _recordingService.retryChunks([]);
+        final missingIndexes = response.errors
+            .map((e) => int.tryParse(e.toString()))
+            .where((e) => e != null)
+            .cast<int>()
+            .toList();
+
+        if (missingIndexes.isEmpty) {
+          setState(() => _recordingLoading = false);
+          _handleApiError(response.message, response.data);
+          return;
+        }
+
+        _showToast('Retrying missing chunks: $missingIndexes');
+
+        await _recordingService.retryChunks(missingIndexes);
 
         setState(() => _recordingLoading = false);
 
         // Retry stop
-        _stopRecording();
+        _stopRecording(retryCount + 1);
       } else {
         setState(() => _recordingLoading = false);
         _handleApiError(response.message, response.data);

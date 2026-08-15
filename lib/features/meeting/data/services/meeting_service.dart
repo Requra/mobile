@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/core/storage/secure_token_storage.dart';
 import 'package:requra/features/auth/data/models/auth_response.dart';
@@ -38,9 +39,10 @@ class MeetingService {
         "appId": "b3616adc01654052b8b7ba4f97e0a12e",
         "channelName": "tmp3",
         "uid": 0,
-        "token": "007eJxTYNBgfBh+3n2Tx3EuTY34kI2/MnaaN2pvu73+4WK7rs2K4UoKDEnGZoZmiSnJBoZmpiYGpkZJFknmSYkmaZbmqQaJhkapAvursxoCGRle+5uxMDJAIIjPwlCSW2DMwAAA8tMeFg==",
+        "token":
+            "007eJxTYNj70E3Ifp2lX+yWSYv+H/l0I2l+34LV696t9jhfK70+cnWSAkOSsZmhWWJKsoGhmamJgalRkkWSeVKiSZqleapBoqFRqr1fQ1ZDICPDUzUBRkYGCATxWRhKcguMGRgA+eUg1A==",
         "role": "PUBLISHER",
-        "expiresAt": "2026-08-11T15:30:00Z",
+        "expiresAt": "2026-08-15T23:17:47Z",
       },
       errors: [],
     );
@@ -187,7 +189,8 @@ class MeetingService {
       endpoint: ApiConstants.startRecording(meetingId),
       body: <String, dynamic>{
         'uploadMode': 'Chunked',
-        'mimeType': 'audio/webm;codecs=opus',
+        // Send a simple mimeType to ensure exact match with the uploaded chunk
+        'mimeType': 'audio/webm',
       },
     );
   }
@@ -215,6 +218,7 @@ class MeetingService {
   /// POST /api/recordings/{recordingId}/chunks  (Spec #26)
   Future<AuthResponse> uploadChunk(
     String recordingId,
+    int chunkIndex,
     String filePath,
     int startedAtMs,
     int endedAtMs,
@@ -232,11 +236,16 @@ class MeetingService {
 
       final http.MultipartRequest request = http.MultipartRequest('POST', uri)
         ..headers.addAll(headers)
-        ..fields['startedAtMs'] = startedAtMs.toString()
-        ..fields['endedAtMs'] = endedAtMs.toString()
-        ..files.add(await http.MultipartFile.fromPath('audioChunk', filePath));
+        ..fields['ChunkIndex'] = chunkIndex.toString()
+        ..fields['StartedAtMs'] = startedAtMs.toString()
+        ..fields['EndedAtMs'] = endedAtMs.toString()
+        ..files.add(await http.MultipartFile.fromPath(
+          'AudioChunk',
+          filePath,
+          contentType: MediaType('audio', 'webm'),
+        ));
 
-      final http.StreamedResponse streamed = await request.send();
+      final http.StreamedResponse streamed = await request.send().timeout(_timeout);
       final http.Response response = await http.Response.fromStream(streamed);
       return _buildResponse(response);
     } on TimeoutException {

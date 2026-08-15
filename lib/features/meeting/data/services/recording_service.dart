@@ -23,22 +23,22 @@ class PendingChunk {
   });
 
   Map<String, dynamic> toJson() => {
-        'index': index,
-        'filePath': filePath,
-        'startedAtMs': startedAtMs,
-        'endedAtMs': endedAtMs,
-      };
+    'index': index,
+    'filePath': filePath,
+    'startedAtMs': startedAtMs,
+    'endedAtMs': endedAtMs,
+  };
 
   factory PendingChunk.fromJson(Map<String, dynamic> json) => PendingChunk(
-        index: json['index'] as int,
-        filePath: json['filePath'] as String,
-        startedAtMs: json['startedAtMs'] as int,
-        endedAtMs: json['endedAtMs'] as int,
-      );
+    index: json['index'] as int,
+    filePath: json['filePath'] as String,
+    startedAtMs: json['startedAtMs'] as int,
+    endedAtMs: json['endedAtMs'] as int,
+  );
 }
 
 class RecordingService {
-  final AudioRecorder _audioRecorder = AudioRecorder();
+  AudioRecorder _audioRecorder = AudioRecorder();
   final MeetingService _meetingService;
   RtcEngine? _agoraEngine;
 
@@ -52,6 +52,7 @@ class RecordingService {
 
   int _chunkIndex = 0;
   int _chunkStartTimeMs = 0;
+  int _successfulUploads = 0;
 
   bool _isRecording = false;
   bool _isUploading = false;
@@ -99,8 +100,25 @@ class RecordingService {
     if (await _audioRecorder.hasPermission()) {
       _currentRecordingId = recordingId;
       _chunkIndex = 0;
+      _successfulUploads = 0;
       _isRecording = true;
       _stateController.add(_isRecording);
+
+      // Recreate AudioRecorder to ensure clean state for subsequent recordings
+      try {
+        await _audioRecorder.dispose();
+      } catch (_) {}
+      _audioRecorder = AudioRecorder();
+
+      // Clear any zombie chunks from previous crashed sessions
+      for (var chunk in _uploadQueue) {
+        try {
+          final file = File(chunk.filePath);
+          if (await file.exists()) await file.delete();
+        } catch (_) {}
+      }
+      _uploadQueue.clear();
+      await _saveQueue();
 
       await _startNewChunk();
 
@@ -115,47 +133,42 @@ class RecordingService {
 
   Future<void> _startNewChunk() async {
     final tempDir = await getTemporaryDirectory();
+    // Always use .webm extension with Opus encoder as required by backend API
+    final String ext = 'webm';
     final filePath =
-        '${tempDir.path}/rec_${_currentRecordingId}_${_chunkIndex}.aac';
+        '${tempDir.path}/rec_${_currentRecordingId}_${_chunkIndex}.$ext';
 
     _currentChunkPath = filePath;
     _chunkStartTimeMs = DateTime.now().millisecondsSinceEpoch;
-    
-    if (_agoraEngine != null) {
-      await _agoraEngine!.startAudioRecording(
-        AudioRecordingConfiguration(
-          filePath: filePath,
-          fileRecordingType: AudioFileRecordingType.audioFileRecordingMixed,
-        ),
-      );
-    } else {
-      await _audioRecorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc, // Use aacLc for broader support on both iOS and Android if webm/opus is not fully supported by the plugin
-        ),
-        path: filePath,
-      );
-    }
+
+    // Using the record plugin to capture audio in WebM/Opus format.
+    // (Agora engine does not support direct WebM/Opus file recording)
+    await _audioRecorder.start(
+      const RecordConfig(encoder: AudioEncoder.opus),
+      path: filePath,
+    );
   }
 
   Future<void> _rotateChunk() async {
     if (!_isRecording) return;
 
-    String? path;
-    if (_agoraEngine != null) {
-      await _agoraEngine!.stopAudioRecording();
-      path = _currentChunkPath;
-    } else {
-      path = await _audioRecorder.stop();
-    }
+    // The record plugin returns the ACTUAL path where the file was saved.
+    final path = await _audioRecorder.stop();
     final endTimeMs = DateTime.now().millisecondsSinceEpoch;
 
-    if (path != null) {
-      _queueChunkForUpload(
-        _chunkIndex,
-        path,
-        _chunkStartTimeMs,
-        endTimeMs,
+    if (path != null && path.isNotEmpty) {
+      // Wait for the OS to finish flushing the file to disk
+      final bool fileReady = await _waitForFile(path);
+      if (fileReady) {
+        _queueChunkForUpload(_chunkIndex, path, _chunkStartTimeMs, endTimeMs);
+      } else {
+        debugPrint(
+          '⚠️ Chunk $_chunkIndex: file never appeared at $path, skipping',
+        );
+      }
+    } else {
+      debugPrint(
+        '⚠️ Chunk $_chunkIndex: recorder returned null/empty path, skipping',
       );
     }
 
@@ -171,34 +184,48 @@ class RecordingService {
     _chunkTimer?.cancel();
     _stateController.add(_isRecording);
 
-    String? path;
-    if (_agoraEngine != null) {
-      await _agoraEngine!.stopAudioRecording();
-      path = _currentChunkPath;
-    } else {
-      path = await _audioRecorder.stop();
-    }
+    final path = await _audioRecorder.stop();
     final endTimeMs = DateTime.now().millisecondsSinceEpoch;
 
-    if (path != null) {
-      _queueChunkForUpload(
-        _chunkIndex,
-        path,
-        _chunkStartTimeMs,
-        endTimeMs,
+    if (path != null && path.isNotEmpty) {
+      final bool fileReady = await _waitForFile(path);
+      if (fileReady) {
+        final chunk = PendingChunk(
+          index: _chunkIndex,
+          filePath: path,
+          startedAtMs: _chunkStartTimeMs,
+          endedAtMs: endTimeMs,
+        );
+        _uploadQueue.add(chunk);
+        await _saveQueue();
+      } else {
+        debugPrint(
+          '⚠️ Final chunk $_chunkIndex: file never appeared at $path, skipping',
+        );
+      }
+    } else {
+      debugPrint(
+        '⚠️ Final chunk $_chunkIndex: recorder returned null/empty path, skipping',
       );
     }
 
-    // Wait for the queue to finish processing
-    while (_isUploading) {
+    // Force process the queue
+    _processUploadQueue();
+
+    // Wait for the queue to finish processing with a timeout to avoid hanging
+    int waitCount = 0;
+    while ((_isUploading || _uploadQueue.isNotEmpty) && waitCount < 60) {
       await Future.delayed(const Duration(milliseconds: 500));
+      waitCount++;
     }
-    
+    if (waitCount >= 60) {
+      debugPrint('⚠️ Upload queue did not finish within 30s timeout');
+    }
+
     return _chunkIndex;
   }
 
-  void _queueChunkForUpload(
-      int index, String path, int startMs, int endMs) {
+  void _queueChunkForUpload(int index, String path, int startMs, int endMs) {
     final chunk = PendingChunk(
       index: index,
       filePath: path,
@@ -210,6 +237,29 @@ class RecordingService {
     _processUploadQueue();
   }
 
+  /// Waits for a file to appear on disk (handles OS flush delays).
+  /// Retries up to [maxRetries] times with [delay] between each attempt.
+  Future<bool> _waitForFile(
+    String path, {
+    int maxRetries = 10,
+    Duration delay = const Duration(milliseconds: 200),
+  }) async {
+    for (int i = 0; i < maxRetries; i++) {
+      final file = File(path);
+      if (await file.exists() && (await file.length()) > 0) {
+        return true;
+      }
+      debugPrint(
+        '⏳ Waiting for chunk file (attempt ${i + 1}/$maxRetries): $path',
+      );
+      await Future.delayed(delay);
+    }
+    debugPrint(
+      '❌ Chunk file never appeared after ${maxRetries} retries: $path',
+    );
+    return false;
+  }
+
   Future<void> _processUploadQueue() async {
     if (_isUploading || _uploadQueue.isEmpty || _currentRecordingId == null) {
       return;
@@ -219,8 +269,18 @@ class RecordingService {
     while (_uploadQueue.isNotEmpty) {
       final chunk = _uploadQueue.first;
       try {
+        // Verify the chunk file exists before attempting upload
+        final chunkFile = File(chunk.filePath);
+        if (!await chunkFile.exists()) {
+          debugPrint('❌ Chunk file not found, skipping: ${chunk.filePath}');
+          _uploadQueue.removeAt(0);
+          await _saveQueue();
+          continue;
+        }
+
         final response = await _meetingService.uploadChunk(
           _currentRecordingId!,
+          chunk.index,
           chunk.filePath,
           chunk.startedAtMs,
           chunk.endedAtMs,
@@ -229,28 +289,47 @@ class RecordingService {
         if (response.isSuccess) {
           // Upload successful, remove from queue
           _uploadQueue.removeAt(0);
+          _successfulUploads++;
           await _saveQueue();
-          // Optionally delete the temp file here to save space
+          debugPrint(
+            '✅ Chunk ${chunk.index} uploaded successfully (total: $_successfulUploads)',
+          );
+          // Delete the temp file to save space
           try {
-            final file = File(chunk.filePath);
-            if (await file.exists()) {
-              await file.delete();
+            if (await chunkFile.exists()) {
+              await chunkFile.delete();
             }
           } catch (e) {
             debugPrint('Failed to delete chunk file: $e');
           }
         } else {
           // If the server explicitly rejected the chunk (e.g. 400 Bad Request)
-          // we might want to drop it to avoid an infinite loop, or retry later.
-          // For now, retry after a delay.
-          debugPrint('Upload failed: ${response.message}');
+          debugPrint('❌ Upload failed: ${response.message}, errors: ${response.errors}');
+          
+          // If the error is a validation error, the chunk will NEVER succeed.
+          // The backend might return 500 for logic errors, so we also check the message.
+          final errorMsg = response.errors.toString().toLowerCase();
+          final isPermanent = response.statusCode == 400 || 
+                              response.statusCode == 422 || 
+                              response.statusCode == 409 ||
+                              errorMsg.contains('already exists') ||
+                              errorMsg.contains('does not match');
+                              
+          if (isPermanent) {
+            debugPrint('⚠️ Discarding chunk ${chunk.index} due to permanent error');
+            _uploadQueue.removeAt(0);
+            await _saveQueue();
+            continue; // Move to next chunk
+          }
+          
+          // Otherwise retry after a delay.
           await Future.delayed(const Duration(seconds: 3));
-          break; // Stop processing and let another call trigger it later
+          continue; // Keep trying the same chunk
         }
       } catch (e) {
         debugPrint('Upload exception: $e');
         await Future.delayed(const Duration(seconds: 3));
-        break; // Stop processing on network error
+        continue; // Keep trying on network error
       }
     }
 
@@ -264,10 +343,10 @@ class RecordingService {
     // If they failed, they would still be in `_uploadQueue`.
     // If the server lost them but we already deleted them, they are gone.
     // For robust implementation, we could keep them until finalization is done.
-    
+
     // In our current simple implementation, we just trigger the queue again.
     _processUploadQueue();
-    
+
     // Wait for the queue to finish processing (if it gave up, _isUploading will be false)
     while (_isUploading) {
       await Future.delayed(const Duration(milliseconds: 500));

@@ -83,7 +83,7 @@ class MeetingCubit extends Cubit<MeetingState> {
     );
   }
 
-  Future<String?> createMeeting({
+  Future<dynamic> createMeeting({
     required String projectId,
     required String title,
     required String description,
@@ -109,7 +109,7 @@ class MeetingCubit extends Cubit<MeetingState> {
       (meeting) {
         final updatedMeetings = List<Meeting>.from(currentMeetings)..add(meeting);
         emit(MeetingLoaded(meetings: updatedMeetings));
-        return null;
+        return meeting;
       },
     );
   }

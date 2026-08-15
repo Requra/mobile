@@ -26,6 +26,30 @@ abstract class ResultViewRemoteDataSource {
   Future<void> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt);
   Future<void> resendReviewInvitation(String projectId, String invitationId);
   Future<void> revokeReviewInvitation(String projectId, String invitationId);
+  Future<Map<String, dynamic>> updateRequirementStatus(
+      String projectId, String requirementId, String workflowStatus,
+      {String? reviewFeedback});
+  Future<Map<String, dynamic>> updateRequirement(
+    String projectId,
+    String requirementId, {
+    required String title,
+    required String description,
+    required String type,
+    required String priority,
+  });
+  Future<Map<String, dynamic>> updateUserStoryStatus(
+      String projectId, String storyId, String workflowStatus,
+      {String? reviewFeedback});
+  Future<Map<String, dynamic>> updateUserStory(
+    String projectId,
+    String storyId, {
+    required String title,
+    required String description,
+    required List<String> acceptanceCriteria,
+    required String priority,
+  });
+  Future<Map<String, dynamic>> regenerateUserStory(
+      String projectId, String storyId, String feedback);
 }
 
 class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
@@ -229,5 +253,113 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
       rethrow;
     }
   }
-}
 
+  @override
+  Future<Map<String, dynamic>> updateRequirementStatus(
+      String projectId, String requirementId, String workflowStatus,
+      {String? reviewFeedback}) async {
+    try {
+      final response = await apiClient.dio.patch(
+        ApiConstants.requirementStatus(projectId, requirementId),
+        data: {
+          "workflowStatus": workflowStatus,
+          if (reviewFeedback != null && reviewFeedback.isNotEmpty)
+            "reviewFeedback": reviewFeedback,
+        },
+      );
+      
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateRequirement(
+    String projectId,
+    String requirementId, {
+    required String title,
+    required String description,
+    required String type,
+    required String priority,
+  }) async {
+    try {
+      final response = await apiClient.dio.put(
+        ApiConstants.requirementById(projectId, requirementId),
+        data: {
+          "title": title,
+          "description": description,
+          "type": type,
+          "priority": priority,
+        },
+      );
+
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateUserStoryStatus(
+      String projectId, String storyId, String workflowStatus,
+      {String? reviewFeedback}) async {
+    try {
+      final response = await apiClient.dio.patch(
+        ApiConstants.userStoryStatus(projectId, storyId),
+        data: {
+          "workflowStatus": workflowStatus,
+          if (reviewFeedback != null && reviewFeedback.isNotEmpty)
+            "reviewFeedback": reviewFeedback,
+        },
+      );
+      
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateUserStory(
+    String projectId,
+    String storyId, {
+    required String title,
+    required String description,
+    required List<String> acceptanceCriteria,
+    required String priority,
+  }) async {
+    try {
+      final response = await apiClient.dio.patch(
+        ApiConstants.userStoryById(projectId, storyId),
+        data: {
+          "title": title,
+          "description": description,
+          "acceptanceCriteria": acceptanceCriteria,
+          "priority": priority,
+        },
+      );
+
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> regenerateUserStory(
+      String projectId, String storyId, String feedback) async {
+    try {
+      final response = await apiClient.dio.post(
+        ApiConstants.userStoryRegenerate(projectId, storyId),
+        data: {
+          "feedback": feedback,
+        },
+      );
+
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+}

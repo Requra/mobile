@@ -79,7 +79,7 @@ class AiResultsTab extends StatelessWidget {
             children: [
               SummarySubTab(dashboard: dashboard),
               RequirementsSubTab(dashboard: dashboard),
-              UserStoriesSubTab(dashboard: dashboard),
+              UserStoriesSubTab(dashboard: dashboard, projectId: projectId),
               ReviewQueueSubTab(dashboard: dashboard),
               StakeholderFeedbackSubTab(
                 dashboard: dashboard,

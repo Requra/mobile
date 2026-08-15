@@ -154,5 +154,108 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateRequirementStatus(
+      String projectId, String requirementId, String workflowStatus,
+      {String? reviewFeedback}) async {
+    try {
+      final result = await remoteDataSource.updateRequirementStatus(
+          projectId, requirementId, workflowStatus,
+          reviewFeedback: reviewFeedback);
+      return Right(result);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateRequirement(
+    String projectId,
+    String requirementId, {
+    required String title,
+    required String description,
+    required String type,
+    required String priority,
+  }) async {
+    try {
+      final result = await remoteDataSource.updateRequirement(
+        projectId,
+        requirementId,
+        title: title,
+        description: description,
+        type: type,
+        priority: priority,
+      );
+      return Right(result);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateUserStoryStatus(
+      String projectId, String storyId, String workflowStatus,
+      {String? reviewFeedback}) async {
+    try {
+      final result = await remoteDataSource.updateUserStoryStatus(
+          projectId, storyId, workflowStatus,
+          reviewFeedback: reviewFeedback);
+      return Right(result);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateUserStory(
+    String projectId,
+    String storyId, {
+    required String title,
+    required String description,
+    required List<String> acceptanceCriteria,
+    required String priority,
+  }) async {
+    try {
+      final result = await remoteDataSource.updateUserStory(
+        projectId,
+        storyId,
+        title: title,
+        description: description,
+        acceptanceCriteria: acceptanceCriteria,
+        priority: priority,
+      );
+      return Right(result);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> regenerateUserStory(
+      String projectId, String storyId, String feedback) async {
+    try {
+      final result = await remoteDataSource.regenerateUserStory(
+          projectId, storyId, feedback);
+      return Right(result);
+    } catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+      }
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
 

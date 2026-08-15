@@ -121,3 +121,90 @@ class RevokeReviewInvitationUseCase {
     return await repository.revokeReviewInvitation(projectId, invitationId);
   }
 }
+
+class UpdateRequirementStatusUseCase {
+  final ResultViewRepository repository;
+
+  UpdateRequirementStatusUseCase(this.repository);
+
+  Future<Either<Failure, Map<String, dynamic>>> call(
+      String projectId, String requirementId, String workflowStatus,
+      {String? reviewFeedback}) async {
+    return await repository.updateRequirementStatus(
+        projectId, requirementId, workflowStatus,
+        reviewFeedback: reviewFeedback);
+  }
+}
+
+class UpdateRequirementUseCase {
+  final ResultViewRepository repository;
+
+  UpdateRequirementUseCase(this.repository);
+
+  Future<Either<Failure, Map<String, dynamic>>> call(
+    String projectId,
+    String requirementId, {
+    required String title,
+    required String description,
+    required String type,
+    required String priority,
+  }) async {
+    return await repository.updateRequirement(
+      projectId,
+      requirementId,
+      title: title,
+      description: description,
+      type: type,
+      priority: priority,
+    );
+  }
+}
+
+class UpdateUserStoryStatusUseCase {
+  final ResultViewRepository repository;
+
+  UpdateUserStoryStatusUseCase(this.repository);
+
+  Future<Either<Failure, Map<String, dynamic>>> call(
+      String projectId, String storyId, String workflowStatus,
+      {String? reviewFeedback}) async {
+    return await repository.updateUserStoryStatus(
+        projectId, storyId, workflowStatus,
+        reviewFeedback: reviewFeedback);
+  }
+}
+
+class UpdateUserStoryUseCase {
+  final ResultViewRepository repository;
+
+  UpdateUserStoryUseCase(this.repository);
+
+  Future<Either<Failure, Map<String, dynamic>>> call(
+    String projectId,
+    String storyId, {
+    required String title,
+    required String description,
+    required List<String> acceptanceCriteria,
+    required String priority,
+  }) async {
+    return await repository.updateUserStory(
+      projectId,
+      storyId,
+      title: title,
+      description: description,
+      acceptanceCriteria: acceptanceCriteria,
+      priority: priority,
+    );
+  }
+}
+
+class RegenerateUserStoryUseCase {
+  final ResultViewRepository repository;
+
+  RegenerateUserStoryUseCase(this.repository);
+
+  Future<Either<Failure, Map<String, dynamic>>> call(
+      String projectId, String storyId, String feedback) async {
+    return await repository.regenerateUserStory(projectId, storyId, feedback);
+  }
+}

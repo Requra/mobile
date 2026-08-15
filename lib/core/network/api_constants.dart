@@ -112,4 +112,21 @@ class ApiConstants {
 
   static String resendInvitation(String projectId, String invitationId) =>
       '/api/projects/$projectId/review-invitations/$invitationId/resend';
+
+  // ── Requirements ──
+  static String requirementStatus(String projectId, String requirementId) =>
+      '/api/projects/$projectId/requirements/$requirementId/status';
+
+  static String requirementById(String projectId, String requirementId) =>
+      '/api/projects/$projectId/requirements/$requirementId';
+
+  // ── User Stories ──
+  static String userStoryStatus(String projectId, String storyId) =>
+      '/api/projects/$projectId/user-stories/$storyId/status';
+
+  static String userStoryById(String projectId, String storyId) =>
+      '/api/projects/$projectId/user-stories/$storyId';
+
+  static String userStoryRegenerate(String projectId, String storyId) =>
+      '/api/projects/$projectId/user-stories/$storyId/regenerate';
 }

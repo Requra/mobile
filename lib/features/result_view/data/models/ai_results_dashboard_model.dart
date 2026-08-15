@@ -15,6 +15,7 @@ class AiResultsDashboardModel extends AiResultsDashboard {
     required super.requirements,
     required super.userStories,
     super.qualityReport,
+    super.rawJson,
   });
 
   factory AiResultsDashboardModel.fromJson(Map<String, dynamic> json) {
@@ -45,6 +46,7 @@ class AiResultsDashboardModel extends AiResultsDashboard {
       qualityReport: json['qualityReport'] != null
           ? QualityReportModel.fromJson(json['qualityReport'])
           : null,
+      rawJson: json,
     );
   }
 }

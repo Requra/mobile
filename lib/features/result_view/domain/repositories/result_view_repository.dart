@@ -25,4 +25,28 @@ abstract class ResultViewRepository {
   Future<Either<Failure, void>> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt);
   Future<Either<Failure, void>> resendReviewInvitation(String projectId, String invitationId);
   Future<Either<Failure, void>> revokeReviewInvitation(String projectId, String invitationId);
+  Future<Either<Failure, Map<String, dynamic>>> updateRequirementStatus(
+      String projectId, String requirementId, String workflowStatus,
+      {String? reviewFeedback});
+  Future<Either<Failure, Map<String, dynamic>>> updateRequirement(
+    String projectId,
+    String requirementId, {
+    required String title,
+    required String description,
+    required String type,
+    required String priority,
+  });
+  Future<Either<Failure, Map<String, dynamic>>> updateUserStoryStatus(
+      String projectId, String storyId, String workflowStatus,
+      {String? reviewFeedback});
+  Future<Either<Failure, Map<String, dynamic>>> updateUserStory(
+    String projectId,
+    String storyId, {
+    required String title,
+    required String description,
+    required List<String> acceptanceCriteria,
+    required String priority,
+  });
+  Future<Either<Failure, Map<String, dynamic>>> regenerateUserStory(
+      String projectId, String storyId, String feedback);
 }

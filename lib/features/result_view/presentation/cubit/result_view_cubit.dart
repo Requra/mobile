@@ -30,6 +30,11 @@ class ResultViewCubit extends Cubit<ResultViewState> {
   final SendReviewInvitationUseCase _sendReviewInvitation;
   final ResendReviewInvitationUseCase _resendReviewInvitation;
   final RevokeReviewInvitationUseCase _revokeReviewInvitation;
+  final UpdateRequirementStatusUseCase _updateRequirementStatus;
+  final UpdateRequirementUseCase _updateRequirement;
+  final UpdateUserStoryStatusUseCase _updateUserStoryStatus;
+  final UpdateUserStoryUseCase _updateUserStory;
+  final RegenerateUserStoryUseCase _regenerateUserStory;
 
   ResultViewCubit({
     required GetProjectDetailsUseCase getProjectDetailsUseCase,
@@ -42,6 +47,11 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required SendReviewInvitationUseCase sendReviewInvitationUseCase,
     required ResendReviewInvitationUseCase resendReviewInvitationUseCase,
     required RevokeReviewInvitationUseCase revokeReviewInvitationUseCase,
+    required UpdateRequirementStatusUseCase updateRequirementStatusUseCase,
+    required UpdateRequirementUseCase updateRequirementUseCase,
+    required UpdateUserStoryStatusUseCase updateUserStoryStatusUseCase,
+    required UpdateUserStoryUseCase updateUserStoryUseCase,
+    required RegenerateUserStoryUseCase regenerateUserStoryUseCase,
   }) : _getProjectDetails = getProjectDetailsUseCase,
        _getProjectDocuments = getProjectDocumentsUseCase,
        _getAiResultsDashboard = getAiResultsDashboardUseCase,
@@ -52,6 +62,11 @@ class ResultViewCubit extends Cubit<ResultViewState> {
         _sendReviewInvitation = sendReviewInvitationUseCase,
         _resendReviewInvitation = resendReviewInvitationUseCase,
         _revokeReviewInvitation = revokeReviewInvitationUseCase,
+        _updateRequirementStatus = updateRequirementStatusUseCase,
+        _updateRequirement = updateRequirementUseCase,
+        _updateUserStoryStatus = updateUserStoryStatusUseCase,
+        _updateUserStory = updateUserStoryUseCase,
+        _regenerateUserStory = regenerateUserStoryUseCase,
         super(ResultViewInitial());
 
   /// Fetches project details and meetings in parallel.
@@ -373,6 +388,230 @@ class ResultViewCubit extends Cubit<ResultViewState> {
       (_) {
         fetchReviewInvitations(projectId);
         return null;
+      },
+    );
+  }
+
+  Future<String?> updateRequirementStatus(
+      String projectId, String requirementId, String status,
+      {String? reviewFeedback}) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded ||
+        currentState.aiDashboard == null) {
+      return 'State not loaded';
+    }
+
+    final result = await _updateRequirementStatus(
+        projectId, requirementId, status,
+        reviewFeedback: reviewFeedback);
+
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        // Update local state
+        final currentDashboard = currentState.aiDashboard!;
+        final updatedRequirements =
+            currentDashboard.requirements.map((req) {
+          if (req.id == requirementId) {
+            return req.copyWith(workflowStatus: status);
+          }
+          return req;
+        }).toList();
+
+        final updatedDashboard =
+            currentDashboard.copyWith(requirements: updatedRequirements);
+
+        emit(ResultViewLoaded(
+          projectDetails: currentState.projectDetails,
+          documents: currentState.documents,
+          totalRequirements: currentState.totalRequirements,
+          aiDashboard: updatedDashboard,
+          feedbackResponse: currentState.feedbackResponse,
+          feedbackLoading: currentState.feedbackLoading,
+          reviewInvitations: currentState.reviewInvitations,
+          invitationsLoading: currentState.invitationsLoading,
+        ));
+        return null; // Success
+      },
+    );
+  }
+
+  Future<String?> updateRequirement(
+    String projectId,
+    String requirementId, {
+    required String title,
+    required String description,
+    required String type,
+    required String priority,
+  }) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded ||
+        currentState.aiDashboard == null) {
+      return 'State not loaded';
+    }
+
+    final result = await _updateRequirement(
+      projectId,
+      requirementId,
+      title: title,
+      description: description,
+      type: type,
+      priority: priority,
+    );
+
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        // Update local state
+        final currentDashboard = currentState.aiDashboard!;
+        final updatedRequirements =
+            currentDashboard.requirements.map((req) {
+          if (req.id == requirementId) {
+            return req.copyWith(
+              title: title,
+              description: description,
+              type: type,
+              priority: priority,
+            );
+          }
+          return req;
+        }).toList();
+
+        final updatedDashboard =
+            currentDashboard.copyWith(requirements: updatedRequirements);
+
+        emit(ResultViewLoaded(
+          projectDetails: currentState.projectDetails,
+          documents: currentState.documents,
+          totalRequirements: currentState.totalRequirements,
+          aiDashboard: updatedDashboard,
+          feedbackResponse: currentState.feedbackResponse,
+          feedbackLoading: currentState.feedbackLoading,
+          reviewInvitations: currentState.reviewInvitations,
+          invitationsLoading: currentState.invitationsLoading,
+        ));
+        return null; // Success
+      },
+    );
+  }
+
+  Future<String?> updateUserStoryStatus(
+      String projectId, String storyId, String status,
+      {String? reviewFeedback}) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded ||
+        currentState.aiDashboard == null) {
+      return 'State not loaded';
+    }
+
+    final result = await _updateUserStoryStatus(
+        projectId, storyId, status,
+        reviewFeedback: reviewFeedback);
+
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        final currentDashboard = currentState.aiDashboard!;
+        final updatedStories =
+            currentDashboard.userStories.map((story) {
+          if (story.id == storyId) {
+            return story.copyWith(workflowStatus: status);
+          }
+          return story;
+        }).toList();
+
+        final updatedDashboard =
+            currentDashboard.copyWith(userStories: updatedStories);
+
+        emit(ResultViewLoaded(
+          projectDetails: currentState.projectDetails,
+          documents: currentState.documents,
+          totalRequirements: currentState.totalRequirements,
+          aiDashboard: updatedDashboard,
+          feedbackResponse: currentState.feedbackResponse,
+          feedbackLoading: currentState.feedbackLoading,
+          reviewInvitations: currentState.reviewInvitations,
+          invitationsLoading: currentState.invitationsLoading,
+        ));
+        return null; // Success
+      },
+    );
+  }
+
+  Future<String?> updateUserStory(
+    String projectId,
+    String storyId, {
+    required String title,
+    required String description,
+    required List<String> acceptanceCriteria,
+    required String priority,
+  }) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded ||
+        currentState.aiDashboard == null) {
+      return 'State not loaded';
+    }
+
+    final result = await _updateUserStory(
+      projectId,
+      storyId,
+      title: title,
+      description: description,
+      acceptanceCriteria: acceptanceCriteria,
+      priority: priority,
+    );
+
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        final currentDashboard = currentState.aiDashboard!;
+        final updatedStories =
+            currentDashboard.userStories.map((story) {
+          if (story.id == storyId) {
+            return story.copyWith(
+              title: title,
+              description: description,
+              acceptanceCriteria: acceptanceCriteria,
+              priority: priority,
+            );
+          }
+          return story;
+        }).toList();
+
+        final updatedDashboard =
+            currentDashboard.copyWith(userStories: updatedStories);
+
+        emit(ResultViewLoaded(
+          projectDetails: currentState.projectDetails,
+          documents: currentState.documents,
+          totalRequirements: currentState.totalRequirements,
+          aiDashboard: updatedDashboard,
+          feedbackResponse: currentState.feedbackResponse,
+          feedbackLoading: currentState.feedbackLoading,
+          reviewInvitations: currentState.reviewInvitations,
+          invitationsLoading: currentState.invitationsLoading,
+        ));
+        return null; // Success
+      },
+    );
+  }
+
+  Future<String?> regenerateUserStory(
+      String projectId, String storyId, String feedback) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) {
+      return 'State not loaded';
+    }
+
+    final result = await _regenerateUserStory(projectId, storyId, feedback);
+
+    return result.fold(
+      (failure) => failure.message,
+      (_) {
+        // Since regenerate replaces the object in backend, and likely modifies
+        // revision details, we should re-fetch the dashboard to get fresh data
+        fetchResultView(projectId, totalRequirements: currentState.totalRequirements);
+        return null; // Success
       },
     );
   }

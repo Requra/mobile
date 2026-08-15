@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:requra/core/global_widgets/custom_button.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/features/result_view/presentation/pages/requirement_detail_screen.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/edit_requirement_dialog.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/reject_requirement_dialog.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/approve_circle_button.dart';
+import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/review_action_popup_menu.dart';
 
 class RequirementsSubTab extends StatelessWidget {
   final AiResultsDashboard dashboard;
@@ -81,6 +89,63 @@ class AiRequirementCard extends StatefulWidget {
 
 class _AiRequirementCardState extends State<AiRequirementCard> {
   bool _isDescriptionExpanded = false;
+  bool _isApproving = false;
+
+  void _showEditDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<ResultViewCubit>(),
+        child: EditRequirementDialog(
+          requirement: widget.req,
+          projectId: widget.dashboard.projectId,
+        ),
+      ),
+    );
+  }
+
+  void _showRejectDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<ResultViewCubit>(),
+        child: RejectRequirementDialog(
+          requirement: widget.req,
+          projectId: widget.dashboard.projectId,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _approveRequirement() async {
+    setState(() {
+      _isApproving = true;
+    });
+
+    final error = await context.read<ResultViewCubit>().updateRequirementStatus(
+          widget.dashboard.projectId,
+          widget.req.id,
+          'APPROVED',
+        );
+
+    if (mounted) {
+      setState(() {
+        _isApproving = false;
+      });
+
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error approving requirement: $error')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Requirement approved successfully')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,17 +162,32 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
       priorityBg = const Color(0xFFDCFCE7);
     }
 
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: ID and Type
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (ctx) => BlocProvider.value(
+              value: context.read<ResultViewCubit>(),
+              child: RequirementDetailScreen(
+                initialRequirement: widget.req,
+                projectId: widget.dashboard.projectId,
+              ),
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+          // Header: ID and Type and Menu
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -135,6 +215,12 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
                     color: AppColors.primary,
                   ),
                 ),
+              ),
+              SizedBox(width: 8.w),
+              ReviewActionPopupMenu(
+                onEdit: _showEditDialog,
+                onReject: _showRejectDialog,
+                iconColor: AppColors.grey,
               ),
             ],
           ),
@@ -263,71 +349,60 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
           SizedBox(height: 16.h),
           Divider(height: 1, color: const Color(0xFFE5E7EB)),
           SizedBox(height: 12.h),
-          // Footer: Confidence and Evidence
-          Wrap(
-            spacing: 16.w,
-            runSpacing: 8.h,
+          // Footer: Confidence and Evidence and Approve Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'CONFIDENCE',
-                    style: semiBoldStyle(
-                      fontSize: FontSize.font10,
-                      color: AppColors.grey,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  SizedBox(
-                    width: 60.w,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4.r),
-                      child: LinearProgressIndicator(
-                        value: widget.req.confidenceScore,
-                        backgroundColor: const Color(0xFFE5E7EB),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          const Color(0xFFF59E0B),
-                        ),
-                        minHeight: 4.h,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    '${(widget.req.confidenceScore * 100).toInt()}%',
-                    style: semiBoldStyle(
-                      fontSize: FontSize.font12,
-                      color: AppColors.grey,
-                    ),
-                  ),
-                ],
-              ),
-              if (widget.req.quality?.score != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+              Expanded(
+                child: Row(
                   children: [
                     Text(
-                      'QUALITY',
+                      'CONFIDENCE',
                       style: semiBoldStyle(
                         fontSize: FontSize.font10,
                         color: AppColors.grey,
                       ),
                     ),
                     SizedBox(width: 8.w),
-                    Text(
-                      '${(widget.req.quality!.score! * 100).toInt()}%',
-                      style: semiBoldStyle(
-                        fontSize: FontSize.font12,
-                        color: AppColors.statusFinished,
+                    Expanded(
+                      flex: 3,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4.r),
+                        child: LinearProgressIndicator(
+                          value: widget.req.confidenceScore.clamp(0.0, 1.0),
+                          backgroundColor: const Color(0xFFE5E7EB),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFF59E0B),
+                          ),
+                          minHeight: 4.h,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        '${(widget.req.confidenceScore * 100).toInt()}%',
+                        style: semiBoldStyle(
+                          fontSize: FontSize.font12,
+                          color: AppColors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
+              ),
+              SizedBox(width: 16.w),
+              ApproveCircleButton(
+                isLoading: _isApproving,
+                onTap: _approveRequirement,
+              ),
             ],
           ),
         ],
       ),
-    );
+    ));
   }
 }

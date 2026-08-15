@@ -1,5 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:csv/csv.dart';
+import 'package:excel/excel.dart' hide Border;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
@@ -40,12 +47,12 @@ class ExportSubTab extends StatelessWidget {
           SizedBox(height: 24.h),
 
           // Download from this run
-          _buildDownloadSection(),
+          _buildDownloadSection(context),
 
           SizedBox(height: 24.h),
 
           // Generate Export
-          _buildGenerateExport(),
+          _buildGenerateExport(context),
         ],
       ),
     );
@@ -314,8 +321,7 @@ class ExportSubTab extends StatelessWidget {
   }
 
   // ─── Download from this run ───
-  Widget _buildDownloadSection() {
-    final int excelRows = dashboard.requirements.length;
+  Widget _buildDownloadSection(BuildContext context) {
     final int jiraIssues = dashboard.userStories.length;
 
     return Container(
@@ -357,21 +363,13 @@ class ExportSubTab extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
 
-          // Requirements CSV
-          _buildDownloadItem(
-            icon: Icons.description_outlined,
-            iconColor: AppColors.primary,
-            title: 'Requirements CSV',
-            subtitle: '$excelRows rows ready',
-          ),
-          SizedBox(height: 8.h),
-
           // Jira-ready JSON
           _buildDownloadItem(
             icon: Icons.developer_board,
             iconColor: AppColors.primary,
             title: 'Jira-ready JSON',
             subtitle: '$jiraIssues issues ready',
+            onTap: () {},
           ),
           SizedBox(height: 8.h),
 
@@ -380,7 +378,8 @@ class ExportSubTab extends StatelessWidget {
             icon: Icons.download_outlined,
             iconColor: AppColors.primary,
             title: 'Full result JSON',
-            subtitle: 'Complete contract payload (admin / d…',
+            subtitle: 'Complete contract payload',
+            onTap: () => _exportFullJson(context),
           ),
         ],
       ),
@@ -392,6 +391,7 @@ class ExportSubTab extends StatelessWidget {
     required Color iconColor,
     required String title,
     required String subtitle,
+    required VoidCallback onTap,
   }) {
     return Container(
       padding: EdgeInsets.all(12.w),
@@ -433,7 +433,7 @@ class ExportSubTab extends StatelessWidget {
             ),
           ),
           OutlinedButton.icon(
-            onPressed: () {},
+            onPressed: onTap,
             icon: Icon(Icons.download, size: 16.sp, color: AppColors.primary),
             label: Text(
               'Download',
@@ -457,7 +457,7 @@ class ExportSubTab extends StatelessWidget {
   }
 
   // ─── Generate Export ───
-  Widget _buildGenerateExport() {
+  Widget _buildGenerateExport(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
@@ -498,9 +498,9 @@ class ExportSubTab extends StatelessWidget {
           SizedBox(height: 16.h),
           Row(
             children: [
-              _buildExportButton(Icons.table_chart_outlined, 'XLSX'),
+              _buildExportButton(Icons.table_chart_outlined, 'XLSX', () => _exportRequirementsXlsx(context)),
               SizedBox(width: 12.w),
-              _buildExportButton(Icons.description_outlined, 'CSV'),
+              _buildExportButton(Icons.description_outlined, 'CSV', () => _exportRequirementsCsv(context)),
             ],
           ),
         ],
@@ -508,9 +508,9 @@ class ExportSubTab extends StatelessWidget {
     );
   }
 
-  Widget _buildExportButton(IconData icon, String label) {
+  Widget _buildExportButton(IconData icon, String label, VoidCallback onTap) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onTap,
       icon: Icon(icon, size: 18.sp, color: AppColors.black),
       label: Text(
         label,
@@ -524,6 +524,150 @@ class ExportSubTab extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
       ),
     );
+  }
+
+  // ─── Export Logic ───
+  Future<String?> _getDownloadPath() async {
+    if (Platform.isAndroid) {
+      // Direct path to Android's public Download folder
+      return '/storage/emulated/0/Download';
+    } else {
+      // For iOS, the public download folder isn't directly accessible without user prompt,
+      // so we use the application documents directory (visible in Files app if enabled in Info.plist)
+      final directory = await getApplicationDocumentsDirectory();
+      return directory.path;
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    if (Platform.isAndroid) {
+      await Permission.storage.request();
+      // We don't block on denial because Android 11+ allows writing to Downloads without storage permission
+    }
+  }
+
+  String _getUniqueFileName(String basePath, String filename) {
+    File file = File('$basePath/$filename');
+    if (!file.existsSync()) return file.path;
+
+    final name = filename.substring(0, filename.lastIndexOf('.'));
+    final ext = filename.substring(filename.lastIndexOf('.'));
+    int counter = 1;
+    
+    while (File('$basePath/${name}_$counter$ext').existsSync()) {
+      counter++;
+    }
+    return '$basePath/${name}_$counter$ext';
+  }
+
+  Future<void> _exportRequirementsCsv(BuildContext context) async {
+    try {
+      await _requestPermissions();
+      final basePath = await _getDownloadPath();
+      if (basePath == null) throw Exception("Could not get download path");
+
+      List<List<dynamic>> rows = [];
+      rows.add(["ID", "Title", "Description", "Type", "Priority", "Confidence Score"]);
+      for (var req in dashboard.requirements) {
+        rows.add([
+          req.id,
+          req.title,
+          req.description,
+          req.type,
+          req.priority,
+          req.confidenceScore
+        ]);
+      }
+      String csv = const CsvEncoder().convert(rows);
+      
+      final filePath = _getUniqueFileName(basePath, 'requirements.csv');
+      final file = File(filePath);
+      await file.writeAsString(csv);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved to $filePath'), backgroundColor: AppColors.primary),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exporting CSV: $e')));
+      }
+    }
+  }
+
+  Future<void> _exportRequirementsXlsx(BuildContext context) async {
+    try {
+      await _requestPermissions();
+      final basePath = await _getDownloadPath();
+      if (basePath == null) throw Exception("Could not get download path");
+
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Requirements'];
+      excel.setDefaultSheet('Requirements');
+      
+      sheetObject.appendRow([
+        TextCellValue("ID"), 
+        TextCellValue("Title"), 
+        TextCellValue("Description"), 
+        TextCellValue("Type"), 
+        TextCellValue("Priority"), 
+        TextCellValue("Confidence Score")
+      ]);
+      
+      for (var req in dashboard.requirements) {
+        sheetObject.appendRow([
+          TextCellValue(req.id),
+          TextCellValue(req.title),
+          TextCellValue(req.description),
+          TextCellValue(req.type),
+          TextCellValue(req.priority),
+          DoubleCellValue(req.confidenceScore),
+        ]);
+      }
+      
+      var fileBytes = excel.save();
+      if (fileBytes != null) {
+        final filePath = _getUniqueFileName(basePath, 'requirements.xlsx');
+        final file = File(filePath);
+        await file.writeAsBytes(fileBytes);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Saved to $filePath'), backgroundColor: AppColors.primary),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exporting XLSX: $e')));
+      }
+    }
+  }
+
+  Future<void> _exportFullJson(BuildContext context) async {
+    try {
+      await _requestPermissions();
+      final basePath = await _getDownloadPath();
+      if (basePath == null) throw Exception("Could not get download path");
+
+      final data = dashboard.rawJson ?? {};
+      String jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+      
+      final filePath = _getUniqueFileName(basePath, 'full_result.json');
+      final file = File(filePath);
+      await file.writeAsString(jsonStr);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved to $filePath'), backgroundColor: AppColors.primary),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exporting JSON: $e')));
+      }
+    }
   }
 }
 

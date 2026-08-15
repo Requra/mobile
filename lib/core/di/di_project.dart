@@ -90,6 +90,11 @@ void initProjectDI() {
         sendReviewInvitationUseCase: sl(),
         resendReviewInvitationUseCase: sl(),
         revokeReviewInvitationUseCase: sl(),
+        updateRequirementStatusUseCase: sl(),
+        updateRequirementUseCase: sl(),
+        updateUserStoryStatusUseCase: sl(),
+        updateUserStoryUseCase: sl(),
+        regenerateUserStoryUseCase: sl(),
       ));
 
   sl.registerFactory(() => MeetingCubit(
@@ -138,6 +143,11 @@ void initProjectDI() {
   sl.registerLazySingleton(() => SendReviewInvitationUseCase(sl()));
   sl.registerLazySingleton(() => ResendReviewInvitationUseCase(sl()));
   sl.registerLazySingleton(() => RevokeReviewInvitationUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateRequirementStatusUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateRequirementUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUserStoryStatusUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUserStoryUseCase(sl()));
+  sl.registerLazySingleton(() => RegenerateUserStoryUseCase(sl()));
 
   sl.registerLazySingleton(() => GetProjectMeetingsUseCase(sl()));
   sl.registerLazySingleton(() => GetMeetingDetailsUseCase(sl()));

@@ -14,6 +14,7 @@ class AiResultsDashboard extends Equatable {
   final List<AiRequirement> requirements;
   final List<AiUserStory> userStories;
   final QualityReport? qualityReport;
+  final Map<String, dynamic>? rawJson;
 
   const AiResultsDashboard({
     required this.projectId,
@@ -29,6 +30,7 @@ class AiResultsDashboard extends Equatable {
     required this.requirements,
     required this.userStories,
     this.qualityReport,
+    this.rawJson,
   });
 
   @override
@@ -46,7 +48,42 @@ class AiResultsDashboard extends Equatable {
         requirements,
         userStories,
         qualityReport,
+        rawJson,
       ];
+
+  AiResultsDashboard copyWith({
+    String? projectId,
+    String? analysisRunId,
+    String? status,
+    DateTime? generatedAt,
+    String? contractVersion,
+    bool? isUseful,
+    double? relevanceScore,
+    List<SourceDocument>? sourceDocuments,
+    AiSummary? summary,
+    AiMetrics? metrics,
+    List<AiRequirement>? requirements,
+    List<AiUserStory>? userStories,
+    QualityReport? qualityReport,
+    Map<String, dynamic>? rawJson,
+  }) {
+    return AiResultsDashboard(
+      projectId: projectId ?? this.projectId,
+      analysisRunId: analysisRunId ?? this.analysisRunId,
+      status: status ?? this.status,
+      generatedAt: generatedAt ?? this.generatedAt,
+      contractVersion: contractVersion ?? this.contractVersion,
+      isUseful: isUseful ?? this.isUseful,
+      relevanceScore: relevanceScore ?? this.relevanceScore,
+      sourceDocuments: sourceDocuments ?? this.sourceDocuments,
+      summary: summary ?? this.summary,
+      metrics: metrics ?? this.metrics,
+      requirements: requirements ?? this.requirements,
+      userStories: userStories ?? this.userStories,
+      qualityReport: qualityReport ?? this.qualityReport,
+      rawJson: rawJson ?? this.rawJson,
+    );
+  }
 }
 
 class SourceDocument extends Equatable {
@@ -329,6 +366,40 @@ class AiRequirement extends Equatable {
         version,
         qualityStatus,
       ];
+
+  AiRequirement copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? type,
+    String? category,
+    String? priority,
+    String? actor,
+    double? confidenceScore,
+    QualityInfo? quality,
+    List<String>? sourceDocumentIds,
+    List<SourceRef>? sourceRefs,
+    String? workflowStatus,
+    int? version,
+    String? qualityStatus,
+  }) {
+    return AiRequirement(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      category: category ?? this.category,
+      priority: priority ?? this.priority,
+      actor: actor ?? this.actor,
+      confidenceScore: confidenceScore ?? this.confidenceScore,
+      quality: quality ?? this.quality,
+      sourceDocumentIds: sourceDocumentIds ?? this.sourceDocumentIds,
+      sourceRefs: sourceRefs ?? this.sourceRefs,
+      workflowStatus: workflowStatus ?? this.workflowStatus,
+      version: version ?? this.version,
+      qualityStatus: qualityStatus ?? this.qualityStatus,
+    );
+  }
 }
 
 class AiUserStory extends Equatable {
@@ -381,7 +452,42 @@ class AiUserStory extends Equatable {
         workflowStatus,
         version,
         qualityStatus,
-        revisionNumber,
         revisionSource,
       ];
+
+  AiUserStory copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? userStory,
+    List<String>? acceptanceCriteria,
+    String? priority,
+    String? type,
+    String? requirementId,
+    QualityInfo? quality,
+    List<SourceRef>? sourceRefs,
+    String? workflowStatus,
+    int? version,
+    String? qualityStatus,
+    int? revisionNumber,
+    String? revisionSource,
+  }) {
+    return AiUserStory(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      userStory: userStory ?? this.userStory,
+      acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+      priority: priority ?? this.priority,
+      type: type ?? this.type,
+      requirementId: requirementId ?? this.requirementId,
+      quality: quality ?? this.quality,
+      sourceRefs: sourceRefs ?? this.sourceRefs,
+      workflowStatus: workflowStatus ?? this.workflowStatus,
+      version: version ?? this.version,
+      qualityStatus: qualityStatus ?? this.qualityStatus,
+      revisionNumber: revisionNumber ?? this.revisionNumber,
+      revisionSource: revisionSource ?? this.revisionSource,
+    );
+  }
 }

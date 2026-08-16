@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/global_widgets/customAppBar.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/features/Dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:requra/features/Dashboard/presentation/cubit/dashboard_state.dart';
+import 'package:requra/features/Dashboard/presentation/widgets/dashboard_stat_card.dart';
+import 'package:requra/features/project_view/domain/entities/project.dart';
+import 'package:requra/features/project_view/presentation/helpers/project_helpers.dart';
+import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_error_state.dart';
+import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_loading_state.dart';
+import 'package:requra/routes/app_routes.dart';
+import 'package:requra/widgets/section_label.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,40 +31,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.backgroundHomeScreen,
       appBar: CustomAppBar(
         onNotificationTap: () {
-          setState(() => _showNotifications = !_showNotifications); // Toggle notification panel
+          setState(() => _showNotifications = !_showNotifications);
         },
       ),
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 20.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Purple header ─────────────────────────────────────
-                  _HeaderStats(),
+            BlocBuilder<DashboardCubit, DashboardState>(
+              builder: (context, state) {
+                if (state is DashboardLoading || state is DashboardInitial) {
+                  return const ProjectLoadingState();
+                }
 
-                  SizedBox(height: 16.h),
+                if (state is DashboardError) {
+                  return ProjectErrorState(
+                    onRetry: () => context.read<DashboardCubit>().loadDashboard(),
+                  );
+                }
 
-                  // ── Recent Actions ────────────────────────────────────
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: _RecentActions(),
-                  ),
+                if (state is DashboardLoaded) {
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.only(bottom: 20.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderStats(state),
+                        SizedBox(height: 16.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SectionLabel(label: 'FOCUS'),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Continue working',
+                                style: semiBoldStyle(
+                                  fontSize: FontSize.font14,
+                                  color: AppColors.darkgrey,
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+                              _buildFocusSection(context, state.focusProjects),
+                              
+                              SizedBox(height: 24.h),
+                              
+                              const SectionLabel(label: 'PORTFOLIO'),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Recently created projects',
+                                style: semiBoldStyle(
+                                  fontSize: FontSize.font14,
+                                  color: AppColors.darkgrey,
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+                              _buildPortfolioSection(context, state.recentProjects),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-                  SizedBox(height: 16.h),
-
-                  // ── Projects Overview ─────────────────────────────────
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: _ProjectsOverview(),
-                  ),
-                ],
-              ),
+                return const SizedBox.shrink();
+              },
             ),
 
-            // ── Notifications Panel (overlay) ─────────────────────────
             if (_showNotifications)
               _NotificationsPanel(
                 onClose: () => setState(() => _showNotifications = false),
@@ -64,72 +108,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-}
 
-// ── App Bar ───────────────────────────────────────────────────────────────────
-
-class _DashboardAppBar extends StatelessWidget {
-  const _DashboardAppBar({required this.onNotificationTap});
-  final VoidCallback onNotificationTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      color: AppColors.white,
-      child: Row(
-        children: [
-          Image.asset(
-            'assets/images/logo.png',
-            height: 28.h,
-            errorBuilder: (_, _, _) => Icon(
-              Icons.smart_toy,
-              color: AppColors.primary,
-              size: 24.sp,
-            ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: onNotificationTap,
-            child: Container(
-              width: 32.w,
-              height: 32.w,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.r),
-                color: const Color(0xFFF5F5F5),
-              ),
-              child: Icon(
-                Icons.notifications_outlined,
-                size: 18.sp,
-                color: AppColors.grey,
-              ),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Container(
-            width: 32.w,
-            height: 32.w,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.r),
-              color: const Color(0xFFF5F5F5),
-            ),
-            child: Icon(
-              Icons.menu_rounded,
-              size: 18.sp,
-              color: AppColors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Header Stats (purple) ─────────────────────────────────────────────────────
-
-class _HeaderStats extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeaderStats(DashboardLoaded state) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -139,415 +119,245 @@ class _HeaderStats extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 24.h),
+      padding: EdgeInsets.fromLTRB(16.w, 18.h, 0, 24.h), // Right padding 0 to let cards scroll off-screen
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Dashboard',
-            style: boldStyle(
-              fontSize: FontSize.font22,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 2.h),
-          Row(
-            children: [
-              Icon(Icons.calendar_today_outlined,
-                  color: Colors.white70, size: 12.sp),
-              SizedBox(width: 4.w),
-              Text(
-                'Thurs 5-6-2025',
-                style: regularStyle(
-                  fontSize: FontSize.font12,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          // Stat cards
-          _StatCard(
-            value: '160',
-            label: 'Total Projects',
-            icon: Icons.folder_copy_outlined,
-            iconBg: const Color(0xFFE8E0FF),
-            iconColor: AppColors.primary,
-          ),
-          SizedBox(height: 10.h),
-          _StatCard(
-            value: '16',
-            label: 'New Community',
-            icon: Icons.group_outlined,
-            iconBg: const Color(0xFFDCF5E4),
-            iconColor: Colors.green,
-          ),
-          SizedBox(height: 10.h),
-          _StatCard(
-            value: '7',
-            label: 'Pending Review',
-            icon: Icons.pending_actions_outlined,
-            iconBg: const Color(0xFFFFF0D4),
-            iconColor: Colors.orange,
-          ),
-          SizedBox(height: 10.h),
-          _StatCard(
-            value: '5',
-            label: 'Exports Ready',
-            icon: Icons.file_download_outlined,
-            iconBg: const Color(0xFFD4EDFF),
-            iconColor: Colors.blue,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.icon,
-    required this.iconBg,
-    required this.iconColor,
-  });
-
-  final String value;
-  final String label;
-  final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Icon(icon, color: iconColor, size: 20.sp),
-          ),
-          SizedBox(width: 12.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: boldStyle(
-                  fontSize: FontSize.font20,
-                  color: AppColors.darkgrey,
-                ),
-              ),
-              Text(
-                label,
-                style: regularStyle(
-                  fontSize: FontSize.font12,
-                  color: AppColors.lightgrey,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Recent Actions ────────────────────────────────────────────────────────────
-
-class _RecentActions extends StatelessWidget {
-  final _actions = const [
-    _ActionData(
-        title: "Story #5 · acceptance schema · Project X",
-        time: "2/13/25",
-        sub: "2 New Comments"),
-    _ActionData(
-        title: "Story #5 · acceptance schema · Project Y",
-        time: "5/20/26",
-        sub: "7 New Changes"),
-    _ActionData(
-        title: "Story #5 · acceptance schema · Project K",
-        time: "11/5/26",
-        sub: "2 New Community"),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(14.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Actions',
-                style: semiBoldStyle(
-                  fontSize: FontSize.font14,
-                  color: AppColors.darkgrey,
-                ),
-              ),
-              Text(
-                'Show All →',
-                style: regularStyle(
-                  fontSize: FontSize.font12,
-                  color: AppColors.primaryText,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          ..._actions.map((a) => _ActionRow(data: a)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionData {
-  const _ActionData(
-      {required this.title, required this.time, required this.sub});
-  final String title;
-  final String time;
-  final String sub;
-}
-
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({required this.data});
-  final _ActionData data;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 10.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 8.w,
-            height: 8.w,
-            margin: EdgeInsets.only(top: 5.h),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.lightPrimary,
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
+          Padding(
+            padding: EdgeInsets.only(right: 16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  data.title,
-                  style: regularStyle(
-                    fontSize: FontSize.font12,
-                    color: AppColors.darkgrey,
+                  state.userName.isNotEmpty 
+                      ? 'Welcome, ${state.userName}.' 
+                      : 'Welcome back!',
+                  style: boldStyle(
+                    fontSize: FontSize.font22,
+                    color: Colors.white,
                   ),
                 ),
+                SizedBox(height: 4.h),
                 Text(
-                  data.sub,
+                  'Monitor active projects and move your requirements forward.',
                   style: regularStyle(
-                    fontSize: FontSize.font10,
-                    color: AppColors.lightgrey,
+                    fontSize: FontSize.font12,
+                    color: Colors.white70,
                   ),
                 ),
               ],
             ),
           ),
-          Text(
-            data.time,
-            style: regularStyle(
-              fontSize: FontSize.font10,
-              color: AppColors.lightgrey,
+          SizedBox(height: 20.h),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                DashboardStatCard(
+                  value: state.totalProjects.toString(),
+                  label: 'All Projects',
+                  icon: Icons.folder_copy_outlined,
+                  iconBg: const Color(0xFFE8E0FF),
+                  iconColor: AppColors.primary,
+                ),
+                DashboardStatCard(
+                  value: state.inProgressCount.toString(),
+                  label: 'In Progress',
+                  icon: Icons.access_time_outlined,
+                  iconBg: const Color(0xFFD4EDFF),
+                  iconColor: Colors.blue,
+                ),
+                DashboardStatCard(
+                  value: state.draftsCount.toString(),
+                  label: 'Drafts',
+                  icon: Icons.description_outlined,
+                  iconBg: const Color(0xFFFFF0D4),
+                  iconColor: Colors.orange,
+                ),
+                DashboardStatCard(
+                  value: state.completedCount.toString(),
+                  label: 'Completed',
+                  icon: Icons.check_circle_outline,
+                  iconBg: const Color(0xFFDCF5E4),
+                  iconColor: Colors.green,
+                ),
+                SizedBox(width: 4.w), // Extra padding at the end of the scroll
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}
 
+  Widget _buildFocusSection(BuildContext context, List<Project> focusProjects) {
+    if (focusProjects.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 20.h),
+        child: Center(
+          child: Text(
+            'No projects in progress.',
+            style: regularStyle(fontSize: FontSize.font14, color: AppColors.lightgrey),
+          ),
+        ),
+      );
+    }
 
-// ── Projects Overview ─────────────────────────────────────────────────────────
-
-class _ProjectsOverview extends StatelessWidget {
-  final _projects = const [
-    _ProjectOverviewData(
-        name: 'VOIS',
-        client: 'Aria Incentive',
-        starring: 3,
-        comments: 4,
-        created: '14 ago',
-        status: 'Active'),
-    _ProjectOverviewData(
-        name: 'Freelance',
-        client: 'Amine',
-        starring: 0,
-        comments: 5,
-        created: '12 ago',
-        status: 'In Review'),
-    _ProjectOverviewData(
-        name: 'Nixon',
-        client: '',
-        starring: 2,
-        comments: 6,
-        created: '34 ago',
-        status: 'Drafted'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Projects Overview',
-            style: semiBoldStyle(
-              fontSize: FontSize.font14,
-              color: AppColors.darkgrey,
-            ),
-          ),
-          SizedBox(height: 14.h),
-          ..._projects.map((p) => _ProjectOverviewRow(data: p)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProjectOverviewData {
-  const _ProjectOverviewData({
-    required this.name,
-    required this.client,
-    required this.starring,
-    required this.comments,
-    required this.created,
-    required this.status,
-  });
-
-  final String name;
-  final String client;
-  final int starring;
-  final int comments;
-  final String created;
-  final String status;
-}
-
-class _ProjectOverviewRow extends StatelessWidget {
-  const _ProjectOverviewRow({required this.data});
-  final _ProjectOverviewData data;
-
-  Color get _statusColor {
-    switch (data.status) {
-      case 'Active':
-        return const Color(0xFF22C55E);
-      case 'In Review':
-        return const Color(0xFF3B82F6);
-      default:
-        return const Color(0xFFF97316);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F9F9),
-        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: const Color(0xFFEEEEF0)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        children: focusProjects.map((project) {
+          final isLast = project == focusProjects.last;
+          return Column(
             children: [
-              Text(
-                data.name,
-                style: semiBoldStyle(
-                  fontSize: FontSize.font14,
-                  color: AppColors.darkgrey,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                decoration: BoxDecoration(
-                  color: _statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Text(
-                  data.status,
-                  style: semiBoldStyle(
-                    fontSize: FontSize.font10,
-                    color: _statusColor,
+              ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                leading: Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightPrimaryBorder,
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
+                  child: Icon(Icons.work_outline, color: AppColors.primary, size: 20.sp),
                 ),
+                title: Text(
+                  project.name,
+                  style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.darkgrey),
+                ),
+                subtitle: Text(
+                  project.clientName,
+                  style: regularStyle(fontSize: FontSize.font12, color: AppColors.lightgrey),
+                ),
+                trailing: Icon(Icons.chevron_right, color: AppColors.lightgrey, size: 20.sp),
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true)
+                      .pushNamed(AppRoutes.resultView, arguments: project);
+                },
               ),
+              if (!isLast)
+                Divider(height: 1.h, thickness: 1, color: const Color(0xFFEEEEF0), indent: 16.w, endIndent: 16.w),
             ],
-          ),
-          if (data.client.isNotEmpty) ...[
-            SizedBox(height: 2.h),
-            Text(
-              data.client,
-              style: regularStyle(
-                fontSize: FontSize.font12,
-                color: AppColors.lightgrey,
-              ),
-            ),
-          ],
-          SizedBox(height: 8.h),
-          Row(
-            children: [
-              Icon(Icons.star_border_rounded,
-                  size: 13.sp, color: AppColors.lightgrey),
-              SizedBox(width: 3.w),
-              Text('${data.starring}',
-                  style: regularStyle(
-                      fontSize: FontSize.font11, color: AppColors.lightgrey)),
-              SizedBox(width: 12.w),
-              Icon(Icons.comment_outlined,
-                  size: 13.sp, color: AppColors.lightgrey),
-              SizedBox(width: 3.w),
-              Text('${data.comments}',
-                  style: regularStyle(
-                      fontSize: FontSize.font11, color: AppColors.lightgrey)),
-              SizedBox(width: 12.w),
-              Icon(Icons.access_time_outlined,
-                  size: 13.sp, color: AppColors.lightgrey),
-              SizedBox(width: 3.w),
-              Text(data.created,
-                  style: regularStyle(
-                      fontSize: FontSize.font11, color: AppColors.lightgrey)),
-            ],
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
+  }
+
+  Widget _buildPortfolioSection(BuildContext context, List<Project> recentProjects) {
+    if (recentProjects.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 20.h),
+        child: Center(
+          child: Text(
+            'No projects found.',
+            style: regularStyle(fontSize: FontSize.font14, color: AppColors.lightgrey),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: recentProjects.map((project) {
+        final badge = projectStatusBadge(project.status);
+        final badgeBg = statusBadgeBg(badge);
+        final badgeColor = statusBadgeColor(badge);
+        final dateStr = project.createdAt != null 
+            ? '${_getMonth(project.createdAt!.month)} ${project.createdAt!.day}, ${project.createdAt!.year}'
+            : 'Unknown date';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context, rootNavigator: true)
+                .pushNamed(AppRoutes.resultView, arguments: project);
+          },
+          child: Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(14.w),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(color: const Color(0xFFEEEEF0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        project.name,
+                        style: semiBoldStyle(
+                          fontSize: FontSize.font14,
+                          color: AppColors.darkgrey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        badge,
+                        style: semiBoldStyle(
+                          fontSize: FontSize.font10,
+                          color: badgeColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                if (project.description.isNotEmpty) ...[
+                  Text(
+                    project.description,
+                    style: regularStyle(fontSize: FontSize.font12, color: AppColors.grey),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 12.h),
+                ],
+                Row(
+                  children: [
+                    Icon(Icons.person_outline, size: 14.sp, color: AppColors.lightgrey),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: Text(
+                        project.clientName.isEmpty ? 'No Client' : project.clientName,
+                        style: regularStyle(fontSize: FontSize.font12, color: AppColors.lightgrey),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(Icons.calendar_today_outlined, size: 14.sp, color: AppColors.lightgrey),
+                    SizedBox(width: 4.w),
+                    Text(
+                      dateStr,
+                      style: regularStyle(fontSize: FontSize.font12, color: AppColors.lightgrey),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  String _getMonth(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (month >= 1 && month <= 12) return months[month - 1];
+    return '';
   }
 }
 
@@ -561,7 +371,7 @@ class _NotificationsPanel extends StatelessWidget {
     _NotifData(text: 'You have a bug that..', time: 'Just Now'),
     _NotifData(text: 'New user registered', time: '10 hours ago'),
     _NotifData(text: 'You have a...', time: '10 hours ago'),
-    _NotifData(text: 'Drill: Jane subscribed', time: '1 hour - 100 AM'),
+    _NotifData(text: 'Drill: Jane subscribed', time: '1 hour - 1:00 AM'),
   ];
 
   @override
@@ -606,11 +416,9 @@ class _NotificationsPanel extends StatelessWidget {
                           const Spacer(),
                           IconButton(
                             onPressed: onClose,
-                            icon: Icon(Icons.close,
-                                size: 16.sp, color: AppColors.grey),
+                            icon: Icon(Icons.close, size: 16.sp, color: AppColors.grey),
                             padding: EdgeInsets.zero,
-                            constraints: BoxConstraints(
-                                minWidth: 24.w, minHeight: 24.w),
+                            constraints: BoxConstraints(minWidth: 24.w, minHeight: 24.w),
                           ),
                         ],
                       ),
@@ -661,14 +469,10 @@ class _NotifTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(data.text,
-                    style: regularStyle(
-                        fontSize: FontSize.font12,
-                        color: AppColors.darkgrey)),
+                    style: regularStyle(fontSize: FontSize.font12, color: AppColors.darkgrey)),
                 SizedBox(height: 2.h),
                 Text(data.time,
-                    style: regularStyle(
-                        fontSize: FontSize.font10,
-                        color: AppColors.lightgrey)),
+                    style: regularStyle(fontSize: FontSize.font10, color: AppColors.lightgrey)),
               ],
             ),
           ),
@@ -677,6 +481,3 @@ class _NotifTile extends StatelessWidget {
     );
   }
 }
-
-
-

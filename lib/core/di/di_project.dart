@@ -24,6 +24,12 @@ import 'package:requra/features/result_view/domain/repositories/result_view_repo
 import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 
+import 'package:requra/features/Dashboard/data/datasource/dashboard_remote_data_source.dart';
+import 'package:requra/features/Dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:requra/features/Dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:requra/features/Dashboard/domain/usecases/get_dashboard_data_usecase.dart';
+import 'package:requra/features/Dashboard/presentation/cubit/dashboard_cubit.dart';
+
 import 'package:requra/features/meeting/data/datasource/meeting_remote_data_source.dart';
 import 'package:requra/features/meeting/data/repositories/meeting_repository_impl.dart';
 import 'package:requra/features/meeting/domain/repositories/meeting_repository.dart';
@@ -68,6 +74,11 @@ void initProjectDI() {
         createProjectUseCase: sl(),
         uploadAndGenerateUseCase: sl(),
         getAiRunProgressUseCase: sl(),
+      ));
+
+  sl.registerFactory(() => DashboardCubit(
+        getDashboardDataUseCase: sl(),
+        getProfileUseCase: sl(),
       ));
 
   sl.registerFactory(() => ProfileCubit(
@@ -124,6 +135,8 @@ void initProjectDI() {
   sl.registerLazySingleton(() => UploadAndGenerateUseCase(sl()));
   sl.registerLazySingleton(() => GetAiRunProgressUseCase(sl()));
 
+  sl.registerLazySingleton(() => GetDashboardDataUseCase(sl()));
+
   sl.registerLazySingleton(() => GetProfileUseCase(sl()));
   sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
   sl.registerLazySingleton(() => UploadAvatarUseCase(sl()));
@@ -170,6 +183,9 @@ void initProjectDI() {
   sl.registerLazySingleton<AddProjectRepository>(
       () => AddProjectRepositoryImpl(remoteDataSource: sl()));
 
+  sl.registerLazySingleton<DashboardRepository>(
+      () => DashboardRepositoryImpl(remoteDataSource: sl()));
+
   sl.registerLazySingleton<ProfileRepository>(
       () => ProfileRepositoryImpl(remoteDataSource: sl()));
 
@@ -185,6 +201,9 @@ void initProjectDI() {
       
   sl.registerLazySingleton<AddProjectRemoteDataSource>(
       () => AddProjectRemoteDataSourceImpl(apiClient: sl()));
+
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+      () => DashboardRemoteDataSourceImpl(apiClient: sl()));
 
   sl.registerLazySingleton<ProfileRemoteDataSource>(
       () => ProfileRemoteDataSourceImpl(authService: sl()));

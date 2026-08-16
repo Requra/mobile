@@ -17,8 +17,9 @@ import 'package:requra/features/result_view/presentation/widgets/overview/overvi
 
 class ResultViewScreen extends StatefulWidget {
   final Project project;
+  final int initialIndex;
 
-  const ResultViewScreen({super.key, required this.project});
+  const ResultViewScreen({super.key, required this.project, this.initialIndex = 0});
 
   @override
   State<ResultViewScreen> createState() => _ResultViewScreenState();
@@ -50,6 +51,7 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: _tabs.length,
+      initialIndex: widget.initialIndex,
       child: Scaffold(
         backgroundColor: AppColors.backgroundHomeScreen,
         appBar: const CustomAppBar(),

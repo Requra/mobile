@@ -63,13 +63,21 @@ class AppRoutes {
         onAddProject: () => Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.addProject),
       ),
       resultView: (context) {
-        final project = ModalRoute.of(context)!.settings.arguments as Project;
+        final args = ModalRoute.of(context)!.settings.arguments;
+        Project project;
+        int initialIndex = 0;
+        if (args is Map<String, dynamic>) {
+          project = args['project'] as Project;
+          initialIndex = args['initialIndex'] as int? ?? 0;
+        } else {
+          project = args as Project;
+        }
         return MultiBlocProvider(
           providers: [
             BlocProvider(create: (_) => sl<ResultViewCubit>()),
             BlocProvider(create: (_) => sl<MeetingCubit>()),
           ],
-          child: ResultViewScreen(project: project),
+          child: ResultViewScreen(project: project, initialIndex: initialIndex),
         );
       },
       users: (_) => const UserstoriesTabview(),

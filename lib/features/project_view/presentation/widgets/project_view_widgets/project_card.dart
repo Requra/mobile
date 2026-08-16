@@ -98,8 +98,7 @@ class ProjectCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child:
-                  CustomButton(
+                  child: CustomButton(
                     text: 'Cancel',
                     color1: Colors.transparent,
                     color2: Colors.transparent,
@@ -147,10 +146,10 @@ class ProjectCard extends StatelessWidget {
   }
 
   void _openEditScreen(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).pushNamed(
-      AppRoutes.editProject,
-      arguments: project,
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushNamed(AppRoutes.editProject, arguments: project);
   }
 
   @override
@@ -331,18 +330,17 @@ class ProjectCard extends StatelessWidget {
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
-                  child:
-                    CustomButton(
-                      text: 'View Details',
-                      color1: AppColors.primary,
-                      isRegularStyle: true,
-                      onTap: () {
-                        Navigator.of(context, rootNavigator: true).pushNamed(
-                          AppRoutes.resultView,
-                          arguments: project,
-                        );
-                      },
-                    )
+                  child: CustomButton(
+                    text: 'View Details',
+                    color1: AppColors.primary,
+                    isRegularStyle: true,
+                    onTap: () {
+                      Navigator.of(
+                        context,
+                        rootNavigator: true,
+                      ).pushNamed(AppRoutes.resultView, arguments: project);
+                    },
+                  ),
                 ),
               ],
             ),

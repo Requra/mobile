@@ -63,12 +63,17 @@ class _AiAnalysisView extends StatelessWidget {
       body: BlocConsumer<AiAnalysisCubit, AiAnalysisState>(
         listener: (context, state) {
           if (state is AiAnalysisSuccess) {
-            // Wait a moment then navigate to the dashboard
+            // Wait a moment then navigate
             Future.delayed(const Duration(seconds: 2), () {
               if (context.mounted) {
-                Navigator.of(
-                  context,
-                ).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+                if (isRegenerating) {
+                  Navigator.of(context).pop(true);
+                } else {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.main,
+                    (route) => false,
+                  );
+                }
               }
             });
           }

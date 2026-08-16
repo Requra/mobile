@@ -41,8 +41,12 @@ class ProjectModel extends Project {
       clientEmail: json['clientEmail'],
       language: json['language'],
       teamMembers: parsedTeamMembers,
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'])
+          : null,
     );
   }
 }

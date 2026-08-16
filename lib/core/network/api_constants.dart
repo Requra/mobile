@@ -32,8 +32,7 @@ class ApiConstants {
   static const String logout = 'https://requra-ai.runasp.net/api/Auth/logout';
 
   // ── Meeting (v1 mock API — kept for backward compatibility) ──
-  static const String meetingsBase =
-      'https://mock.apidog.com/m1/1212435-1208182-1270861/api';
+  static const String meetingsBase = 'https://requra-ai.runasp.net/api';
 
   // ── Meetings (real API base) ──
   static const String realMeetingsBase = 'https://requra-ai.runasp.net/api';
@@ -95,16 +94,16 @@ class ApiConstants {
   static String projectMembers(String id) =>
       'https://requra-ai.runasp.net/api/projects/$id/members';
 
-  static const String documents = 'https://requra-ai.runasp.net/api/Documents';
+  static const String documents = 'http://192.168.100.12:5099/api/Documents';
 
   static String aiResultsDashboard(String projectId) =>
-      '/api/projects/$projectId/ai/results-dashboard';
+      'http://192.168.100.12:5099/api/projects/$projectId/ai/results-dashboard';
 
   static String startAiRun(String projectId) =>
-      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs';
+      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs';
 
   static String getAiRunProgress(String projectId, String runId) =>
-      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs/$runId';
+      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs/$runId';
 
   static String feedback(String projectId) =>
       'https://requra-ai.runasp.net/api/project-review/$projectId/feedback';

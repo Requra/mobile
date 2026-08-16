@@ -8,6 +8,8 @@ import 'package:requra/screens/Home/add_project/step2_add_sources.dart';
 import 'package:requra/screens/Home/add_project/step3_ai_generate.dart';
 import 'package:requra/screens/Home/add_project/widgets/project_stepper.dart';
 import 'package:requra/core/theme/color_manager.dart';
+import 'package:requra/features/project_view/domain/entities/project.dart';
+import 'package:requra/routes/app_routes.dart';
 
 /// Multi-step "Add Project" wizard.
 class AddProjectScreen extends StatelessWidget {
@@ -95,7 +97,27 @@ class AddProjectScreen extends StatelessWidget {
     } else {
       return Step3AiGenerate(
         key: const ValueKey('step3'),
-        onViewResults: onViewResults ?? () {},
+        onViewResults: onViewResults ?? () {
+          if (state is AddProjectSuccess) {
+            final project = Project(
+              id: state.projectId ?? '',
+              name: state.details.projectName,
+              description: state.details.description,
+              status: 'In Progress',
+              clientName: state.details.clientEmail ?? '',
+              totalRequirements: 0,
+              totalUserStories: 0,
+              totalComments: 0,
+            );
+            Navigator.of(context).pushReplacementNamed(
+              AppRoutes.resultView,
+              arguments: {
+                'project': project,
+                'initialIndex': 1,
+              },
+            );
+          }
+        },
       );
     }
   }

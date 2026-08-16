@@ -87,7 +87,7 @@ class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
     };
 
     final response = await apiClient.dio.post(
-      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs',
+      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs',
       data: payload,
     );
 
@@ -95,7 +95,7 @@ class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
     if (responseData is Map<String, dynamic> &&
         responseData['isSuccess'] == true &&
         responseData['data'] != null) {
-      return responseData['data']['aiJobId'] ?? '';
+      return responseData['data']['id'] ?? '';
     }
 
     throw Exception(responseData?['message'] ?? 'Failed to start AI run');
@@ -104,7 +104,7 @@ class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
   @override
   Future<AiRunStatus> getAiRunProgress(String projectId, String runId) async {
     final response = await apiClient.dio.get(
-      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs/$runId',
+      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs/$runId',
     );
 
     final responseData = response.data;

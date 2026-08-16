@@ -56,7 +56,7 @@ class AiResultsTab extends StatelessWidget {
           return [
             SliverToBoxAdapter(
                 child: AiResultsHeader(
-                    dashboard: dashboard, projectName: projectName)),
+                    dashboard: dashboard, projectId: projectId, projectName: projectName)),
             SliverAppBar(
               pinned: true,
               automaticallyImplyLeading: false,

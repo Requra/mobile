@@ -34,7 +34,7 @@ class AiAnalysisCubit extends Cubit<AiAnalysisState> {
 
   Future<void> startAnalysis(String projectId, {String? meetingId}) async {
     if (state is AiAnalysisLoading || state is AiAnalysisRunning) return;
-    
+
     _projectId = projectId;
     emit(AiAnalysisLoading());
 
@@ -47,8 +47,8 @@ class AiAnalysisCubit extends Cubit<AiAnalysisState> {
       if (response.isSuccess && response.data != null) {
         // The API returns the runId in data['aiJobId'] based on add_project_remote_data_source logic
         final data = response.data as Map<String, dynamic>;
-        _runId = data['aiJobId']?.toString();
-        
+        _runId = data['id']?.toString();
+
         if (_runId != null && _runId!.isNotEmpty) {
           _startPolling();
         } else {
@@ -77,19 +77,27 @@ class AiAnalysisCubit extends Cubit<AiAnalysisState> {
         );
 
         if (response.isSuccess && response.data != null) {
-          final aiStatus = AiRunStatus.fromJson(response.data as Map<String, dynamic>);
-          
-          if (aiStatus.status.toLowerCase() == 'completed') {
+          final aiStatus = AiRunStatus.fromJson(
+            response.data as Map<String, dynamic>,
+          );
+
+          if (aiStatus.status.toLowerCase() == 'completed' || aiStatus.progress >= 100) {
             timer.cancel();
             emit(AiAnalysisSuccess(aiStatus));
           } else if (aiStatus.status.toLowerCase() == 'failed') {
             timer.cancel();
-            emit(AiAnalysisError(aiStatus.message.isNotEmpty ? aiStatus.message : 'AI Analysis failed.'));
+            emit(
+              AiAnalysisError(
+                aiStatus.message.isNotEmpty
+                    ? aiStatus.message
+                    : 'AI Analysis failed.',
+              ),
+            );
           } else {
             emit(AiAnalysisRunning(aiStatus));
           }
         } else {
-          // If polling fails briefly, don't kill the whole process immediately, 
+          // If polling fails briefly, don't kill the whole process immediately,
           // just log or maybe increment a failure counter. For now, we'll keep trying.
           print('Polling error: ${response.message}');
         }

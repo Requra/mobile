@@ -19,32 +19,58 @@ class AiResultsDashboardModel extends AiResultsDashboard {
   });
 
   factory AiResultsDashboardModel.fromJson(Map<String, dynamic> json) {
+    final rawRequirements = (json['requirements'] as List<dynamic>?) ?? [];
+    final requirements = rawRequirements.map((e) => AiRequirementModel.fromJson(e)).toList();
+    
+    final rawUserStories = (json['user_stories'] as List<dynamic>?) ?? [];
+    final userStories = rawUserStories.map((e) => AiUserStoryModel.fromJson(e)).toList();
+    
+    final summary = AiSummaryModel.fromJson(json['summary'] ?? {});
+    
+    // Calculate metrics
+    final totalRequirements = requirements.length;
+    final functionalRequirements = requirements.where((r) => r.type.toLowerCase() == 'functional').length;
+    final nonFunctionalRequirements = requirements.where((r) => r.type.toLowerCase() == 'non-functional').length;
+    final businessRequirements = requirements.where((r) => r.type.toLowerCase() == 'business').length;
+    final userStoriesCount = userStories.length;
+    final highPriorityItems = requirements.where((r) => r.priority.toLowerCase() == 'high').length +
+        userStories.where((us) => us.priority.toLowerCase() == 'high').length;
+    final risksCount = summary.risks.length;
+    final openQuestionsCount = summary.openQuestions.length;
+    final warningsCount = (json['warnings'] as List<dynamic>?)?.length ?? 0;
+    final qualityIssuesCount = (json['quality_issues'] as List<dynamic>?)?.length ?? 0;
+
+    final metrics = AiMetricsModel(
+      totalRequirements: totalRequirements,
+      functionalRequirements: functionalRequirements,
+      nonFunctionalRequirements: nonFunctionalRequirements,
+      businessRequirements: businessRequirements,
+      userStories: userStoriesCount,
+      highPriorityItems: highPriorityItems,
+      risksCount: risksCount,
+      openQuestionsCount: openQuestionsCount,
+      warningsCount: warningsCount,
+      qualityIssuesCount: qualityIssuesCount,
+    );
+
     return AiResultsDashboardModel(
-      projectId: json['projectId']?.toString() ?? '',
-      analysisRunId: json['analysisRunId']?.toString() ?? '',
-      status: json['analysisRunStatus']?.toString() ?? '',
-      generatedAt: json['generatedAt'] != null
-          ? DateTime.tryParse(json['generatedAt'].toString())
-          : null,
-      contractVersion: json['contractVersion']?.toString() ?? '',
-      isUseful: json['isUseful'] ?? false,
-      relevanceScore: (json['relevanceScore'] ?? 0).toDouble(),
-      sourceDocuments: (json['sourceDocuments'] as List<dynamic>?)
+      projectId: json['project_id']?.toString() ?? '',
+      analysisRunId: json['job_id']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      generatedAt: null,
+      contractVersion: json['contract_version']?.toString() ?? '',
+      isUseful: json['is_useful'] ?? false,
+      relevanceScore: (json['relevance_score'] ?? 0).toDouble(),
+      sourceDocuments: (json['source_documents'] as List<dynamic>?)
               ?.map((e) => SourceDocumentModel.fromJson(e))
               .toList() ??
           [],
-      summary: AiSummaryModel.fromJson(json['summary'] ?? {}),
-      metrics: AiMetricsModel.fromJson(json['metrics'] ?? {}),
-      requirements: (json['requirements'] as List<dynamic>?)
-              ?.map((e) => AiRequirementModel.fromJson(e))
-              .toList() ??
-          [],
-      userStories: (json['userStories'] as List<dynamic>?)
-              ?.map((e) => AiUserStoryModel.fromJson(e))
-              .toList() ??
-          [],
-      qualityReport: json['qualityReport'] != null
-          ? QualityReportModel.fromJson(json['qualityReport'])
+      summary: summary,
+      metrics: metrics,
+      requirements: requirements,
+      userStories: userStories,
+      qualityReport: json['quality_report'] != null
+          ? QualityReportModel.fromJson(json['quality_report'])
           : null,
       rawJson: json,
     );
@@ -67,8 +93,8 @@ class SourceDocumentModel extends SourceDocument {
       title: json['title']?.toString() ?? '',
       type: json['type']?.toString(),
       language: json['language']?.toString(),
-      mimeType: json['mimeType']?.toString() ?? '',
-      fileUrl: json['fileUrl']?.toString(),
+      mimeType: json['mime_type']?.toString() ?? '',
+      fileUrl: json['file_url']?.toString(),
     );
   }
 }
@@ -88,9 +114,9 @@ class AiSummaryModel extends AiSummary {
 
   factory AiSummaryModel.fromJson(Map<String, dynamic> json) {
     return AiSummaryModel(
-      executiveSummary: json['executiveSummary']?.toString() ?? '',
-      keyDecisions: (json['keyDecisions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      openQuestions: (json['openQuestions'] as List<dynamic>?)
+      executiveSummary: json['executive_summary']?.toString() ?? '',
+      keyDecisions: (json['key_decisions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      openQuestions: (json['open_questions'] as List<dynamic>?)
               ?.map((e) => AiOpenQuestionModel.fromJson(e))
               .toList() ??
           [],
@@ -99,13 +125,13 @@ class AiSummaryModel extends AiSummary {
               .toList() ??
           [],
       assumptions: (json['assumptions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      actionItems: (json['actionItems'] as List<dynamic>?)
+      actionItems: (json['action_items'] as List<dynamic>?)
               ?.map((e) => AiActionItemModel.fromJson(e))
               .toList() ??
           [],
       stakeholders: (json['stakeholders'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       scope: (json['scope'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      outOfScope: (json['outOfScope'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      outOfScope: (json['out_of_scope'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 }
@@ -122,8 +148,8 @@ class AiOpenQuestionModel extends AiOpenQuestion {
     return AiOpenQuestionModel(
       id: json['id']?.toString() ?? '',
       question: json['question']?.toString() ?? '',
-      sourceDocumentIds: (json['sourceDocumentIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      sourceRefs: (json['sourceRefs'] as List<dynamic>?)
+      sourceDocumentIds: (json['source_document_ids'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      sourceRefs: (json['source_refs'] as List<dynamic>?)
               ?.map((e) => SourceRefModel.fromJson(e))
               .toList() ??
           [],
@@ -181,13 +207,13 @@ class SourceRefModel extends SourceRef {
 
   factory SourceRefModel.fromJson(Map<String, dynamic> json) {
     return SourceRefModel(
-      documentId: json['documentId']?.toString(),
-      sourceId: json['sourceId']?.toString(),
-      documentTitle: json['documentTitle']?.toString(),
-      sourceType: json['sourceType']?.toString(),
-      chunkId: json['chunkId']?.toString(),
-      confidenceScore: json['confidenceScore'] != null ? (json['confidenceScore'] as num).toDouble() : null,
-      fileUrl: json['fileUrl']?.toString(),
+      documentId: json['document_id']?.toString(),
+      sourceId: json['source_id']?.toString(),
+      documentTitle: json['document_title']?.toString(),
+      sourceType: json['source_type']?.toString(),
+      chunkId: json['chunk_id']?.toString(),
+      confidenceScore: json['confidence_score'] != null ? (json['confidence_score'] as num).toDouble() : null,
+      fileUrl: json['file_url']?.toString(),
       quote: json['quote']?.toString(),
     );
   }
@@ -226,15 +252,15 @@ class QualityReportModel extends QualityReport {
 
   factory QualityReportModel.fromJson(Map<String, dynamic> json) {
     return QualityReportModel(
-      overallScore: json['overallScore'] != null ? (json['overallScore'] as num).toDouble() : null,
-      traceabilityCoverage: json['traceabilityCoverage'] != null ? (json['traceabilityCoverage'] as num).toDouble() : null,
-      groundednessScore: json['groundednessScore'] != null ? (json['groundednessScore'] as num).toDouble() : null,
-      storyCompleteness: json['storyCompleteness'] != null ? (json['storyCompleteness'] as num).toDouble() : null,
-      acceptanceCriteriaQuality: json['acceptanceCriteriaQuality'] != null ? (json['acceptanceCriteriaQuality'] as num).toDouble() : null,
-      duplicateRisk: json['duplicateRisk'] != null ? (json['duplicateRisk'] as num).toDouble() : null,
-      highSeverityIssueCount: json['highSeverityIssueCount'] as int?,
-      requirementCount: json['requirementCount'] as int?,
-      storyCount: json['storyCount'] as int?,
+      overallScore: json['overall_score'] != null ? (json['overall_score'] as num).toDouble() : null,
+      traceabilityCoverage: json['traceability_coverage'] != null ? (json['traceability_coverage'] as num).toDouble() : null,
+      groundednessScore: json['groundedness_score'] != null ? (json['groundedness_score'] as num).toDouble() : null,
+      storyCompleteness: json['story_completeness'] != null ? (json['story_completeness'] as num).toDouble() : null,
+      acceptanceCriteriaQuality: json['acceptance_criteria_quality'] != null ? (json['acceptance_criteria_quality'] as num).toDouble() : null,
+      duplicateRisk: json['duplicate_risk'] != null ? (json['duplicate_risk'] as num).toDouble() : null,
+      highSeverityIssueCount: json['high_severity_issue_count'] as int?,
+      requirementCount: json['requirement_count'] as int?,
+      storyCount: json['story_count'] as int?,
     );
   }
 }
@@ -296,16 +322,16 @@ class AiRequirementModel extends AiRequirement {
       category: json['category']?.toString(),
       priority: json['priority']?.toString() ?? '',
       actor: json['actor']?.toString(),
-      confidenceScore: (json['confidenceScore'] ?? 0).toDouble(),
+      confidenceScore: (json['confidence_score'] ?? 0).toDouble(),
       quality: json['quality'] != null ? QualityInfoModel.fromJson(json['quality']) : null,
-      sourceDocumentIds: (json['sourceDocumentIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      sourceRefs: (json['sourceRefs'] as List<dynamic>?)
+      sourceDocumentIds: (json['source_document_ids'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      sourceRefs: (json['source_refs'] as List<dynamic>?)
               ?.map((e) => SourceRefModel.fromJson(e))
               .toList() ??
           [],
-      workflowStatus: json['workflowStatus']?.toString(),
+      workflowStatus: json['workflow_status']?.toString(),
       version: json['version'] as int?,
-      qualityStatus: json['qualityStatus']?.toString(),
+      qualityStatus: json['quality_status']?.toString(),
     );
   }
 }
@@ -331,8 +357,8 @@ class AiUserStoryModel extends AiUserStory {
 
   factory AiUserStoryModel.fromJson(Map<String, dynamic> json) {
     List<String> parsedAC = [];
-    if (json['acceptanceCriteria'] != null) {
-      for (var item in json['acceptanceCriteria']) {
+    if (json['acceptance_criteria'] != null) {
+      for (var item in json['acceptance_criteria']) {
         if (item is String) {
           parsedAC.add(item);
         } else if (item is Map<String, dynamic> && item['text'] != null) {
@@ -347,21 +373,21 @@ class AiUserStoryModel extends AiUserStory {
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      userStory: json['userStory']?.toString() ?? '',
+      userStory: json['user_story']?.toString() ?? '',
       acceptanceCriteria: parsedAC,
       priority: json['priority']?.toString() ?? '',
       type: json['type']?.toString(),
-      requirementId: json['requirementId']?.toString() ?? '',
+      requirementId: json['requirement_id']?.toString() ?? '',
       quality: json['quality'] != null ? QualityInfoModel.fromJson(json['quality']) : null,
-      sourceRefs: (json['sourceRefs'] as List<dynamic>?)
+      sourceRefs: (json['source_refs'] as List<dynamic>?)
               ?.map((e) => SourceRefModel.fromJson(e))
               .toList() ??
           [],
-      workflowStatus: json['workflowStatus']?.toString(),
+      workflowStatus: json['workflow_status']?.toString(),
       version: json['version'] as int?,
-      qualityStatus: json['qualityStatus']?.toString(),
-      revisionNumber: json['revisionNumber'] as int?,
-      revisionSource: json['revisionSource']?.toString(),
+      qualityStatus: json['quality_status']?.toString(),
+      revisionNumber: json['revision_number'] as int?,
+      revisionSource: json['revision_source']?.toString(),
     );
   }
 }

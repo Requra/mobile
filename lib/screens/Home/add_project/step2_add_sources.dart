@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,25 +34,41 @@ class _Step2AddSourcesState extends State<Step2AddSources> {
   // ── File upload ──────────────────────────────────────────────────────────
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'docx', 'doc', 'txt', 'mp3', 'mp4'],
-      withData: true,
-    );
-
-    if (result == null || result.files.isEmpty) return;
-
-    for (final file in result.files) {
-      final ext = '.${file.extension ?? ''}';
-      _addSource(
-        SourceItem(
-          fileName: file.name,
-          fileSizeBytes: file.size,
-          documentType: DocumentType.fromExtension(ext).value,
-          fileBytes: file.bytes,
-        ),
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'docx', 'doc', 'txt', 'mp3', 'mp4'],
+        withData: false, // Changed to false to prevent unknown_path exceptions for cloud files
       );
+
+      if (result == null || result.files.isEmpty) return;
+
+      for (final file in result.files) {
+        if (file.path != null) {
+          final ext = '.${file.extension ?? ''}';
+          // Read bytes manually from the cached local path
+          final bytes = await File(file.path!).readAsBytes();
+          
+          _addSource(
+            SourceItem(
+              fileName: file.name,
+              fileSizeBytes: file.size,
+              documentType: DocumentType.fromExtension(ext).value,
+              fileBytes: bytes,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load file. Try downloading it to your device first.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

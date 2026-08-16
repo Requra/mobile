@@ -141,13 +141,15 @@ class AddProjectCubit extends Cubit<AddProjectState> {
   Future<void> _startPollingAiProgress(String projectId, String runId, ProjectDetails details, List<SourceItem> sources) async {
     const pollInterval = Duration(seconds: 3);
     
-    while (state is AddProjectCreating && (state as AddProjectCreating).aiJobId == runId) {
+    while (!isClosed && state is AddProjectCreating && (state as AddProjectCreating).aiJobId == runId) {
       await Future.delayed(pollInterval);
       
-      // Stop if state changed while waiting (e.g., user went back)
-      if (state is! AddProjectCreating) return;
+      // Stop if state changed while waiting (e.g., user went back) or cubit closed
+      if (isClosed || state is! AddProjectCreating) return;
       
       final result = await _getAiRunProgressUseCase(projectId, runId);
+      
+      if (isClosed) return;
       
       result.fold(
         (failure) {
@@ -159,7 +161,7 @@ class AddProjectCubit extends Cubit<AddProjectState> {
           ));
         },
         (status) {
-          if (status.status.toUpperCase() == 'COMPLETED') {
+          if (status.status.toUpperCase() == 'COMPLETED' || status.progress >= 100) {
             emit(AddProjectSuccess(
               details: details,
               sources: sources,

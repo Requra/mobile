@@ -14,9 +14,10 @@ import 'package:requra/features/result_view/presentation/cubit/result_view_cubit
 
 class AiResultsHeader extends StatelessWidget {
   final AiResultsDashboard dashboard;
+  final String projectId;
   final String projectName;
 
-  const AiResultsHeader({super.key, required this.dashboard, required this.projectName});
+  const AiResultsHeader({super.key, required this.dashboard, required this.projectId, required this.projectName});
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +135,7 @@ class AiResultsHeader extends StatelessWidget {
                       builder: (_) => BlocProvider.value(
                         value: context.read<ResultViewCubit>(),
                         child: ShareStakeholdersDialog(
-                          projectId: dashboard.projectId,
+                          projectId: projectId,
                           projectName: projectName,
                         ),
                       ),
@@ -165,15 +166,18 @@ class AiResultsHeader extends StatelessWidget {
                 ),
                 SizedBox(width: 12.w),
                 OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
+                  onPressed: () async {
+                    final shouldRefresh = await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => AiAnalysisScreen(
-                          projectId: dashboard.projectId,
+                          projectId: projectId,
                           isRegenerating: true,
                         ),
                       ),
                     );
+                    if (shouldRefresh == true && context.mounted) {
+                      context.read<ResultViewCubit>().fetchResultView(projectId);
+                    }
                   },
                   icon: Icon(
                     Icons.refresh,
@@ -214,7 +218,7 @@ class AiResultsHeader extends StatelessWidget {
                       builder: (_) => BlocProvider.value(
                         value: context.read<ResultViewCubit>(),
                         child: ShareStakeholdersDialog(
-                          projectId: dashboard.projectId,
+                          projectId: projectId,
                           projectName: projectName,
                         ),
                       ),
@@ -232,15 +236,18 @@ class AiResultsHeader extends StatelessWidget {
                 SizedBox(height: 12.h),
 
                 CustomButton(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    final shouldRefresh = await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => AiAnalysisScreen(
-                          projectId: dashboard.projectId,
+                          projectId: projectId,
                           isRegenerating: true,
                         ),
                       ),
                     );
+                    if (shouldRefresh == true && context.mounted) {
+                      context.read<ResultViewCubit>().fetchResultView(projectId);
+                    }
                   },
                   text: 'Regenerate',
                   icon: Icons.refresh,

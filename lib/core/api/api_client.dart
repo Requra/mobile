@@ -14,9 +14,7 @@ class ApiClient {
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       ),
     );
 
@@ -60,16 +58,20 @@ class ApiClient {
                 _handleUnauthorized();
                 break;
               }
-              
+
               final data = e.response?.data;
               if (data is Map<String, dynamic>) {
-                if (data['errors'] != null && 
-                    ((data['errors'] is List && (data['errors'] as List).isNotEmpty) || 
-                     (data['errors'] is Map && (data['errors'] as Map).isNotEmpty))) {
+                if (data['errors'] != null &&
+                    ((data['errors'] is List &&
+                            (data['errors'] as List).isNotEmpty) ||
+                        (data['errors'] is Map &&
+                            (data['errors'] as Map).isNotEmpty))) {
                   message = data['errors'].toString();
-                } else if (data['message'] != null && data['message'].toString().isNotEmpty) {
+                } else if (data['message'] != null &&
+                    data['message'].toString().isNotEmpty) {
                   message = data['message'].toString();
-                } else if (data['title'] != null && data['title'].toString().isNotEmpty) {
+                } else if (data['title'] != null &&
+                    data['title'].toString().isNotEmpty) {
                   message = data['title'].toString();
                 } else {
                   message = 'Server error (${statusCode})';
@@ -104,10 +106,16 @@ class ApiClient {
   void _handleUnauthorized() async {
     final tokenStorage = const SecureTokenStorage();
     await tokenStorage.clearTokens();
-    
+
     if (navigatorKey.currentContext != null) {
-      AppSnackbar.showError(navigatorKey.currentContext!, 'Session expired. Please log in again.');
-      Navigator.of(navigatorKey.currentContext!, rootNavigator: true).pushNamedAndRemoveUntil('/login', (route) => false);
+      AppSnackbar.showError(
+        navigatorKey.currentContext!,
+        'Session expired. Please log in again.',
+      );
+      Navigator.of(
+        navigatorKey.currentContext!,
+        rootNavigator: true,
+      ).pushNamedAndRemoveUntil('/login', (route) => false);
     }
   }
 

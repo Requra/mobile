@@ -75,271 +75,327 @@ class _ShareStakeholdersDialogState extends State<ShareStakeholdersDialog> {
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error)));
+        AppSnackbar.showError(context, error);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      backgroundColor: AppColors.white,
-      insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
-      child: Container(
-        width: 600.w,
-        constraints: BoxConstraints(maxHeight: 800.h),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header Section
-              Padding(
-                padding: EdgeInsets.all(24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+    return ScaffoldMessenger(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          backgroundColor: AppColors.white,
+          insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width - 32.w,
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header Section
+                  Padding(
+                    padding: EdgeInsets.all(24.w),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3E8FF),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Icon(
-                            Icons.people_outline,
-                            color: AppColors.primary,
-                            size: 24.sp,
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 8.w,
-                                runSpacing: 4.h,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(12.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3E8FF),
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Icon(
+                                Icons.people_outline,
+                                color: AppColors.primary,
+                                size: 24.sp,
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Share with stakeholders',
-                                    style: boldStyle(
-                                      fontSize: FontSize.font20,
-                                      color: AppColors.black,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8.w,
-                                      vertical: 4.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFEF3C7),
-                                      borderRadius: BorderRadius.circular(16.r),
-                                      border: Border.all(
-                                        color: const Color(0xFFFDE68A),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.science_outlined,
-                                          size: 12.sp,
-                                          color: const Color(0xFFD97706),
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 8.w,
+                                    runSpacing: 4.h,
+                                    children: [
+                                      Text(
+                                        'Share with stakeholders',
+                                        style: boldStyle(
+                                          fontSize: FontSize.font20,
+                                          color: AppColors.black,
                                         ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          'Simulation',
-                                          style: semiBoldStyle(
-                                            fontSize: FontSize.font10,
-                                            color: const Color(0xFFD97706),
+                                      ),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 8.w,
+                                          vertical: 4.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFEF3C7),
+                                          borderRadius: BorderRadius.circular(
+                                            16.r,
+                                          ),
+                                          border: Border.all(
+                                            color: const Color(0xFFFDE68A),
                                           ),
                                         ),
-                                      ],
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.science_outlined,
+                                              size: 12.sp,
+                                              color: const Color(0xFFD97706),
+                                            ),
+                                            SizedBox(width: 4.w),
+                                            Text(
+                                              'Simulation',
+                                              style: semiBoldStyle(
+                                                fontSize: FontSize.font10,
+                                                color: const Color(0xFFD97706),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    'Invite stakeholders to review the generated results for ${widget.projectName}.',
+                                    style: regularStyle(
+                                      fontSize: FontSize.font14,
+                                      color: AppColors.grey,
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'Invite stakeholders to review the generated results for ${widget.projectName}.',
-                                style: regularStyle(
-                                  fontSize: FontSize.font14,
-                                  color: AppColors.grey,
-                                ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: Icon(
+                                Icons.close,
+                                size: 20.sp,
+                                color: AppColors.grey,
                               ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close,
-                            size: 20.sp,
-                            color: AppColors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 24.h),
-
-                    // Form Section
-                    _buildFormSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            'Close',
-                            style: semiBoldStyle(
-                              fontSize: FontSize.font14,
-                              color: AppColors.black,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        ElevatedButton.icon(
-                          onPressed: _isSending ? null : _handleSendInvitation,
-                          icon: _isSending
-                              ? SizedBox(
-                                  width: 16.w,
-                                  height: 16.w,
-                                  child: const CircularProgressIndicator(
-                                    color: AppColors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.send_outlined,
-                                  size: 16.sp,
-                                  color: AppColors.white,
-                                ),
-                          label: Text(
-                            'Send invitation',
-                            style: semiBoldStyle(
-                              fontSize: FontSize.font14,
-                              color: AppColors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                            ),
-                            minimumSize: Size(0, 40.h),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const Divider(height: 1),
-
-              // Existing Invitations Section
-              Container(
-                color: const Color(0xFFF9FAFB),
-                padding: EdgeInsets.all(24.w),
-                child: BlocBuilder<ResultViewCubit, ResultViewState>(
-                  builder: (context, state) {
-                    if (state is! ResultViewLoaded) {
-                      return const SizedBox.shrink();
-                    }
-
-                    if (state.invitationsLoading &&
-                        state.reviewInvitations == null) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
-                      );
-                    }
-
-                    final response = state.reviewInvitations;
-                    if (response == null || response.items.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No existing invitations',
-                          style: regularStyle(
-                            fontSize: FontSize.font14,
-                            color: AppColors.grey,
-                          ),
-                        ),
-                      );
-                    }
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Existing invitations',
-                                  style: boldStyle(
-                                    fontSize: FontSize.font16,
-                                    color: AppColors.black,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  'Manage who has access to this review.',
-                                  style: regularStyle(
-                                    fontSize: FontSize.font12,
-                                    color: AppColors.grey,
-                                  ),
-                                ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  '${response.pendingCount} PENDING · ${response.acceptedCount} ACCEPTED',
-                                  style: semiBoldStyle(
-                                    fontSize: FontSize.font12,
-                                    color: AppColors.grey,
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
-                        SizedBox(height: 16.h),
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: response.items.length,
-                          separatorBuilder: (context, index) =>
-                              SizedBox(height: 12.h),
-                          itemBuilder: (context, index) {
-                            return _buildInvitationCard(
-                              response.items[index],
-                              context,
-                            );
-                          },
+
+                        SizedBox(height: 24.h),
+
+                        // Form Section
+                        _buildFormSection(),
+
+                        SizedBox(height: 24.h),
+
+                        // Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Close',
+                                style: semiBoldStyle(
+                                  fontSize: FontSize.font14,
+                                  color: AppColors.black,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            ElevatedButton.icon(
+                              onPressed: _isSending
+                                  ? null
+                                  : _handleSendInvitation,
+                              icon: _isSending
+                                  ? SizedBox(
+                                      width: 16.w,
+                                      height: 16.w,
+                                      child: const CircularProgressIndicator(
+                                        color: AppColors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.send_outlined,
+                                      size: 16.sp,
+                                      color: AppColors.white,
+                                    ),
+                              label: Text(
+                                'Send invitation',
+                                style: semiBoldStyle(
+                                  fontSize: FontSize.font14,
+                                  color: AppColors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                minimumSize: Size(0, 40.h),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
-                    );
-                  },
-                ),
+                    ),
+                  ),
+
+                  const Divider(height: 1),
+
+                  // Existing Invitations Section
+                  Container(
+                    color: const Color(0xFFF9FAFB),
+                    padding: EdgeInsets.all(24.w),
+                    child: BlocBuilder<ResultViewCubit, ResultViewState>(
+                      builder: (context, state) {
+                        if (state is! ResultViewLoaded) {
+                          return const SizedBox.shrink();
+                        }
+
+                        if (state.invitationsLoading &&
+                            state.reviewInvitations == null) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                            ),
+                          );
+                        }
+
+                        final response = state.reviewInvitations;
+                        if (response == null || response.items.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No existing invitations',
+                              style: regularStyle(
+                                fontSize: FontSize.font14,
+                                color: AppColors.grey,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Existing invitations',
+                                      style: boldStyle(
+                                        fontSize: FontSize.font16,
+                                        color: AppColors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      'Manage who has access to this review.',
+                                      style: regularStyle(
+                                        fontSize: FontSize.font12,
+                                        color: AppColors.grey,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10.w,
+                                            vertical: 4.h,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFEF3C7),
+                                            borderRadius: BorderRadius.circular(
+                                              16.r,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0xFFFDE68A),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '${response.pendingCount} PENDING',
+                                            style: semiBoldStyle(
+                                              fontSize: FontSize.font11,
+                                              color: const Color(0xFFD97706),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 6.h),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10.w,
+                                            vertical: 4.h,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                AppColors.statusFinishedLight,
+                                            borderRadius: BorderRadius.circular(
+                                              16.r,
+                                            ),
+                                            border: Border.all(
+                                              color: AppColors.statusFinished
+                                                  .withOpacity(0.3),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '${response.acceptedCount} ACCEPTED',
+                                            style: semiBoldStyle(
+                                              fontSize: FontSize.font11,
+                                              color: AppColors.statusFinished,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16.h),
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: response.items.length,
+                              separatorBuilder: (context, index) =>
+                                  SizedBox(height: 12.h),
+                              itemBuilder: (context, index) {
+                                return _buildInvitationCard(
+                                  response.items[index],
+                                  context,
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -709,9 +765,11 @@ class _ShareStakeholdersDialogState extends State<ShareStakeholdersDialog> {
                           invitationId: item.id,
                         );
                     if (mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        SnackBar(content: Text(error ?? 'Invitation resent')),
-                      );
+                      if (error != null) {
+                        AppSnackbar.showError(ctx, error);
+                      } else {
+                        AppSnackbar.showSuccess(ctx, 'Invitation resent');
+                      }
                     }
                   },
                   icon: Icon(
@@ -736,9 +794,7 @@ class _ShareStakeholdersDialogState extends State<ShareStakeholdersDialog> {
                         invitationId: item.id,
                       );
                   if (mounted && error != null) {
-                    ScaffoldMessenger.of(
-                      ctx,
-                    ).showSnackBar(SnackBar(content: Text(error)));
+                    AppSnackbar.showError(ctx, error);
                   }
                 },
                 icon: Icon(
@@ -761,54 +817,65 @@ class _ShareStakeholdersDialogState extends State<ShareStakeholdersDialog> {
           if (item.reviewUrl != null) ...[
             SizedBox(height: 8.h),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
                 color: const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.link, size: 16.sp, color: AppColors.grey),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      item.reviewUrl!,
-                      style: regularStyle(
-                        fontSize: FontSize.font12,
-                        color: AppColors.grey,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: item.reviewUrl!));
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(
-                          content: Text('Link copied to clipboard'),
+                  Row(
+                    children: [
+                      Icon(Icons.link, size: 16.sp, color: AppColors.grey),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          item.reviewUrl!,
+                          style: regularStyle(
+                            fontSize: FontSize.font12,
+                            color: AppColors.grey,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      );
-                    },
-                    icon: Icon(Icons.copy, size: 14.sp, color: AppColors.white),
-                    label: Text(
-                      'Copy link',
-                      style: semiBoldStyle(
-                        fontSize: FontSize.font12,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: item.reviewUrl!));
+                        AppSnackbar.showSuccess(
+                          ctx,
+                          'Link copied to clipboard',
+                        );
+                      },
+                      icon: Icon(
+                        Icons.copy,
+                        size: 14.sp,
                         color: AppColors.white,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
+                      label: Text(
+                        'Copy link',
+                        style: semiBoldStyle(
+                          fontSize: FontSize.font12,
+                          color: AppColors.white,
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6.r),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 8.h,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
                       ),
-                      minimumSize: Size.zero,
                     ),
                   ),
                 ],

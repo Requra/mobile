@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:requra/core/di/di_project.dart';
+import 'package:requra/features/Dashboard/presentation/cubit/dashboard_cubit.dart';
 
 import 'package:requra/screens/Home/add_project_screen.dart';
 import 'package:requra/features/Dashboard/presentation/pages/dashboard_screen.dart';
@@ -26,7 +29,10 @@ class _MainNavigationState extends State<MainNavigation> {
 
   List<Widget> _buildScreens() {
     return [
-      const DashboardScreen(),
+      BlocProvider(
+        create: (_) => sl<DashboardCubit>()..loadDashboard(),
+        child: const DashboardScreen(),
+      ),
       ProjectViewScreen(
         onAddProject: () {
           _controller.jumpToTab(2);

@@ -463,27 +463,22 @@ class _RequirementDetailScreenState extends State<RequirementDetailScreen> {
                   color: AppColors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       offset: const Offset(0, -4),
-                      blurRadius: 10,
+                      blurRadius: 16,
                     ),
                   ],
                 ),
                 child: SizedBox(
                   width: double.infinity,
                   child: _isApproving
-                      ? Center(
-                          child: SizedBox(
-                            height: 24.h,
-                            width: 24.h,
-                            child: const CircularProgressIndicator(
-                                color: AppColors.primary),
-                          ),
-                        )
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                       : CustomButton(
-                          text: 'Approve',
-                          icon: Icons.check,
-                          onTap: () => _approveRequirement(req),
+                          text: req.workflowStatus == 'APPROVED' ? 'Approved' : 'Approve',
+                          icon: Icons.check_circle_outline,
+                          color1: req.workflowStatus == 'APPROVED' ? AppColors.statusFinished : AppColors.primary,
+                          color2: req.workflowStatus == 'APPROVED' ? AppColors.statusFinished : AppColors.primary,
+                          onTap: req.workflowStatus == 'APPROVED' ? null : () => _approveRequirement(req),
                         ),
                 ),
               ),

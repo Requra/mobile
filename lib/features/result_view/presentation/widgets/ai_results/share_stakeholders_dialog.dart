@@ -240,8 +240,8 @@ class _ShareStakeholdersDialogState extends State<ShareStakeholdersDialog> {
                             ),
                             padding: EdgeInsets.symmetric(
                               horizontal: 16.w,
-                              vertical: 12.h,
                             ),
+                            minimumSize: Size(0, 40.h),
                           ),
                         ),
                       ],

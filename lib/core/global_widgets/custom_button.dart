@@ -19,6 +19,8 @@ class CustomButton extends StatelessWidget {
     this.color1 = AppColors.lightPrimary,
     this.color2 = AppColors.primary,
     this.raduis = 8.0,
+    this.height,
+    this.fontSize,
   });
 
   final String text;
@@ -32,6 +34,8 @@ class CustomButton extends StatelessWidget {
   final Color iconColor;
   final IconData? icon;
   final double raduis;
+  final double? height;
+  final double? fontSize;
 
 
   @override
@@ -53,13 +57,14 @@ class CustomButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(raduis.r),
           onTap: onTap,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 12.h),
+          child: Container(
+            height: height ?? 48.h,
+            alignment: Alignment.center,
             child: icon == null ? Text(
               text,
               textAlign: TextAlign.center,
-              style: isRegularStyle ? regularStyle(fontSize: FontSize.font14, color: transparent ? AppColors.black : textColor) :
-              boldStyle(fontSize: FontSize.font14, color: transparent ? AppColors.black :textColor)
+              style: isRegularStyle ? regularStyle(fontSize: fontSize ?? FontSize.font14, color: transparent ? AppColors.black : textColor) :
+              boldStyle(fontSize: fontSize ?? FontSize.font14, color: transparent ? AppColors.black :textColor)
             ) :
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -69,8 +74,8 @@ class CustomButton extends StatelessWidget {
                 Text(
                     text,
                     textAlign: TextAlign.center,
-                    style: isRegularStyle ? regularStyle(fontSize: FontSize.font14, color: transparent ? AppColors.black : textColor) :
-                    boldStyle(fontSize: FontSize.font14, color: transparent ? AppColors.black : textColor)
+                    style: isRegularStyle ? regularStyle(fontSize: fontSize ?? FontSize.font14, color: transparent ? AppColors.black : textColor) :
+                    boldStyle(fontSize: fontSize ?? FontSize.font14, color: transparent ? AppColors.black : textColor)
                 )
               ],
             ),

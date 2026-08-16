@@ -50,7 +50,10 @@ class AiResultsHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12.w,
+                      runSpacing: 4.h,
                       children: [
                         Text(
                           'AI Results',
@@ -59,7 +62,6 @@ class AiResultsHeader extends StatelessWidget {
                             color: AppColors.black,
                           ),
                         ),
-                        SizedBox(width: 12.w),
                         Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 8.w,

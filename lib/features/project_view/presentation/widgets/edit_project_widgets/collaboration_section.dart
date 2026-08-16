@@ -100,6 +100,7 @@ class CollaborationSection extends StatelessWidget {
             runSpacing: 8.h,
             children: teamMembers.map((email) {
               return Container(
+                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 80.w),
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
@@ -117,11 +118,14 @@ class CollaborationSection extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 8.w),
-                    Text(
-                      email,
-                      style: regularStyle(
-                        fontSize: FontSize.font12,
-                        color: AppColors.white,
+                    Flexible(
+                      child: Text(
+                        email,
+                        style: regularStyle(
+                          fontSize: FontSize.font12,
+                          color: AppColors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     SizedBox(width: 6.w),

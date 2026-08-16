@@ -23,6 +23,10 @@ class MeetingActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = meeting.status.toUpperCase();
+    if (s == 'CANCELLED') {
+      return const SizedBox.shrink();
+    }
+    
     final buttons = <Widget>[];
 
     void joinMeeting() {
@@ -162,7 +166,7 @@ class MeetingActionButtons extends StatelessWidget {
 
     if (s == 'LIVE') {
       buttons.add(_ActionButton(
-        emoji: '📹', 
+        icon: Icons.videocam_outlined, 
         label: 'Join Now', 
         style: MeetingActionStyle.purple,
         onTap: joinMeeting,
@@ -170,7 +174,7 @@ class MeetingActionButtons extends StatelessWidget {
     }
 
     buttons.add(_ActionButton(
-      emoji: '👤', 
+      icon: Icons.person_add_alt, 
       label: 'Invite', 
       style: MeetingActionStyle.outline,
       onTap: () {
@@ -186,41 +190,36 @@ class MeetingActionButtons extends StatelessWidget {
     if (s == 'SCHEDULED') {
       buttons.addAll([
         _ActionButton(
-          emoji: '✏️', 
+          icon: Icons.edit_outlined, 
           label: 'Edit Details', 
           style: MeetingActionStyle.outline,
           onTap: editDetails,
         ),
         _ActionButton(
-          emoji: '▶', 
+          icon: Icons.play_arrow_outlined, 
           label: 'Start Meeting', 
           style: MeetingActionStyle.primary,
           onTap: startAndJoinMeeting,
         ),
         _ActionButton(
-          emoji: '⊗', 
+          icon: Icons.cancel_outlined, 
           label: 'Cancel Meeting', 
           style: MeetingActionStyle.danger,
           onTap: cancelMeeting,
         ),
       ]);
     } else if (s == 'CANCELLED') {
-      buttons.add(_ActionButton(
-        emoji: '▶', 
-        label: 'Start Meeting', 
-        style: MeetingActionStyle.primary,
-        onTap: startAndJoinMeeting,
-      ));
+      // Handled above
     } else if (s == 'LIVE') {
       buttons.addAll([
         _ActionButton(
-          emoji: '■', 
+          icon: Icons.stop_outlined, 
           label: 'End Meeting', 
           style: MeetingActionStyle.dangerSolid,
           onTap: endMeeting,
         ),
         _ActionButton(
-          emoji: '⊗', 
+          icon: Icons.cancel_outlined, 
           label: 'Cancel Meeting', 
           style: MeetingActionStyle.danger,
           onTap: cancelMeeting,
@@ -243,13 +242,13 @@ class MeetingActionButtons extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────────
 
 class _ActionButton extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final String label;
   final MeetingActionStyle style;
   final VoidCallback onTap;
 
   const _ActionButton({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.style,
     required this.onTap,
@@ -271,7 +270,7 @@ class _ActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: TextStyle(fontSize: 14.sp)),
+            Icon(icon, size: 16.sp, color: fg),
             SizedBox(width: 6.w),
             Text(
               label,

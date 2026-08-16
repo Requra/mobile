@@ -13,6 +13,7 @@ import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/password_rules_checklist.dart';
 import '../../widgets/social_auth_buttons_row.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -147,9 +148,7 @@ class _SignupScreenState extends State<SignupScreen> {
             (Route<dynamic> route) => false,
           );
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          AppSnackbar.showError(context, state.message);
         }
         // AuthUnauthenticated means Google sign-in was cancelled — no action.
       },
@@ -158,11 +157,12 @@ class _SignupScreenState extends State<SignupScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const AuthHeader(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const AuthHeader(
                   title: 'Create your Requra.ai account',
                   subtitle:
                       'Start generating requirements from meetings and documents using AI.',
@@ -315,6 +315,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ],
             ),
+          ),
           ),
         );
       },

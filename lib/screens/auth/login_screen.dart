@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         } else if (state is AuthError) {
-          AppSnackbar.showSuccess(context, state.message);
+          AppSnackbar.showError(context, state.message);
         }
         // AuthUnauthenticated on this screen means Google sign-in was
         // cancelled — simply dismiss the loader, nothing else needed.
@@ -113,9 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const AuthHeader(
                   title: 'Welcome Back to Requra.ai',
@@ -229,6 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
+          ),
           ),
         );
       },

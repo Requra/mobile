@@ -37,6 +37,7 @@ class AiResultsMetricCard extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: EdgeInsets.all(8.w),
@@ -50,11 +51,15 @@ class AiResultsMetricCard extends StatelessWidget {
                   size: 20.sp,
                 ),
               ),
-              Text(
-                value,
-                style: boldStyle(
-                  fontSize: FontSize.font24,
-                  color: AppColors.black,
+              SizedBox(width: 8.w),
+              Flexible(
+                child: Text(
+                  value,
+                  style: boldStyle(
+                    fontSize: FontSize.font16,
+                    color: AppColors.black,
+                  ),
+                  textAlign: TextAlign.right,
                 ),
               ),
             ],
@@ -74,7 +79,7 @@ class AiResultsMetricCard extends StatelessWidget {
               fontSize: FontSize.font11,
               color: AppColors.grey,
             ),
-            maxLines: 1,
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
         ],

@@ -17,6 +17,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_state.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import 'package:requra/core/di/di_project.dart';
+import 'package:requra/features/meeting/presentation/cubit/meeting_invite_cubit.dart';
 
 /// Displays meeting details with a layout that varies by [Meeting.status].
 ///
@@ -98,8 +100,11 @@ class _MeetingDetailsScreenState extends State<MeetingDetailsScreen> {
                 SizedBox(height: 14.h),
                 const MeetingLiveRoomCard(),
                 SizedBox(height: 14.h),
-                MeetingParticipantsCard(
-                  participantsCount: currentMeeting.participantsCount,
+                BlocProvider(
+                  create: (context) => sl<MeetingInviteCubit>()..loadInvitations(currentMeeting.id),
+                  child: MeetingParticipantsCard(
+                    meeting: currentMeeting,
+                  ),
                 ),
                 if (isEnded) ...[
                   SizedBox(height: 14.h),

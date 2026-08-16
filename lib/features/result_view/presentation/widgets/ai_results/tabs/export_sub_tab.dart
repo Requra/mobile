@@ -353,24 +353,26 @@ class _ExportSubTabState extends State<ExportSubTab> {
               Icon(Icons.file_copy_outlined,
                   size: 20.sp, color: AppColors.grey),
               SizedBox(width: 8.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Download from this run',
-                    style: boldStyle(
-                      fontSize: FontSize.font16,
-                      color: AppColors.black,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Download from this run',
+                      style: boldStyle(
+                        fontSize: FontSize.font16,
+                        color: AppColors.black,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Generated in your browser — no server needed',
-                    style: regularStyle(
-                      fontSize: FontSize.font12,
-                      color: AppColors.grey,
+                    Text(
+                      'Generated in your browser — no server needed',
+                      style: regularStyle(
+                        fontSize: FontSize.font12,
+                        color: AppColors.grey,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -439,11 +441,11 @@ class _ExportSubTabState extends State<ExportSubTab> {
           ),
           OutlinedButton.icon(
             onPressed: onTap,
-            icon: Icon(Icons.download, size: 16.sp, color: AppColors.primary),
+            icon: Icon(Icons.download, size: 14.sp, color: AppColors.primary),
             label: Text(
               'Download',
               style: semiBoldStyle(
-                fontSize: FontSize.font12,
+                fontSize: FontSize.font11,
                 color: AppColors.primary,
               ),
             ),
@@ -453,7 +455,7 @@ class _ExportSubTabState extends State<ExportSubTab> {
                 borderRadius: BorderRadius.circular(8.r),
               ),
               padding:
-                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
             ),
           ),
         ],
@@ -479,24 +481,26 @@ class _ExportSubTabState extends State<ExportSubTab> {
               Icon(Icons.cloud_download_outlined,
                   size: 20.sp, color: AppColors.grey),
               SizedBox(width: 8.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Generate Export',
-                    style: boldStyle(
-                      fontSize: FontSize.font16,
-                      color: AppColors.black,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Generate Export',
+                      style: boldStyle(
+                        fontSize: FontSize.font16,
+                        color: AppColors.black,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Download on demand via backend',
-                    style: regularStyle(
-                      fontSize: FontSize.font12,
-                      color: AppColors.grey,
+                    Text(
+                      'Download on demand via backend',
+                      style: regularStyle(
+                        fontSize: FontSize.font12,
+                        color: AppColors.grey,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -555,17 +559,17 @@ class _ExportSubTabState extends State<ExportSubTab> {
   Widget _buildExportButton(IconData icon, String label, VoidCallback onTap) {
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: Icon(icon, size: 18.sp, color: AppColors.black),
+      icon: Icon(icon, size: 16.sp, color: AppColors.black),
       label: Text(
         label,
-        style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.black),
+        style: semiBoldStyle(fontSize: FontSize.font12, color: AppColors.black),
       ),
       style: OutlinedButton.styleFrom(
         side: BorderSide(color: const Color(0xFFE5E7EB)),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.r),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       ),
     );
   }

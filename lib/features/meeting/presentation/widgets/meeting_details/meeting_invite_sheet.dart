@@ -7,9 +7,11 @@ import 'package:requra/core/global_widgets/custom_button.dart';
 import 'package:requra/core/global_widgets/custom_text_field.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_invite_cubit.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_invite_state.dart';
 import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_details_colors.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class MeetingInviteSheet extends StatelessWidget {
   final String meetingId;
@@ -140,17 +142,32 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
 
   void _showSnack(String message, {bool isError = false}) {
     if (!mounted) return;
-    _scaffoldMessengerKey.currentState?.showSnackBar(
+    final messenger = _scaffoldMessengerKey.currentState;
+    messenger?.clearSnackBars();
+    messenger?.showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor:
-            isError ? MeetingDetailsColors.red : MeetingDetailsColors.green,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(
-          bottom: 20.h,
-          left: 20.w,
-          right: 20.w,
+        content: Row(
+          children: [
+            Icon(isError ? Icons.error_outline : Icons.check_circle_outline, color: Colors.white, size: 20.sp),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                message,
+                style: semiBoldStyle(
+                  fontSize: FontSize.font14,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
         ),
+        backgroundColor: isError ? AppColors.error : AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        margin: EdgeInsets.only(bottom: 20.h, left: 16.w, right: 16.w),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -523,6 +540,8 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
                             SizedBox(
                               width: 110.w,
                               child: CustomButton(
+                                height: 36.h,
+                                fontSize: FontSize.font11,
                                 text: (_submittingMemberId == member.id && state.isSubmitting)
                                     ? 'SENDING...'
                                     : 'SEND INVITE',
@@ -583,6 +602,7 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
           ),
           SizedBox(height: 24.h),
           CustomButton(
+            height: 40.h,
             text: (_submittingGuest && state.isSubmitting) ? 'Sending...' : 'Send Invite',
             color1: MeetingDetailsColors.purple,
             color2: MeetingDetailsColors.purple,

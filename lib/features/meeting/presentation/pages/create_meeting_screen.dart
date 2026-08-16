@@ -158,7 +158,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         leading: const BackButton(color: AppColors.black),
         title: Text(
           _isEditMode ? 'Edit Sync Session' : 'Create Sync Session',
-          style: boldStyle(fontSize: FontSize.font24, color: AppColors.black),
+          style: boldStyle(fontSize: FontSize.font18, color: AppColors.black),
         ),
         centerTitle: true,
       ),

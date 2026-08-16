@@ -34,6 +34,7 @@ class _ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<_ProfileView> {
   final TextEditingController _nameController = TextEditingController();
   final ProfileScreenService _profileService = ProfileScreenService();
+  ProfileLoaded? _lastLoadedState;
 
   @override
   void dispose() {
@@ -42,8 +43,9 @@ class _ProfileViewState extends State<_ProfileView> {
   }
 
   void _syncControllerWithState(ProfileState state) {
-    if (state is ProfileLoaded && !state.isEditing) {
-      if (_nameController.text != state.profile.name) {
+    if (state is ProfileLoaded) {
+      _lastLoadedState = state;
+      if (!state.isEditing && _nameController.text != state.profile.name) {
         _nameController.text = state.profile.name;
       }
     }
@@ -84,13 +86,12 @@ class _ProfileViewState extends State<_ProfileView> {
         }
       },
       builder: (context, state) {
+        if (state is ProfileLoaded) {
+          _lastLoadedState = state;
+        }
         final bool isLoading =
             state is ProfileLoading || state is ProfileInitial;
-        ProfileLoaded? loadedState;
-
-        if (state is ProfileLoaded) {
-          loadedState = state;
-        }
+        final loadedState = _lastLoadedState;
 
         return Scaffold(
           backgroundColor: AppColors.backgroundHomeScreen,

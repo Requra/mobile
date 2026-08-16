@@ -8,6 +8,7 @@ import 'package:requra/features/project_view/domain/entities/project.dart';
 import 'package:requra/features/project_view/presentation/helpers/project_helpers.dart';
 import 'package:requra/routes/app_routes.dart';
 import 'package:requra/core/global_widgets/custom_button.dart';
+import 'package:requra/core/global_widgets/app_popup_menu.dart';
 
 class ProjectCard extends StatelessWidget {
   final Project project;
@@ -188,21 +189,23 @@ class ProjectCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(
-                  Icons.file_download_outlined,
-                  size: 20.sp,
-                  color: AppColors.lightgrey,
-                ),
-                SizedBox(width: 2.w),
-                IconButton(
-                  onPressed: () {
-                    _showDeleteDialog(context);
-                  },
-                  icon: Icon(
-                    Icons.delete_forever_outlined,
-                    size: 20.sp,
-                    color: AppColors.lightgrey,
-                  ),
+                AppPopupMenu(
+                  triggerColor: AppColors.lightgrey,
+                  items: [
+                    PopupMenuItemData(
+                      title: 'Download',
+                      icon: Icons.file_download_outlined,
+                      onTap: () {
+                        // Implement download logic here
+                      },
+                    ),
+                    PopupMenuItemData(
+                      title: 'Delete',
+                      icon: Icons.delete_outline,
+                      color: AppColors.error,
+                      onTap: () => _showDeleteDialog(context),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -5,6 +5,7 @@ import 'package:requra/core/global_widgets/custom_text_form_field.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class RejectItemDialog extends StatefulWidget {
   final String title;
@@ -46,9 +47,7 @@ class _RejectItemDialogState extends State<RejectItemDialog> {
 
   Future<void> _handleReject() async {
     if (_reasonController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.label.replaceAll(' *', '')} is required.')),
-      );
+      AppSnackbar.showError(context, '${widget.label.replaceAll(' *', '')} is required');
       return;
     }
 
@@ -64,13 +63,9 @@ class _RejectItemDialogState extends State<RejectItemDialog> {
       });
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
-        );
+        AppSnackbar.showError(context, 'Error: $error');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.successMessage)),
-        );
+        AppSnackbar.showSuccess(context, widget.successMessage);
         Navigator.of(context).pop();
       }
     }

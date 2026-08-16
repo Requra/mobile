@@ -14,10 +14,14 @@ class AppColors {
   static const grey = Color(0xFF51525C);
   static const darkgrey = Color(0xFF323232);
   static const black = Color(0xFF000000);
-  static const statusInProgressLight = Color(0xFFDBEAFE);
-  static const statusInProgress = Color(0xFF1890FF);
-  static const statusFinishedLight = Color(0xFF6AA93D);
-  static const statusFinished = Color(0xFF45940C);
+  static const statusInProgressLight = Color(0xFFE0E7FF);
+  static const statusInProgress = Color(0xFF6366F1);
+  static const statusFinishedLight = Color(0xFFD1FAE5);
+  static const statusFinished = Color(0xFF059669);
+  static const statusDraftedLight = Color(0xFFFEF3C7);
+  static const statusDrafted = Color(0xFFD97706);
+  static const statusCancelledLight = Color(0xFFFEE2E2);
+  static const statusCancelled = Color(0xFFDC2626);
   static const error = Color(0xFFDC2626);
   // ignore: constant_identifier_names
   static const IndicatorBG = Color(0xFFC9C9CC);

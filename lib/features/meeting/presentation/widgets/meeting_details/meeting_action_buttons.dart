@@ -8,6 +8,7 @@ import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/pages/pre_join_meeting_screen.dart';
 import 'package:requra/features/meeting/presentation/pages/create_meeting_screen.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 /// The style of an action button.
 enum MeetingActionStyle { primary, danger, dangerSolid, purple, outline }
@@ -45,9 +46,7 @@ class MeetingActionButtons extends StatelessWidget {
       if (!context.mounted) return;
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        AppSnackbar.showError(context, error);
         return;
       }
 
@@ -107,14 +106,10 @@ class MeetingActionButtons extends StatelessWidget {
 
                 if (context.mounted) {
                   if (error == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Meeting cancelled successfully')),
-                    );
+                    AppSnackbar.showSuccess(context, 'Meeting cancelled successfully');
                     Navigator.of(context).pop();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(error)),
-                    );
+                    AppSnackbar.showError(context, error);
                   }
                 }
               },
@@ -150,14 +145,10 @@ class MeetingActionButtons extends StatelessWidget {
 
                 if (context.mounted) {
                   if (error == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Meeting ended successfully')),
-                    );
+                    AppSnackbar.showSuccess(context, 'Meeting ended successfully');
                     Navigator.of(context).pop();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(error)),
-                    );
+                    AppSnackbar.showError(context, error);
                   }
                 }
               },

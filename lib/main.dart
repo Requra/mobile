@@ -8,6 +8,7 @@ import 'package:requra/features/auth/presentation/cubit/forgot_password_cubit.da
 import 'package:requra/features/project_view/presentation/cubit/project_cubit.dart';
 import 'package:requra/core/di/di_project.dart';
 import 'package:requra/routes/app_routes.dart';
+import 'package:requra/core/navigation/navigator_key.dart';
 
 void main() {
   initProjectDI();
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey,
             theme: ThemeData(
               scaffoldBackgroundColor: Colors.white,
               useMaterial3: true,

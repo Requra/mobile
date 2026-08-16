@@ -6,6 +6,7 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:http/http.dart' as http;
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class ProjectCard extends StatefulWidget {
   final String id;
@@ -110,19 +111,7 @@ class _ProjectCardState extends State<ProjectCard> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Project deleted successfully',
-              style: semiBoldStyle(
-                  fontSize: FontSize.font14, color: AppColors.white),
-            ),
-            backgroundColor: AppColors.statusFinished,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r)),
-          ),
-        );
+        AppSnackbar.showSuccess(context, 'Project deleted successfully');
         widget.onDeleted?.call();
       } else {
         _showErrorSnack('Failed to delete. Please try again.');
@@ -135,17 +124,7 @@ class _ProjectCardState extends State<ProjectCard> {
   }
 
   void _showErrorSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg,
-            style: semiBoldStyle(
-                fontSize: FontSize.font14, color: AppColors.white)),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-      ),
-    );
+    AppSnackbar.showError(context, msg);
   }
 
   // ── Delete Confirmation Dialog ────────────────────────────────────────────

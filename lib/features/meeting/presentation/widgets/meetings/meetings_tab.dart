@@ -20,7 +20,8 @@ class MeetingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       children: [
         /// Header card
         Container(
@@ -79,19 +80,18 @@ class MeetingsTab extends StatelessWidget {
         SizedBox(height: 12.h),
 
         /// Meetings list or empty state
-        Expanded(
-          child: meetings.isEmpty
-              ? const MeetingsEmptyState()
-              : ListView.separated(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 16.w, vertical: 4.h),
-                  itemCount: meetings.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                  itemBuilder: (context, index) {
-                    return MeetingCard(meeting: meetings[index]);
-                  },
-                ),
-        ),
+        if (meetings.isEmpty)
+          const MeetingsEmptyState()
+        else
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+            child: Column(
+              children: meetings.map((meeting) => Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: MeetingCard(meeting: meeting),
+              )).toList(),
+            ),
+          ),
       ],
     );
   }

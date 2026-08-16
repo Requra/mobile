@@ -20,6 +20,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/routes/app_routes.dart';
 import 'package:requra/features/meeting/data/services/agora_service.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 /// The live meeting screen shown when a meeting has status LIVE or RECORDING.
 ///
@@ -726,13 +727,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
 
   void _showToast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.meetingCard,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppSnackbar.showSuccess(context, message);
   }
 
   void _navigateAway() {

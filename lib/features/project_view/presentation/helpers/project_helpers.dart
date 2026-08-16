@@ -37,16 +37,16 @@ String projectStatusBadge(String status) {
 Color statusBadgeBg(String badge) {
   if (badge == 'IN PROGRESS') return AppColors.statusInProgressLight;
   if (badge == 'FINISHED') return AppColors.statusFinishedLight;
-  if (badge == 'CANCELLED') return Colors.red.shade100;
-  return AppColors.grey;
+  if (badge == 'CANCELLED') return AppColors.statusCancelledLight;
+  return AppColors.statusDraftedLight;
 }
 
 /// Returns the text/icon color for a project status badge.
 Color statusBadgeColor(String badge) {
   if (badge == 'IN PROGRESS') return AppColors.statusInProgress;
   if (badge == 'FINISHED') return AppColors.statusFinished;
-  if (badge == 'CANCELLED') return Colors.red.shade700;
-  return AppColors.lightgrey;
+  if (badge == 'CANCELLED') return AppColors.statusCancelled;
+  return AppColors.statusDrafted;
 }
 
 

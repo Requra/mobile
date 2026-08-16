@@ -29,6 +29,11 @@ class ProfileCubit extends Cubit<ProfileState> {
         _logoutUseCase = logoutUseCase,
         super(const ProfileInitial());
 
+  Future<void> loadProfileIfNeeded() async {
+    if (state is ProfileLoaded) return;
+    await loadProfile();
+  }
+
   Future<void> loadProfile() async {
     emit(const ProfileLoading());
     final result = await _getProfileUseCase();

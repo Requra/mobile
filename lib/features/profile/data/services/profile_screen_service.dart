@@ -9,6 +9,7 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:requra/features/profile/presentation/widgets/language_option.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class ProfileScreenService {
   static const int _maxAvatarBytes = 5 * 1024 * 1024;
@@ -31,9 +32,7 @@ class ProfileScreenService {
 
     if (sizeBytes > _maxAvatarBytes) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File size must be less than 5MB.')),
-      );
+      AppSnackbar.showSuccess(context, 'File size must be less than 5MB.');
       return;
     }
 

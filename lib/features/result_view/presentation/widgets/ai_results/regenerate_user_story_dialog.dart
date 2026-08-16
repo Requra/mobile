@@ -8,6 +8,7 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class RegenerateUserStoryDialog extends StatefulWidget {
   final AiUserStory userStory;
@@ -41,9 +42,7 @@ class _RegenerateUserStoryDialogState extends State<RegenerateUserStoryDialog> {
 
   Future<void> _regenerate() async {
     if (_instructionsController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Regeneration instructions are required.')),
-      );
+      AppSnackbar.showError(context, 'Regeneration instructions are required.');
       return;
     }
 
@@ -65,13 +64,9 @@ class _RegenerateUserStoryDialogState extends State<RegenerateUserStoryDialog> {
       });
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error regenerating user story: $error')),
-        );
+        AppSnackbar.showError(context, 'Error regenerating user story: $error');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User story regenerated successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'User story regenerated successfully');
         Navigator.of(context).pop();
       }
     }

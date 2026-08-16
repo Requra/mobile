@@ -10,6 +10,7 @@ import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/password_rules_checklist.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   const CreateNewPasswordScreen({super.key});
@@ -99,9 +100,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             ),
           );
         } else if (state is ForgotPasswordError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppSnackbar.showSuccess(context, state.message);
         }
       },
       builder: (BuildContext context, ForgotPasswordState state) {

@@ -12,6 +12,7 @@ import 'package:requra/features/result_view/presentation/widgets/ai_results/edit
 import 'package:requra/features/result_view/presentation/widgets/ai_results/reject_requirement_dialog.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/approve_circle_button.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/review_action_popup_menu.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class RequirementsSubTab extends StatelessWidget {
   final AiResultsDashboard dashboard;
@@ -21,6 +22,7 @@ class RequirementsSubTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,13 +138,9 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
       });
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error approving requirement: $error')),
-        );
+        AppSnackbar.showError(context, 'Error approving requirement: $error');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Requirement approved successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'Requirement approved successfully');
       }
     }
   }

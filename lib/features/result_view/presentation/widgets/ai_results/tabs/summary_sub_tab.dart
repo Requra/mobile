@@ -18,6 +18,7 @@ class SummarySubTab extends StatelessWidget {
     final bool isMobile = MediaQuery.of(context).size.width <= 800;
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.all(24.w),
       child: isMobile
           ? Column(

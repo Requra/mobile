@@ -37,6 +37,15 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
     context.read<MeetingCubit>().fetchProjectMeetings(widget.project.id);
   }
 
+  Future<void> _onRefresh() async {
+    context.read<ResultViewCubit>().fetchResultView(
+          widget.project.id,
+          totalRequirements: widget.project.totalRequirements,
+        );
+    context.read<MeetingCubit>().fetchProjectMeetings(widget.project.id);
+    await Future.delayed(const Duration(seconds: 1));
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -44,13 +53,27 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundHomeScreen,
         appBar: const CustomAppBar(),
-        body: BlocBuilder<ResultViewCubit, ResultViewState>(
-          builder: (context, state) {
-            if (state is ResultViewLoading || state is ResultViewInitial) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              );
-            }
+        body: Column(
+          children: [
+            /// Tab bar (no counts, just tab names)
+            const CustomTabBar(
+              tabs: _tabs,
+              isScrollable: false,
+            ),
+            Expanded(
+              child: BlocBuilder<ResultViewCubit, ResultViewState>(
+                builder: (context, state) {
+                  if (state is ResultViewLoading || state is ResultViewInitial) {
+                    return CustomScrollView(
+                      slivers: [
+                        SliverFillRemaining(
+                          child: Center(
+                            child: CircularProgressIndicator(color: AppColors.primary),
+                          ),
+                        )
+                      ],
+                    );
+                  }
 
             if (state is ResultViewError) {
               return Center(
@@ -107,42 +130,40 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
             }
 
             if (state is ResultViewLoaded) {
-              return Column(
+              return TabBarView(
                 children: [
-                  /// Tab bar (no counts, just tab names)
-                  CustomTabBar(
-                    tabs: _tabs,
-                    isScrollable: false,
-                  ),
-
-                  /// Tab views
-                  Expanded(
-                    child: TabBarView(
-                      children: [
                         /// Overview tab
-                        OverviewTab(
-                          details: state.projectDetails,
-                          totalRequirements: state.totalRequirements,
-                          documents: state.documents,
-                          projectId: state.projectDetails.id,
+                        RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          color: AppColors.primary,
+                          child: OverviewTab(
+                            details: state.projectDetails,
+                            totalRequirements: state.totalRequirements,
+                            documents: state.documents,
+                            projectId: state.projectDetails.id,
+                          ),
                         ),
 
                         /// AI Results tab
-                        state.aiDashboard != null
-                            ? AiResultsTab(
-                                dashboard: state.aiDashboard!,
-                                projectId: state.projectDetails.id,
-                                projectName: state.projectDetails.name,
-                              )
-                            : Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                        RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          color: AppColors.primary,
+                          child: state.aiDashboard != null
+                              ? AiResultsTab(
+                                  dashboard: state.aiDashboard!,
+                                  projectId: state.projectDetails.id,
+                                  projectName: state.projectDetails.name,
+                                )
+                              : ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
                                   children: [
+                                    SizedBox(height: 100.h),
                                     Icon(Icons.error_outline,
                                         size: 64.sp, color: AppColors.error),
                                     SizedBox(height: 12.h),
                                     Text(
                                       'Failed to load AI Results',
+                                      textAlign: TextAlign.center,
                                       style: boldStyle(
                                         fontSize: FontSize.font18,
                                         color: AppColors.black,
@@ -150,33 +171,48 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
                                     ),
                                   ],
                                 ),
-                              ),
+                        ),
 
                         /// Meetings tab
-                        BlocBuilder<MeetingCubit, MeetingState>(
-                          builder: (context, meetingState) {
-                            if (meetingState is MeetingLoading) {
-                              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-                            } else if (meetingState is MeetingError) {
-                              return Center(child: Text(meetingState.message, style: TextStyle(color: AppColors.error)));
-                            } else if (meetingState is MeetingLoaded) {
-                              return MeetingsTab(meetings: meetingState.meetings);
-                            }
-                            return const SizedBox.shrink();
-                          },
+                        RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          color: AppColors.primary,
+                          child: BlocBuilder<MeetingCubit, MeetingState>(
+                            builder: (context, meetingState) {
+                              if (meetingState is MeetingLoading) {
+                                return ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  children: [
+                                    SizedBox(height: 100.h),
+                                    const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                                  ]
+                                );
+                              } else if (meetingState is MeetingError) {
+                                return ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  children: [
+                                    SizedBox(height: 100.h),
+                                    Center(child: Text(meetingState.message, style: TextStyle(color: AppColors.error))),
+                                  ]
+                                );
+                              } else if (meetingState is MeetingLoaded) {
+                                return MeetingsTab(meetings: meetingState.meetings);
+                              }
+                              return ListView(physics: const AlwaysScrollableScrollPhysics());
+                            },
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              );
+                    );
             }
 
             return const SizedBox.shrink();
           },
         ),
       ),
+      ],
+      ),
+      ),
     );
   }
 }
-

@@ -9,6 +9,7 @@ import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
 import 'package:requra/features/result_view/domain/entities/review_invitation.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class ShareStakeholdersDialog extends StatefulWidget {
   final String projectId;
@@ -70,9 +71,7 @@ class _ShareStakeholdersDialogState extends State<ShareStakeholdersDialog> {
       _nameController.clear();
       _emailController.clear();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invitation sent successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'Invitation sent successfully');
       }
     } else {
       if (mounted) {

@@ -9,6 +9,7 @@ import 'package:requra/core/theme/color_manager.dart';
 import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -59,9 +60,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           current is ForgotPasswordOtpSent || current is ForgotPasswordError,
       listener: (BuildContext context, ForgotPasswordState state) {
         if (state is ForgotPasswordOtpSent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Verification code sent to your email.')),
-          );
+          AppSnackbar.showSuccess(context, 'Verification code sent to your email.');
           Navigator.push<void>(
             context,
             MaterialPageRoute<void>(
@@ -72,9 +71,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           );
         } else if (state is ForgotPasswordError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppSnackbar.showSuccess(context, state.message);
         }
       },
       builder: (BuildContext context, ForgotPasswordState state) {

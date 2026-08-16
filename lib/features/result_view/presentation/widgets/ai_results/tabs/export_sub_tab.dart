@@ -11,14 +11,24 @@ import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
-class ExportSubTab extends StatelessWidget {
+class ExportSubTab extends StatefulWidget {
   final AiResultsDashboard dashboard;
 
   const ExportSubTab({super.key, required this.dashboard});
 
   @override
+  State<ExportSubTab> createState() => _ExportSubTabState();
+}
+
+class _ExportSubTabState extends State<ExportSubTab> {
+  String _selectedStatus = 'All';
+  final List<String> _statusOptions = ['All', 'Approved'];
+
+  @override
   Widget build(BuildContext context) {
+    final dashboard = widget.dashboard;
     final bool isMobile = MediaQuery.of(context).size.width <= 800;
 
     return SingleChildScrollView(
@@ -60,6 +70,7 @@ class ExportSubTab extends StatelessWidget {
 
   // ─── Export Readiness ───
   Widget _buildExportReadiness() {
+    final dashboard = widget.dashboard;
     final checks = <_ReadinessCheck>[
       _ReadinessCheck(
         icon: Icons.check_circle_outline,
@@ -189,6 +200,7 @@ class ExportSubTab extends StatelessWidget {
 
   // ─── Export Preview ───
   Widget _buildExportPreview() {
+    final dashboard = widget.dashboard;
     // Build rows from requirements
     final previewRows = dashboard.requirements.take(5).toList();
 
@@ -322,6 +334,7 @@ class ExportSubTab extends StatelessWidget {
 
   // ─── Download from this run ───
   Widget _buildDownloadSection(BuildContext context) {
+    final dashboard = widget.dashboard;
     final int jiraIssues = dashboard.userStories.length;
 
     return Container(
@@ -363,15 +376,7 @@ class ExportSubTab extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
 
-          // Jira-ready JSON
-          _buildDownloadItem(
-            icon: Icons.developer_board,
-            iconColor: AppColors.primary,
-            title: 'Jira-ready JSON',
-            subtitle: '$jiraIssues issues ready',
-            onTap: () {},
-          ),
-          SizedBox(height: 8.h),
+
 
           // Full result JSON
           _buildDownloadItem(
@@ -498,6 +503,45 @@ class ExportSubTab extends StatelessWidget {
           SizedBox(height: 16.h),
           Row(
             children: [
+              Text(
+                'Filter by Status: ',
+                style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.black),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedStatus,
+                    icon: Icon(Icons.keyboard_arrow_down, color: AppColors.grey),
+                    items: _statusOptions.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: regularStyle(fontSize: FontSize.font14, color: AppColors.black),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _selectedStatus = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
               _buildExportButton(Icons.table_chart_outlined, 'XLSX', () => _exportRequirementsXlsx(context)),
               SizedBox(width: 12.w),
               _buildExportButton(Icons.description_outlined, 'CSV', () => _exportRequirementsCsv(context)),
@@ -567,31 +611,63 @@ class ExportSubTab extends StatelessWidget {
       if (basePath == null) throw Exception("Could not get download path");
 
       List<List<dynamic>> rows = [];
-      rows.add(["ID", "Title", "Description", "Type", "Priority", "Confidence Score"]);
-      for (var req in dashboard.requirements) {
+      rows.add([
+        "Summary", 
+        "Description", 
+        "Issue Type", 
+        "Priority", 
+        "Labels", 
+        "Story Points", 
+        "Acceptance Criteria", 
+        "Source Requirement", 
+        "Requirement Details", 
+        "Requra Review Status"
+      ]);
+      
+      final dashboard = widget.dashboard;
+      
+      final filteredStories = dashboard.userStories.where((story) {
+        if (_selectedStatus == 'All') return true;
+        final status = story.workflowStatus ?? 'Pending';
+        return status.toLowerCase() == _selectedStatus.toLowerCase();
+      }).toList();
+
+      for (var story in filteredStories) {
+        // Fallback description to userStory text if empty
+        final description = story.userStory.isNotEmpty ? story.userStory : story.description;
+        // Linked requirement info
+        final linkedReq = dashboard.requirements.where((r) => r.id == story.requirementId).firstOrNull;
+        
+        final cleanAcceptanceCriteria = story.acceptanceCriteria.map((c) {
+          final trimmed = c.trim();
+          return trimmed.endsWith('.') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
+        }).join(', ');
+        
         rows.add([
-          req.id,
-          req.title,
-          req.description,
-          req.type,
-          req.priority,
-          req.confidenceScore
+          story.title,
+          description,
+          story.type ?? 'Story',
+          story.priority,
+          '', // Labels (jira not in model yet)
+          '', // Story Points
+          cleanAcceptanceCriteria,
+          linkedReq?.title ?? '',
+          linkedReq?.description ?? '',
+          story.workflowStatus ?? ''
         ]);
       }
       String csv = const CsvEncoder().convert(rows);
       
-      final filePath = _getUniqueFileName(basePath, 'requirements.csv');
+      final filePath = _getUniqueFileName(basePath, 'user_stories.csv');
       final file = File(filePath);
       await file.writeAsString(csv);
       
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to $filePath'), backgroundColor: AppColors.primary),
-        );
+        AppSnackbar.showSuccess(context, 'Saved to $filePath');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exporting CSV: $e')));
+        AppSnackbar.showError(context, 'Error exporting CSV: $e');
       }
     }
   }
@@ -603,44 +679,66 @@ class ExportSubTab extends StatelessWidget {
       if (basePath == null) throw Exception("Could not get download path");
 
       var excel = Excel.createExcel();
-      Sheet sheetObject = excel['Requirements'];
-      excel.setDefaultSheet('Requirements');
+      Sheet sheetObject = excel['User Stories'];
+      excel.setDefaultSheet('User Stories');
       
       sheetObject.appendRow([
-        TextCellValue("ID"), 
-        TextCellValue("Title"), 
+        TextCellValue("Summary"), 
         TextCellValue("Description"), 
-        TextCellValue("Type"), 
+        TextCellValue("Issue Type"), 
         TextCellValue("Priority"), 
-        TextCellValue("Confidence Score")
+        TextCellValue("Labels"), 
+        TextCellValue("Story Points"),
+        TextCellValue("Acceptance Criteria"),
+        TextCellValue("Source Requirement"),
+        TextCellValue("Requirement Details"),
+        TextCellValue("Requra Review Status")
       ]);
       
-      for (var req in dashboard.requirements) {
+      final dashboard = widget.dashboard;
+
+      final filteredStories = dashboard.userStories.where((story) {
+        if (_selectedStatus == 'All') return true;
+        final status = story.workflowStatus ?? 'Pending';
+        return status.toLowerCase() == _selectedStatus.toLowerCase();
+      }).toList();
+
+      for (var story in filteredStories) {
+        final description = story.userStory.isNotEmpty ? story.userStory : story.description;
+        final linkedReq = dashboard.requirements.where((r) => r.id == story.requirementId).firstOrNull;
+        
+        final cleanAcceptanceCriteria = story.acceptanceCriteria.map((c) {
+          final trimmed = c.trim();
+          return trimmed.endsWith('.') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
+        }).join(', ');
+
         sheetObject.appendRow([
-          TextCellValue(req.id),
-          TextCellValue(req.title),
-          TextCellValue(req.description),
-          TextCellValue(req.type),
-          TextCellValue(req.priority),
-          DoubleCellValue(req.confidenceScore),
+          TextCellValue(story.title),
+          TextCellValue(description),
+          TextCellValue(story.type ?? 'Story'),
+          TextCellValue(story.priority),
+          TextCellValue(''), // Labels
+          TextCellValue(''), // Story Points
+          TextCellValue(cleanAcceptanceCriteria),
+          TextCellValue(linkedReq?.title ?? ''),
+          TextCellValue(linkedReq?.description ?? ''),
+          TextCellValue(story.workflowStatus ?? '')
         ]);
       }
       
       var fileBytes = excel.save();
       if (fileBytes != null) {
-        final filePath = _getUniqueFileName(basePath, 'requirements.xlsx');
+        final filePath = _getUniqueFileName(basePath, 'user_stories.xlsx');
         final file = File(filePath);
         await file.writeAsBytes(fileBytes);
         
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Saved to $filePath'), backgroundColor: AppColors.primary),
-          );
+          AppSnackbar.showSuccess(context, 'Saved to $filePath');
         }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exporting XLSX: $e')));
+        AppSnackbar.showError(context, 'Error exporting XLSX: $e');
       }
     }
   }
@@ -651,6 +749,7 @@ class ExportSubTab extends StatelessWidget {
       final basePath = await _getDownloadPath();
       if (basePath == null) throw Exception("Could not get download path");
 
+      final dashboard = widget.dashboard;
       final data = dashboard.rawJson ?? {};
       String jsonStr = const JsonEncoder.withIndent('  ').convert(data);
       
@@ -659,13 +758,11 @@ class ExportSubTab extends StatelessWidget {
       await file.writeAsString(jsonStr);
       
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to $filePath'), backgroundColor: AppColors.primary),
-        );
+        AppSnackbar.showSuccess(context, 'Saved to $filePath');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error exporting JSON: $e')));
+        AppSnackbar.showError(context, 'Error exporting JSON: $e');
       }
     }
   }

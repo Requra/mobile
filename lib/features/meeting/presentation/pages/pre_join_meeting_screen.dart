@@ -11,6 +11,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:record/record.dart';
 import 'package:requra/features/meeting/presentation/helpers/date_helper.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 
 class PreJoinMeetingScreen extends StatefulWidget {
@@ -223,23 +224,13 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
       } else {
         setState(() => _isJoining = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppSnackbar.showError(context, response.message);
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isJoining = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to join meeting: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackbar.showError(context, 'Failed to join meeting: $e');
       }
     }
   }

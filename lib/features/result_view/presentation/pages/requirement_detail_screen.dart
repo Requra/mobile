@@ -11,6 +11,7 @@ import 'package:requra/features/result_view/presentation/cubit/result_view_state
 import 'package:requra/features/result_view/presentation/widgets/ai_results/edit_requirement_dialog.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/reject_requirement_dialog.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/review_action_popup_menu.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class RequirementDetailScreen extends StatefulWidget {
   final AiRequirement initialRequirement;
@@ -46,13 +47,9 @@ class _RequirementDetailScreenState extends State<RequirementDetailScreen> {
       });
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error approving requirement: $error')),
-        );
+        AppSnackbar.showError(context, 'Error approving requirement: $error');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Requirement approved successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'Requirement approved successfully');
       }
     }
   }

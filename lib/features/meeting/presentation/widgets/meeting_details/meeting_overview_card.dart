@@ -6,6 +6,7 @@ import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_details_card.dart';
 import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_details_colors.dart';
 import 'package:requra/features/meeting/presentation/widgets/meeting_details/meeting_date_formatter.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 /// Scheduled date, host reference, role, access link, and meeting context.
 class MeetingOverviewCard extends StatelessWidget {
@@ -51,9 +52,7 @@ class MeetingOverviewCard extends StatelessWidget {
             if (meeting.joinUrl.isNotEmpty) {
               Clipboard.setData(ClipboardData(text: meeting.joinUrl)).then((_) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invitation link copied!')),
-                  );
+                  AppSnackbar.showSuccess(context, 'Invitation link copied!');
                 }
               });
             }

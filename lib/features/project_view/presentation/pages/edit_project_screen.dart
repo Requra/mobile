@@ -11,6 +11,7 @@ import 'package:requra/features/project_view/presentation/cubit/project_state.da
 import 'package:requra/features/project_view/presentation/widgets/edit_project_widgets/core_info_section.dart';
 import 'package:requra/features/project_view/presentation/widgets/edit_project_widgets/classification_section.dart';
 import 'package:requra/features/project_view/presentation/widgets/edit_project_widgets/collaboration_section.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class EditProjectScreen extends StatefulWidget {
   final Project project;
@@ -99,9 +100,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     final email = _memberCtrl.text.trim();
     if (email.isNotEmpty && !_teamMembers.contains(email)) {
       if (_clientCtrl.text.isNotEmpty && email.toLowerCase() == _clientCtrl.text.trim().toLowerCase()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Client email cannot be added as a team member')),
-        );
+        AppSnackbar.showSuccess(context, 'Client email cannot be added as a team member');
         return;
       }
       setState(() {
@@ -159,15 +158,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         listener: (_, state) {
           if (state is ProjectActionError) {
             ScaffoldMessenger.of(context).clearSnackBars();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.redAccent,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.r)),
-              ),
-            );
+            AppSnackbar.showError(context, state.message);
           }
         },
         child: _isLoadingDetails

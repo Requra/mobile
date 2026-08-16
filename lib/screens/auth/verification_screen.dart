@@ -12,6 +12,7 @@ import 'package:requra/core/theme/style_manager.dart';
 
 import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 // ---------------------------------------------------------------------------
 // Mode enum — replaces the old VerificationSource so naming is consistent
@@ -104,15 +105,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
         _isPasswordResetMode ? code.length >= 5 : code.length == 6;
 
     if (!isValidLength) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isPasswordResetMode
+      AppSnackbar.showSuccess(context, _isPasswordResetMode
                 ? 'Please enter a valid OTP code.'
-                : 'Please enter the 6-digit code.',
-          ),
-        ),
-      );
+                : 'Please enter the 6-digit code.',);
       return;
     }
 
@@ -121,11 +116,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     } else {
       final String email = (widget.email ?? '').trim();
       if (email.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email is missing. Please register again.'),
-          ),
-        );
+        AppSnackbar.showSuccess(context, 'Email is missing. Please register again.');
         return;
       }
       context.read<AuthCubit>().confirmAccount(
@@ -143,11 +134,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     final String email = (widget.email ?? '').trim();
     if (email.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email is missing. Please go back and try again.'),
-        ),
-      );
+      AppSnackbar.showError(context, 'Email is missing. Please go back and try again.');
       return;
     }
 
@@ -170,11 +157,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
           .showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to resend code right now. Please try again.'),
-        ),
-      );
+      AppSnackbar.showError(context, 'Unable to resend code right now. Please try again.');
     } finally {
       if (mounted) setState(() => _isResending = false);
     }
@@ -198,31 +181,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
           listener: (BuildContext context, AuthState state) {
             if (state is AuthAuthenticated) {
               // Auto-login succeeded after confirmation — go straight to app.
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Account confirmed! Welcome.'),
-                ),
-              );
+              AppSnackbar.showSuccess(context, 'Account confirmed! Welcome.');
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/main',
                 (Route<dynamic> route) => false,
               );
             } else if (state is AuthUnauthenticated) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Account confirmed! Please sign in.'),
-                ),
-              );
+              AppSnackbar.showSuccess(context, 'Account confirmed! Please sign in.');
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/login',
                 (Route<dynamic> route) => false,
               );
             } else if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              AppSnackbar.showSuccess(context, state.message);
             }
           },
         ),
@@ -238,9 +211,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
             if (state is ForgotPasswordOtpVerified) {
               Navigator.pushReplacementNamed(context, '/createPassword');
             } else if (state is ForgotPasswordError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              AppSnackbar.showSuccess(context, state.message);
             }
           },
         ),

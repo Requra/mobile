@@ -13,6 +13,7 @@ import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/social_auth_buttons_row.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -102,9 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppSnackbar.showSuccess(context, state.message);
         }
         // AuthUnauthenticated on this screen means Google sign-in was
         // cancelled — simply dismiss the loader, nothing else needed.

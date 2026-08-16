@@ -6,6 +6,7 @@ import 'package:requra/features/meeting/presentation/widgets/live_meeting/confir
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 /// Bottom sheet listing pending invitations with Resend / Revoke actions.
 class PendingInvitationsSheet extends StatefulWidget {
@@ -63,12 +64,7 @@ class _PendingInvitationsSheetState extends State<PendingInvitationsSheet> {
     setState(() => _loadingIds.remove('resend_${inv.id}'));
 
     if (response.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invitation resent to ${inv.displayName}'),
-          backgroundColor: AppColors.timerGreen,
-        ),
-      );
+      AppSnackbar.showSuccess(context, 'Invitation resent to ${inv.displayName}');
     } else {
       _showError(response.message);
     }
@@ -102,12 +98,7 @@ class _PendingInvitationsSheetState extends State<PendingInvitationsSheet> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.liveRed,
-      ),
-    );
+    AppSnackbar.showError(context, message);
   }
 
   @override

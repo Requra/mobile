@@ -6,6 +6,7 @@ import 'package:requra/features/add_project/presentation/cubit/add_project_cubit
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class Step3AiGenerate extends StatefulWidget {
   final VoidCallback onViewResults;
@@ -67,13 +68,7 @@ class _Step3AiGenerateState extends State<Step3AiGenerate> {
           _messageTimer?.cancel();
         }
         if (state is AddProjectError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to generate project: ${state.message}'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppSnackbar.showError(context, 'Failed to generate project: ${state.message}');
         }
       },
       builder: (context, state) {

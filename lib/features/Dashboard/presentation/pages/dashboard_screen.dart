@@ -50,47 +50,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 }
 
                 if (state is DashboardLoaded) {
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.only(bottom: 20.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeaderStats(state),
-                        SizedBox(height: 16.h),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SectionLabel(label: 'FOCUS'),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'Continue working',
-                                style: semiBoldStyle(
-                                  fontSize: FontSize.font14,
-                                  color: AppColors.darkgrey,
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () async {
+                      await context.read<DashboardCubit>().loadDashboard();
+                    },
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: 20.h),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeaderStats(state),
+                          SizedBox(height: 16.h),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SectionLabel(label: 'FOCUS'),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  'Continue working',
+                                  style: semiBoldStyle(
+                                    fontSize: FontSize.font14,
+                                    color: AppColors.darkgrey,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 12.h),
-                              _buildFocusSection(context, state.focusProjects),
-                              
-                              SizedBox(height: 24.h),
-                              
-                              const SectionLabel(label: 'PORTFOLIO'),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'Recently created projects',
-                                style: semiBoldStyle(
-                                  fontSize: FontSize.font14,
-                                  color: AppColors.darkgrey,
+                                SizedBox(height: 12.h),
+                                _buildFocusSection(context, state.focusProjects),
+                                
+                                SizedBox(height: 24.h),
+                                
+                                const SectionLabel(label: 'PORTFOLIO'),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  'Recently created projects',
+                                  style: semiBoldStyle(
+                                    fontSize: FontSize.font14,
+                                    color: AppColors.darkgrey,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 12.h),
-                              _buildPortfolioSection(context, state.recentProjects),
-                            ],
+                                SizedBox(height: 12.h),
+                                _buildPortfolioSection(context, state.recentProjects),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 }

@@ -9,6 +9,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/priority_dropdown.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class EditUserStoryDialog extends StatefulWidget {
   final AiUserStory userStory;
@@ -50,9 +51,7 @@ class _EditUserStoryDialogState extends State<EditUserStoryDialog> {
 
   Future<void> _saveChanges() async {
     if (_titleController.text.trim().isEmpty || _storyController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title and story text are required.')),
-      );
+      AppSnackbar.showError(context, 'Title and story text are required.');
       return;
     }
 
@@ -88,13 +87,9 @@ class _EditUserStoryDialogState extends State<EditUserStoryDialog> {
       });
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating user story: $error')),
-        );
+        AppSnackbar.showError(context, 'Error updating user story: $error');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User story updated successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'User story updated successfully');
         Navigator.of(context).pop();
       }
     }

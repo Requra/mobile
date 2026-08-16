@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:requra/core/global_widgets/custom_button.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
@@ -10,6 +11,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/document.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 import 'package:requra/features/result_view/presentation/widgets/overview/document_tile.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class FileManagementSection extends StatelessWidget {
   final List<Document> documents;
@@ -85,6 +87,13 @@ class FileManagementSection extends StatelessWidget {
             borderColor: AppColors.grey,
             onTap: () async {
               try {
+                if (Platform.isAndroid) {
+                  await Permission.storage.request();
+                  // Also request newer Android 13+ permissions just in case
+                  await Permission.photos.request();
+                  await Permission.audio.request();
+                }
+
                 FilePickerResult? result = await FilePicker.platform.pickFiles(
                   type: FileType.custom,
                   allowedExtensions: ['pdf', 'docx', 'mp3', 'wav', 'm4a', 'aac'],
@@ -104,23 +113,13 @@ class FileManagementSection extends StatelessWidget {
                         );
                         
                     if (error != null && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(error),
-                          backgroundColor: AppColors.error,
-                        ),
-                      );
+                      AppSnackbar.showError(context, error);
                     }
                   }
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to pick file: $e'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
+                  AppSnackbar.showError(context, 'Failed to pick file: $e');
                 }
               }
             },
@@ -139,22 +138,13 @@ class FileManagementSection extends StatelessWidget {
                   onTap: () async {
                     if (document.status == 999) return; // Don't download if uploading
                     
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Downloading document...')),
-                    );
+                    AppSnackbar.showSuccess(context, 'Downloading document...');
                     
                     final result = await context.read<ResultViewCubit>().downloadDocument(document: document);
                     
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(result ?? 'Download finished'),
-                          backgroundColor: result != null && result.contains('Success') 
-                            ? AppColors.statusFinished 
-                            : AppColors.error,
-                        ),
-                      );
+                      AppSnackbar.showError(context, result ?? 'Download finished');
                     }
                   },
                   child: DocumentTile(document: document),

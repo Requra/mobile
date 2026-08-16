@@ -5,6 +5,7 @@ import 'package:requra/features/meeting/data/services/meeting_service.dart';
 import 'package:requra/core/theme/color_manager.dart';
 import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 /// Tabbed invite bottom sheet: Members / Stakeholders / Guests.
 class InviteSheet extends StatefulWidget {
@@ -208,9 +209,7 @@ class _InviteSheetState extends State<InviteSheet>
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.liveRed),
-    );
+    AppSnackbar.showError(context, message);
   }
 
   @override

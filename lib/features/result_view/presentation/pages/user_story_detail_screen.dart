@@ -13,6 +13,7 @@ import 'package:requra/features/result_view/presentation/widgets/ai_results/rege
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/approve_circle_button.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/reject_item_dialog.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/review_action_popup_menu.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class UserStoryDetailScreen extends StatefulWidget {
   final AiUserStory initialStory;
@@ -119,13 +120,9 @@ class _UserStoryDetailScreenState extends State<UserStoryDetailScreen> {
       });
 
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error approving user story: $error')),
-        );
+        AppSnackbar.showError(context, 'Error approving user story: $error');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User story approved successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'User story approved successfully');
       }
     }
   }

@@ -38,17 +38,22 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
         ApiConstants.projects,
         queryParameters: queryParams,
       );
+      if (response.statusCode == 204 || response.data == null || response.data == '') {
+        return const PaginatedProjects(items: [], totalCount: 0, totalPages: 0, currentPage: 1);
+      }
       
       // Debug: log the raw response to see item structure
-      debugPrint('[getProjects] raw response keys: ${response.data?.keys}');
-      if (response.data['data'] != null) {
-        final data = response.data['data'];
-        if (data is Map && data['items'] is List) {
-          for (final item in (data['items'] as List).take(2)) {
-            debugPrint('[getProjects] item keys: ${(item as Map).keys}, id=${item['id']}');
+      if (response.data is Map) {
+        debugPrint('[getProjects] raw response keys: ${response.data.keys}');
+        if (response.data['data'] != null) {
+          final data = response.data['data'];
+          if (data is Map && data['items'] is List) {
+            for (final item in (data['items'] as List).take(2)) {
+              debugPrint('[getProjects] item keys: ${(item as Map).keys}, id=${item['id']}');
+            }
           }
+          return PaginatedProjects.fromJson(data);
         }
-         return PaginatedProjects.fromJson(data);
       }
       return const PaginatedProjects(items: [], totalCount: 0, totalPages: 0, currentPage: 1);
     } catch (e) {

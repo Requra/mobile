@@ -9,6 +9,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/priority_dropdown.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class EditRequirementDialog extends StatefulWidget {
   final AiRequirement requirement;
@@ -56,9 +57,7 @@ class _EditRequirementDialogState extends State<EditRequirementDialog> {
   Future<void> _saveChanges() async {
     if (_titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title and description are required.')),
-      );
+      AppSnackbar.showError(context, 'Title and description are required.');
       return;
     }
 
@@ -83,9 +82,7 @@ class _EditRequirementDialogState extends State<EditRequirementDialog> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating content: $error')),
-        );
+        AppSnackbar.showError(context, 'Error updating content: $error');
       }
       return;
     }
@@ -103,13 +100,9 @@ class _EditRequirementDialogState extends State<EditRequirementDialog> {
       });
 
       if (statusError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating status: $statusError')),
-        );
+        AppSnackbar.showError(context, 'Error updating status: $statusError');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Requirement updated successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'Requirement updated successfully');
         Navigator.of(context).pop();
       }
     }

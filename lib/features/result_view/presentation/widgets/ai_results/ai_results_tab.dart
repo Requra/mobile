@@ -51,6 +51,7 @@ class AiResultsTab extends StatelessWidget {
     return DefaultTabController(
       length: subTabs.length,
       child: NestedScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(

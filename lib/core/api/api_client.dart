@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:requra/core/network/api_constants.dart';
 import 'package:requra/core/storage/secure_token_storage.dart';
+import 'package:requra/core/navigation/navigator_key.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class ApiClient {
   late Dio _dio;
@@ -51,6 +54,13 @@ class ApiClient {
               break;
 
             case DioExceptionType.badResponse:
+              final statusCode = e.response?.statusCode;
+              if (statusCode == 401) {
+                message = 'Session expired. Please log in again.';
+                _handleUnauthorized();
+                break;
+              }
+              
               final data = e.response?.data;
               if (data is Map<String, dynamic>) {
                 if (data['errors'] != null && 
@@ -62,10 +72,10 @@ class ApiClient {
                 } else if (data['title'] != null && data['title'].toString().isNotEmpty) {
                   message = data['title'].toString();
                 } else {
-                  message = 'Server error (${e.response?.statusCode})';
+                  message = 'Server error (${statusCode})';
                 }
               } else {
-                message = 'Server error (${e.response?.statusCode ?? 'Unknown'})';
+                message = 'Server error (${statusCode ?? 'Unknown'})';
               }
               break;
 
@@ -89,6 +99,16 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  void _handleUnauthorized() async {
+    final tokenStorage = const SecureTokenStorage();
+    await tokenStorage.clearTokens();
+    
+    if (navigatorKey.currentContext != null) {
+      AppSnackbar.showError(navigatorKey.currentContext!, 'Session expired. Please log in again.');
+      Navigator.of(navigatorKey.currentContext!, rootNavigator: true).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
   }
 
   Dio get dio => _dio;

@@ -20,10 +20,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ProfileCubit>(
-      create: (_) => sl<ProfileCubit>()..loadProfile(),
-      child: const _ProfileView(),
-    );
+    return const _ProfileView();
   }
 }
 
@@ -104,140 +101,147 @@ class _ProfileViewState extends State<_ProfileView> {
                   children: [
                     Container(height: 2.h, color: AppColors.statusInProgress),
                     Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 12.h,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const AppTopBar(),
-                            SizedBox(height: 18.h),
-                            Text(
-                              'Profile Settings',
-                              style: boldStyle(
-                                fontSize: FontSize.font24,
-                                color: AppColors.darkgrey,
-                              ),
-                            ),
-                            SizedBox(height: 16.h),
-                            if (loadedState != null)
-                              ProfileCard(
-                                nameController: _nameController,
-                                email: loadedState.profile.email,
-                                role: loadedState.profile.jobTitle,
-                                isEditing: loadedState.isEditing,
-                                displayName: loadedState.profile.name,
-                                avatarImage: _profileService.resolveAvatarImage(
-                                  loadedState,
+                      child: RefreshIndicator(
+                        color: AppColors.primary,
+                        onRefresh: () async {
+                          await context.read<ProfileCubit>().loadProfile();
+                        },
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 12.h,
+                          ),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const AppTopBar(),
+                              SizedBox(height: 18.h),
+                              Text(
+                                'Profile Settings',
+                                style: boldStyle(
+                                  fontSize: FontSize.font24,
+                                  color: AppColors.darkgrey,
                                 ),
-                                isUploadingAvatar:
-                                    loadedState.isUploadingAvatar,
-                                onEditAvatar: _pickAvatarFromGallery,
-                                onStartEditing: () =>
-                                    context.read<ProfileCubit>().startEditing(),
-                                onCancelEditing: () => context
-                                    .read<ProfileCubit>()
-                                    .cancelEditing(),
-                                onUpdateProfile: () => context
-                                    .read<ProfileCubit>()
-                                    .updateProfile(_nameController.text),
-                                isUpdatingProfile:
-                                    loadedState.isUpdatingProfile,
-                              )
-                            else if (state is ProfileError)
-                              Container(
-                                height: 200.h,
-                                alignment: Alignment.center,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Failed to load profile',
-                                      style: regularStyle(
-                                        fontSize: FontSize.font14,
-                                        color: AppColors.error,
+                              ),
+                              SizedBox(height: 16.h),
+                              if (loadedState != null)
+                                ProfileCard(
+                                  nameController: _nameController,
+                                  email: loadedState.profile.email,
+                                  role: loadedState.profile.jobTitle,
+                                  isEditing: loadedState.isEditing,
+                                  displayName: loadedState.profile.name,
+                                  avatarImage: _profileService.resolveAvatarImage(
+                                    loadedState,
+                                  ),
+                                  isUploadingAvatar:
+                                      loadedState.isUploadingAvatar,
+                                  onEditAvatar: _pickAvatarFromGallery,
+                                  onStartEditing: () =>
+                                      context.read<ProfileCubit>().startEditing(),
+                                  onCancelEditing: () => context
+                                      .read<ProfileCubit>()
+                                      .cancelEditing(),
+                                  onUpdateProfile: () => context
+                                      .read<ProfileCubit>()
+                                      .updateProfile(_nameController.text),
+                                  isUpdatingProfile:
+                                      loadedState.isUpdatingProfile,
+                                )
+                              else if (state is ProfileError)
+                                Container(
+                                  height: 200.h,
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Failed to load profile',
+                                        style: regularStyle(
+                                          fontSize: FontSize.font14,
+                                          color: AppColors.error,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    ElevatedButton(
-                                      onPressed: () => context
-                                          .read<ProfileCubit>()
-                                          .loadProfile(),
-                                      child: const Text('Retry'),
-                                    ),
-                                  ],
+                                      SizedBox(height: 8.h),
+                                      ElevatedButton(
+                                        onPressed: () => context
+                                            .read<ProfileCubit>()
+                                            .loadProfile(),
+                                        child: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Container(
+                                  height: 200.h,
+                                  alignment: Alignment.center,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primaryText,
+                                  ),
                                 ),
-                              )
-                            else
-                              Container(
-                                height: 200.h,
-                                alignment: Alignment.center,
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primaryText,
-                                ),
+                              SizedBox(height: 16.h),
+                              const SectionLabel(label: 'ACCOUNT'),
+                              SizedBox(height: 10.h),
+                              SettingsTile(
+                                title: 'Email',
+                                subtitle:
+                                    loadedState?.profile.email ??
+                                    (state is ProfileError
+                                        ? 'Error'
+                                        : 'Loading...'),
+                                icon: Icons.mail_outline,
+                                iconColor: const Color(0xFF7B5DD4),
+                                iconBackground: const Color(0xFFEDE7FF),
                               ),
-                            SizedBox(height: 16.h),
-                            const SectionLabel(label: 'ACCOUNT'),
-                            SizedBox(height: 10.h),
-                            SettingsTile(
-                              title: 'Email',
-                              subtitle:
-                                  loadedState?.profile.email ??
-                                  (state is ProfileError
-                                      ? 'Error'
-                                      : 'Loading...'),
-                              icon: Icons.mail_outline,
-                              iconColor: const Color(0xFF7B5DD4),
-                              iconBackground: const Color(0xFFEDE7FF),
-                            ),
-                            SettingsTile(
-                              title: 'Change Password',
-                              icon: Icons.lock_outline,
-                              iconColor: const Color(0xFF7B5DD4),
-                              iconBackground: const Color(0xFFEDE7FF),
-                              onTap: () {
-                                Navigator.of(
+                              SettingsTile(
+                                title: 'Change Password',
+                                icon: Icons.lock_outline,
+                                iconColor: const Color(0xFF7B5DD4),
+                                iconBackground: const Color(0xFFEDE7FF),
+                                onTap: () {
+                                  Navigator.of(
+                                    context,
+                                    rootNavigator: true,
+                                  ).pushNamed('/resetPassword');
+                                },
+                              ),
+                              SettingsTile(
+                                title: 'Role',
+                                subtitle:
+                                    loadedState?.profile.jobTitle ??
+                                    (state is ProfileError
+                                        ? 'Error'
+                                        : 'Loading...'),
+                                icon: Icons.manage_accounts_outlined,
+                                iconColor: const Color(0xFF7B5DD4),
+                                iconBackground: const Color(0xFFEDE7FF),
+                              ),
+                              SizedBox(height: 12.h),
+                              SettingsTile(
+                                title: 'Log Out',
+                                subtitle: 'Sign out of your account',
+                                icon: Icons.logout,
+                                iconColor: const Color(0xFFD04A2B),
+                                iconBackground: const Color(0xFFFFECE7),
+                                onTap: () => _profileService.confirmLogout(
                                   context,
-                                  rootNavigator: true,
-                                ).pushNamed('/resetPassword');
-                              },
-                            ),
-                            SettingsTile(
-                              title: 'Role',
-                              subtitle:
-                                  loadedState?.profile.jobTitle ??
-                                  (state is ProfileError
-                                      ? 'Error'
-                                      : 'Loading...'),
-                              icon: Icons.manage_accounts_outlined,
-                              iconColor: const Color(0xFF7B5DD4),
-                              iconBackground: const Color(0xFFEDE7FF),
-                            ),
-                            SizedBox(height: 12.h),
-                            SettingsTile(
-                              title: 'Log Out',
-                              subtitle: 'Sign out of your account',
-                              icon: Icons.logout,
-                              iconColor: const Color(0xFFD04A2B),
-                              iconBackground: const Color(0xFFFFECE7),
-                              onTap: () => _profileService.confirmLogout(
-                                context,
-                                () => context.read<ProfileCubit>().logout(),
+                                  () => context.read<ProfileCubit>().logout(),
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 18.h),
-                            Text(
-                              'Danger Zone',
-                              style: semiBoldStyle(
-                                fontSize: FontSize.font14,
-                                color: const Color(0xFFD04A2B),
+                              SizedBox(height: 18.h),
+                              Text(
+                                'Danger Zone',
+                                style: semiBoldStyle(
+                                  fontSize: FontSize.font14,
+                                  color: const Color(0xFFD04A2B),
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 10.h),
-                            DangerZoneCard(onDelete: _confirmDeleteAccount),
-                          ],
+                              SizedBox(height: 10.h),
+                              DangerZoneCard(onDelete: _confirmDeleteAccount),
+                            ],
+                          ),
                         ),
                       ),
                     ),

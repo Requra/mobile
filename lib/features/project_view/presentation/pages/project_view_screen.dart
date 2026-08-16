@@ -11,6 +11,7 @@ import 'package:requra/core/global_widgets/custom_tab_bar.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_list_view.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_error_state.dart';
 import 'package:requra/features/project_view/presentation/widgets/project_view_widgets/project_loading_state.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class ProjectViewScreen extends StatefulWidget {
   final VoidCallback onAddProject;
@@ -73,70 +74,76 @@ class _ProjectViewScreenState extends State<ProjectViewScreen> with SingleTicker
             searchController: _searchController,
           ),
           SizedBox(height: 10.h),
+          BlocBuilder<ProjectCubit, ProjectState>(
+            buildWhen: (prev, curr) => curr is ProjectLoaded,
+            builder: (context, state) {
+              int totalCount = -1;
+              if (state is ProjectLoaded) totalCount = state.totalCount;
+              return CustomTabBar(
+                tabs: _tabs,
+                controller: _tabController,
+                counts: List.generate(_tabs.length, (i) => i == _tabController.index ? totalCount : -1),
+              );
+            },
+          ),
           Expanded(
-            child: BlocConsumer<ProjectCubit, ProjectState>(
-              buildWhen: (prev, curr) => curr is ProjectLoading || curr is ProjectLoaded || curr is ProjectError || curr is ProjectInitial,
-              listener: (context, state) {
-                if (state is ProjectActionError) {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: Colors.redAccent,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.r)),
-                  ));
-                }
-                if (state is ProjectActionSuccess) {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: AppColors.statusFinished,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.r)),
-                  ));
-                }
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                final status = _statusValues[_tabController.index];
+                await context.read<ProjectCubit>().fetchProjects(status: status.isEmpty ? null : status, page: 1);
               },
-              builder: (context, state) {
-                if (state is ProjectLoading || state is ProjectInitial) {
-                  return const Center(child: ProjectLoadingState());
-                }
+              child: BlocConsumer<ProjectCubit, ProjectState>(
+                buildWhen: (prev, curr) => curr is ProjectLoading || curr is ProjectLoaded || curr is ProjectError || curr is ProjectInitial,
+                listener: (context, state) {
+                  if (state is ProjectActionError) {
+                    AppSnackbar.showError(context, state.message);
+                  }
+                  if (state is ProjectActionSuccess) {
+                    AppSnackbar.showError(context, state.message);
+                  }
+                },
+                builder: (context, state) {
+                  if (state is ProjectLoading || state is ProjectInitial) {
+                    // Must be in a scrollable widget so pull-to-refresh works even when loading
+                    return CustomScrollView(
+                      slivers: [
+                        SliverFillRemaining(
+                          child: const Center(child: ProjectLoadingState()),
+                        )
+                      ],
+                    );
+                  }
 
-                if (state is ProjectError) {
-                  return ProjectErrorState(
-                    onRetry: () =>
-                        context.read<ProjectCubit>().fetchProjects(
-                          status: _statusValues[_tabController.index].isEmpty ? null : _statusValues[_tabController.index],
-                          page: 1,
-                        ),
-                  );
-                }
+                  if (state is ProjectError) {
+                    return CustomScrollView(
+                      slivers: [
+                        SliverFillRemaining(
+                          child: ProjectErrorState(
+                            onRetry: () =>
+                                context.read<ProjectCubit>().fetchProjects(
+                                  status: _statusValues[_tabController.index].isEmpty ? null : _statusValues[_tabController.index],
+                                  page: 1,
+                                ),
+                          ),
+                        )
+                      ],
+                    );
+                  }
 
-                if (state is ProjectLoaded) {
-                  return Column(
-                    children: [
-                      CustomTabBar(
-                        tabs: _tabs,
-                        controller: _tabController,
-                        // Only show count for the active tab since we only load one tab's data at a time from server
-                        counts: List.generate(_tabs.length, (i) => i == _tabController.index ? state.totalCount : -1),
-                      ),
-                      Expanded(
-                        child: ProjectListView(
-                          projects: state.filteredProjects,
-                          tabIndex: _tabController.index,
-                          onAddProject: widget.onAddProject,
-                          scrollController: _scrollController,
-                          isLoadingMore: state.isLoadingMore,
-                        ),
-                      ),
-                    ],
-                  );
-                }
+                  if (state is ProjectLoaded) {
+                    return ProjectListView(
+                      projects: state.filteredProjects,
+                      tabIndex: _tabController.index,
+                      onAddProject: widget.onAddProject,
+                      scrollController: _scrollController,
+                      isLoadingMore: state.isLoadingMore,
+                    );
+                  }
 
-                return const SizedBox();
-              },
+                  return const SizedBox();
+                },
+              ),
             ),
           ),
         ],

@@ -27,49 +27,39 @@ class ProjectListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (projects.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: () async => context.read<ProjectCubit>().fetchProjects(
-          status: context.read<ProjectCubit>().state is ProjectLoaded
-              ? (context.read<ProjectCubit>().state as ProjectLoaded).activeStatus
-              : null,
-          page: 1,
-        ),
-        child: ProjectEmptyState(
-          tabIndex: tabIndex,
-          onAddProject: onAddProject,
-        ),
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverFillRemaining(
+            child: ProjectEmptyState(
+              tabIndex: tabIndex,
+              onAddProject: onAddProject,
+            ),
+          ),
+        ],
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () async => context.read<ProjectCubit>().fetchProjects(
-          status: context.read<ProjectCubit>().state is ProjectLoaded
-              ? (context.read<ProjectCubit>().state as ProjectLoaded).activeStatus
-              : null,
-          page: 1,
-        ),
-      color: AppColors.primary,
-      child: ListView.builder(
-        controller: scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-        itemCount: projects.length + (isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == projects.length) {
-            return Padding(
-              padding: EdgeInsets.all(16.0.r),
-              child: const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            );
-          }
-          final p = projects[index];
-          return ProjectCard(
-            project: p,
-            onDeleted: () => context.read<ProjectCubit>().deleteProject(p.id),
+    return ListView.builder(
+      controller: scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      itemCount: projects.length + (isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == projects.length) {
+          return Padding(
+            padding: EdgeInsets.all(16.0.r),
+            child: const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           );
-        },
-      ),
+        }
+        final p = projects[index];
+        return ProjectCard(
+          project: p,
+          onDeleted: () => context.read<ProjectCubit>().deleteProject(p.id),
+        );
+      },
     );
   }
 }

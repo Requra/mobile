@@ -8,6 +8,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/meeting/domain/entities/meeting.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 import 'package:requra/features/meeting/presentation/pages/meeting_details_screen.dart' as requra_meeting_details;
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
   final String projectId;
@@ -83,9 +84,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
   Future<void> _submit() async {
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Meeting title is required')),
-      );
+      AppSnackbar.showError(context, 'Meeting title is required');
       return;
     }
 
@@ -121,9 +120,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         // It's a Meeting object
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Meeting created successfully')),
-          );
+          AppSnackbar.showSuccess(context, 'Meeting created successfully');
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (ctx) => BlocProvider.value(
@@ -143,14 +140,10 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       });
 
       if (error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meeting updated successfully')),
-        );
+        AppSnackbar.showSuccess(context, 'Meeting updated successfully');
         Navigator.of(context).pop(true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        AppSnackbar.showError(context, error);
       }
     }
   }

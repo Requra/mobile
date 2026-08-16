@@ -16,6 +16,7 @@ import 'package:requra/features/meeting/presentation/widgets/meeting_details/mee
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_state.dart';
+import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 /// Displays meeting details with a layout that varies by [Meeting.status].
 ///
@@ -41,13 +42,9 @@ class _MeetingDetailsScreenState extends State<MeetingDetailsScreen> {
       final error = await context.read<MeetingCubit>().getMeetingDetails(widget.meeting.id);
       if (mounted) {
         if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load details: $error')),
-          );
+          AppSnackbar.showError(context, 'Failed to load details: $error');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Meeting details synced.')),
-          );
+          AppSnackbar.showSuccess(context, 'Meeting details synced.');
         }
       }
     });

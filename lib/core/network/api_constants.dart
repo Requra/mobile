@@ -140,4 +140,26 @@ class ApiConstants {
 
   static String userStoryRegenerate(String projectId, String storyId) =>
       '/api/projects/$projectId/user-stories/$storyId/regenerate';
+
+  // ── ClickUp Integration ──
+  static const String _clickUpBase = 'https://requra-ai.runasp.net/api/ClickUp';
+
+  /// GET /api/ClickUp/auth/authorize?projectId={projectId}
+  static String clickUpAuthorize(String projectId) =>
+      '$_clickUpBase/auth/authorize?projectId=$projectId';
+
+  /// POST /api/ClickUp/auth/callback
+  static const String clickUpCallback = '$_clickUpBase/auth/callback';
+
+  /// GET /api/ClickUp/status/{projectId}
+  static String clickUpStatus(String projectId) =>
+      '$_clickUpBase/status/$projectId';
+
+  /// POST /api/ClickUp/disconnect/{projectId}
+  static String clickUpDisconnect(String projectId) =>
+      '$_clickUpBase/disconnect/$projectId';
+
+  /// POST /api/ClickUp/push/{projectId}/approved
+  static String clickUpPushApproved(String projectId) =>
+      '$_clickUpBase/push/$projectId/approved';
 }

@@ -12,6 +12,10 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import 'package:requra/features/clickup/presentation/cubit/clickup_cubit.dart';
+import 'package:requra/features/clickup/presentation/widgets/clickup_integration_section.dart';
+import 'package:requra/core/di/di_project.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ExportSubTab extends StatefulWidget {
   final AiResultsDashboard dashboard;
@@ -63,6 +67,14 @@ class _ExportSubTabState extends State<ExportSubTab> {
 
           // Generate Export
           _buildGenerateExport(context),
+          
+          SizedBox(height: 24.h),
+          
+          // ClickUp Integration
+          BlocProvider(
+            create: (_) => sl<ClickUpCubit>()..fetchStatus(widget.dashboard.projectId),
+            child: ClickUpIntegrationSection(projectId: widget.dashboard.projectId),
+          ),
         ],
       ),
     );

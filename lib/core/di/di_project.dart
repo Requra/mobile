@@ -48,6 +48,12 @@ import 'package:requra/features/meeting/domain/usecases/end_meeting_usecase.dart
 import 'package:requra/features/meeting/presentation/cubit/meeting_cubit.dart';
 import 'package:requra/features/meeting/presentation/cubit/meeting_invite_cubit.dart';
 
+// ClickUp
+import 'package:requra/features/clickup/data/datasource/clickup_remote_data_source.dart';
+import 'package:requra/features/clickup/data/repositories/clickup_repository_impl.dart';
+import 'package:requra/features/clickup/domain/repositories/clickup_repository.dart';
+import 'package:requra/features/clickup/domain/usecases/clickup_usecases.dart';
+import 'package:requra/features/clickup/presentation/cubit/clickup_cubit.dart';
 final sl = GetIt.instance;
 
 void initProjectDI() {
@@ -217,5 +223,30 @@ void initProjectDI() {
 
   sl.registerLazySingleton<MeetingRemoteDataSource>(
       () => MeetingRemoteDataSourceImpl(apiClient: sl()));
+
+  // ── ClickUp ──
+  // Data Source
+  sl.registerLazySingleton<ClickUpRemoteDataSource>(
+      () => ClickUpRemoteDataSourceImpl(apiClient: sl()));
+
+  // Repository
+  sl.registerLazySingleton<ClickUpRepository>(
+      () => ClickUpRepositoryImpl(remoteDataSource: sl()));
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetClickUpAuthUrlUseCase(sl()));
+  sl.registerLazySingleton(() => CompleteClickUpCallbackUseCase(sl()));
+  sl.registerLazySingleton(() => GetClickUpStatusUseCase(sl()));
+  sl.registerLazySingleton(() => DisconnectClickUpUseCase(sl()));
+  sl.registerLazySingleton(() => PushApprovedToClickUpUseCase(sl()));
+
+  // Cubit
+  sl.registerFactory(() => ClickUpCubit(
+        getStatusUseCase: sl(),
+        getAuthUrlUseCase: sl(),
+        completeCallbackUseCase: sl(),
+        disconnectUseCase: sl(),
+        pushApprovedUseCase: sl(),
+      ));
 }
 

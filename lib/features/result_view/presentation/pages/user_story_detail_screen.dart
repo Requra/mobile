@@ -134,10 +134,10 @@ class _UserStoryDetailScreenState extends State<UserStoryDetailScreen> {
         AiUserStory story = widget.initialStory;
         
         if (state is ResultViewLoaded) {
-          final aiDashboard = state.aiDashboard;
-          if (aiDashboard != null) {
+          final userStories = state.userStories;
+          if (userStories != null) {
             try {
-              story = aiDashboard.userStories.firstWhere(
+              story = userStories.firstWhere(
                 (s) => s.id == widget.initialStory.id,
               );
             } catch (_) {}

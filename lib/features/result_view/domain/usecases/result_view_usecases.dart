@@ -62,6 +62,26 @@ class GetAiResultsDashboardUseCase {
   }
 }
 
+class GetUserStoriesUseCase {
+  final ResultViewRepository repository;
+
+  GetUserStoriesUseCase(this.repository);
+
+  Future<Either<Failure, List<AiUserStory>>> call(String projectId) {
+    return repository.getUserStories(projectId);
+  }
+}
+
+class GetRequirementsUseCase {
+  final ResultViewRepository repository;
+
+  GetRequirementsUseCase(this.repository);
+
+  Future<Either<Failure, List<AiRequirement>>> call(String projectId) {
+    return repository.getRequirements(projectId);
+  }
+}
+
 class GetStakeholderFeedbackUseCase {
   final ResultViewRepository repository;
 
@@ -128,10 +148,10 @@ class UpdateRequirementStatusUseCase {
   UpdateRequirementStatusUseCase(this.repository);
 
   Future<Either<Failure, Map<String, dynamic>>> call(
-      String projectId, String requirementId, String workflowStatus,
+      String projectId, String requirementId, int version, String workflowStatus,
       {String? reviewFeedback}) async {
     return await repository.updateRequirementStatus(
-        projectId, requirementId, workflowStatus,
+        projectId, requirementId, version, workflowStatus,
         reviewFeedback: reviewFeedback);
   }
 }
@@ -143,7 +163,8 @@ class UpdateRequirementUseCase {
 
   Future<Either<Failure, Map<String, dynamic>>> call(
     String projectId,
-    String requirementId, {
+    String requirementId,
+    int version, {
     required String title,
     required String description,
     required String type,
@@ -152,6 +173,7 @@ class UpdateRequirementUseCase {
     return await repository.updateRequirement(
       projectId,
       requirementId,
+      version,
       title: title,
       description: description,
       type: type,
@@ -166,10 +188,10 @@ class UpdateUserStoryStatusUseCase {
   UpdateUserStoryStatusUseCase(this.repository);
 
   Future<Either<Failure, Map<String, dynamic>>> call(
-      String projectId, String storyId, String workflowStatus,
+      String projectId, String storyId, int version, String workflowStatus,
       {String? reviewFeedback}) async {
     return await repository.updateUserStoryStatus(
-        projectId, storyId, workflowStatus,
+        projectId, storyId, version, workflowStatus,
         reviewFeedback: reviewFeedback);
   }
 }
@@ -181,7 +203,8 @@ class UpdateUserStoryUseCase {
 
   Future<Either<Failure, Map<String, dynamic>>> call(
     String projectId,
-    String storyId, {
+    String storyId,
+    int version, {
     required String title,
     required String description,
     required List<String> acceptanceCriteria,
@@ -190,6 +213,7 @@ class UpdateUserStoryUseCase {
     return await repository.updateUserStory(
       projectId,
       storyId,
+      version,
       title: title,
       description: description,
       acceptanceCriteria: acceptanceCriteria,
@@ -204,7 +228,7 @@ class RegenerateUserStoryUseCase {
   RegenerateUserStoryUseCase(this.repository);
 
   Future<Either<Failure, Map<String, dynamic>>> call(
-      String projectId, String storyId, String feedback) async {
-    return await repository.regenerateUserStory(projectId, storyId, feedback);
+      String projectId, String storyId, int version, String feedback) async {
+    return await repository.regenerateUserStory(projectId, storyId, version, feedback);
   }
 }

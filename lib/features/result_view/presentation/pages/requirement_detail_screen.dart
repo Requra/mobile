@@ -88,9 +88,9 @@ class _RequirementDetailScreenState extends State<RequirementDetailScreen> {
       builder: (context, state) {
         // Try to get updated requirement from state, fallback to initial
         AiRequirement req = widget.initialRequirement;
-        if (state is ResultViewLoaded && state.aiDashboard != null) {
+        if (state is ResultViewLoaded && state.requirements != null) {
           try {
-            req = state.aiDashboard!.requirements
+            req = state.requirements!
                 .firstWhere((r) => r.id == widget.initialRequirement.id);
           } catch (_) {}
         }

@@ -94,6 +94,8 @@ void initProjectDI() {
         getProjectDetailsUseCase: sl(),
         getProjectDocumentsUseCase: sl(),
         getAiResultsDashboardUseCase: sl(),
+        getUserStoriesUseCase: sl(),
+        getRequirementsUseCase: sl(),
         uploadDocumentUseCase: sl(),
         getStakeholderFeedbackUseCase: sl(),
         resolveFeedbackUseCase: sl(),
@@ -149,6 +151,8 @@ void initProjectDI() {
   sl.registerLazySingleton(() => GetProjectDetailsUseCase(sl()));
   sl.registerLazySingleton(() => GetProjectDocumentsUseCase(sl()));
   sl.registerLazySingleton(() => GetAiResultsDashboardUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserStoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetRequirementsUseCase(sl()));
   sl.registerLazySingleton(() => UploadDocumentUseCase(sl()));
   sl.registerLazySingleton(() => GetStakeholderFeedbackUseCase(sl()));
   sl.registerLazySingleton(() => ResolveFeedbackUseCase(sl()));

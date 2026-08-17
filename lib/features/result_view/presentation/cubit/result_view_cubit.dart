@@ -8,20 +8,12 @@ import 'package:requra/features/result_view/domain/entities/ai_results_dashboard
 import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
 
-import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:requra/features/result_view/domain/entities/project_details.dart';
-import 'package:requra/features/result_view/domain/entities/document.dart';
-import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
-import 'package:requra/features/result_view/domain/usecases/result_view_usecases.dart';
-import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
-
 class ResultViewCubit extends Cubit<ResultViewState> {
   final GetProjectDetailsUseCase _getProjectDetails;
   final GetProjectDocumentsUseCase _getProjectDocuments;
   final GetAiResultsDashboardUseCase _getAiResultsDashboard;
+  final GetUserStoriesUseCase _getUserStories;
+  final GetRequirementsUseCase _getRequirements;
   final UploadDocumentUseCase _uploadDocument;
 
   final GetStakeholderFeedbackUseCase _getStakeholderFeedback;
@@ -40,6 +32,8 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required GetProjectDetailsUseCase getProjectDetailsUseCase,
     required GetProjectDocumentsUseCase getProjectDocumentsUseCase,
     required GetAiResultsDashboardUseCase getAiResultsDashboardUseCase,
+    required GetUserStoriesUseCase getUserStoriesUseCase,
+    required GetRequirementsUseCase getRequirementsUseCase,
     required UploadDocumentUseCase uploadDocumentUseCase,
     required GetStakeholderFeedbackUseCase getStakeholderFeedbackUseCase,
     required ResolveFeedbackUseCase resolveFeedbackUseCase,
@@ -55,19 +49,21 @@ class ResultViewCubit extends Cubit<ResultViewState> {
   }) : _getProjectDetails = getProjectDetailsUseCase,
        _getProjectDocuments = getProjectDocumentsUseCase,
        _getAiResultsDashboard = getAiResultsDashboardUseCase,
+       _getUserStories = getUserStoriesUseCase,
+       _getRequirements = getRequirementsUseCase,
        _uploadDocument = uploadDocumentUseCase,
-        _getStakeholderFeedback = getStakeholderFeedbackUseCase,
-        _resolveFeedback = resolveFeedbackUseCase,
-        _getReviewInvitations = getReviewInvitationsUseCase,
-        _sendReviewInvitation = sendReviewInvitationUseCase,
-        _resendReviewInvitation = resendReviewInvitationUseCase,
-        _revokeReviewInvitation = revokeReviewInvitationUseCase,
-        _updateRequirementStatus = updateRequirementStatusUseCase,
-        _updateRequirement = updateRequirementUseCase,
-        _updateUserStoryStatus = updateUserStoryStatusUseCase,
-        _updateUserStory = updateUserStoryUseCase,
-        _regenerateUserStory = regenerateUserStoryUseCase,
-        super(ResultViewInitial());
+       _getStakeholderFeedback = getStakeholderFeedbackUseCase,
+       _resolveFeedback = resolveFeedbackUseCase,
+       _getReviewInvitations = getReviewInvitationsUseCase,
+       _sendReviewInvitation = sendReviewInvitationUseCase,
+       _resendReviewInvitation = resendReviewInvitationUseCase,
+       _revokeReviewInvitation = revokeReviewInvitationUseCase,
+       _updateRequirementStatus = updateRequirementStatusUseCase,
+       _updateRequirement = updateRequirementUseCase,
+       _updateUserStoryStatus = updateUserStoryStatusUseCase,
+       _updateUserStory = updateUserStoryUseCase,
+       _regenerateUserStory = regenerateUserStoryUseCase,
+       super(ResultViewInitial());
 
   /// Fetches project details and meetings in parallel.
   /// [totalRequirements] comes from the Project entity already available
@@ -121,6 +117,146 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     );
   }
 
+  /// Fetches user stories from the dedicated user-stories endpoint.
+  Future<void> fetchUserStories(String projectId) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return;
+
+    emit(
+      ResultViewLoaded(
+        projectDetails: currentState.projectDetails,
+        documents: currentState.documents,
+        totalRequirements: currentState.totalRequirements,
+        aiDashboard: currentState.aiDashboard,
+        userStories: currentState.userStories,
+        userStoriesLoading: true,
+        requirements: currentState.requirements,
+        requirementsLoading: currentState.requirementsLoading,
+        feedbackResponse: currentState.feedbackResponse,
+        feedbackLoading: currentState.feedbackLoading,
+        reviewInvitations: currentState.reviewInvitations,
+        invitationsLoading: currentState.invitationsLoading,
+      ),
+    );
+
+    final result = await _getUserStories(projectId);
+
+    result.fold(
+      (failure) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: false,
+              requirements: curr.requirements,
+              requirementsLoading: curr.requirementsLoading,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: curr.feedbackLoading,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: curr.invitationsLoading,
+            ),
+          );
+        }
+      },
+      (userStories) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              userStories: userStories,
+              userStoriesLoading: false,
+              requirements: curr.requirements,
+              requirementsLoading: curr.requirementsLoading,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: curr.feedbackLoading,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: curr.invitationsLoading,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  /// Fetches requirements from the dedicated requirements endpoint.
+  Future<void> fetchRequirements(String projectId) async {
+    final currentState = state;
+    if (currentState is! ResultViewLoaded) return;
+
+    emit(
+      ResultViewLoaded(
+        projectDetails: currentState.projectDetails,
+        documents: currentState.documents,
+        totalRequirements: currentState.totalRequirements,
+        aiDashboard: currentState.aiDashboard,
+        userStories: currentState.userStories,
+        userStoriesLoading: currentState.userStoriesLoading,
+        requirements: currentState.requirements,
+        requirementsLoading: true,
+        feedbackResponse: currentState.feedbackResponse,
+        feedbackLoading: currentState.feedbackLoading,
+        reviewInvitations: currentState.reviewInvitations,
+        invitationsLoading: currentState.invitationsLoading,
+      ),
+    );
+
+    final result = await _getRequirements(projectId);
+
+    result.fold(
+      (failure) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: curr.userStoriesLoading,
+              requirements: curr.requirements,
+              requirementsLoading: false,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: curr.feedbackLoading,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: curr.invitationsLoading,
+            ),
+          );
+        }
+      },
+      (requirements) {
+        if (state is ResultViewLoaded) {
+          final curr = state as ResultViewLoaded;
+          emit(
+            ResultViewLoaded(
+              projectDetails: curr.projectDetails,
+              documents: curr.documents,
+              totalRequirements: curr.totalRequirements,
+              aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: curr.userStoriesLoading,
+              requirements: requirements,
+              requirementsLoading: false,
+              feedbackResponse: curr.feedbackResponse,
+              feedbackLoading: curr.feedbackLoading,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: curr.invitationsLoading,
+            ),
+          );
+        }
+      },
+    );
+  }
+
   Future<String?> uploadDocument({
     required File file,
     required String projectId,
@@ -147,6 +283,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
         documents: List.from(currentState.documents)..add(tempDoc),
         totalRequirements: currentState.totalRequirements,
         aiDashboard: currentState.aiDashboard,
+        userStories: currentState.userStories,
+        userStoriesLoading: currentState.userStoriesLoading,
+        requirements: currentState.requirements,
+        requirementsLoading: currentState.requirementsLoading,
+        feedbackResponse: currentState.feedbackResponse,
+        feedbackLoading: currentState.feedbackLoading,
+        reviewInvitations: currentState.reviewInvitations,
+        invitationsLoading: currentState.invitationsLoading,
       ),
     );
 
@@ -168,6 +312,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
               documents: currentState.documents,
               totalRequirements: currentState.totalRequirements,
               aiDashboard: currentState.aiDashboard,
+              userStories: currentState.userStories,
+              userStoriesLoading: currentState.userStoriesLoading,
+              requirements: currentState.requirements,
+              requirementsLoading: currentState.requirementsLoading,
+              feedbackResponse: currentState.feedbackResponse,
+              feedbackLoading: currentState.feedbackLoading,
+              reviewInvitations: currentState.reviewInvitations,
+              invitationsLoading: currentState.invitationsLoading,
             ),
           );
           return failure.message; // Return error string
@@ -183,6 +335,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
               documents: updatedDocuments,
               totalRequirements: currentState.totalRequirements,
               aiDashboard: currentState.aiDashboard,
+              userStories: currentState.userStories,
+              userStoriesLoading: currentState.userStoriesLoading,
+              requirements: currentState.requirements,
+              requirementsLoading: currentState.requirementsLoading,
+              feedbackResponse: currentState.feedbackResponse,
+              feedbackLoading: currentState.feedbackLoading,
+              reviewInvitations: currentState.reviewInvitations,
+              invitationsLoading: currentState.invitationsLoading,
             ),
           );
           return null; // Return null on success
@@ -196,6 +356,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
           documents: currentState.documents,
           totalRequirements: currentState.totalRequirements,
           aiDashboard: currentState.aiDashboard,
+          userStories: currentState.userStories,
+          userStoriesLoading: currentState.userStoriesLoading,
+          requirements: currentState.requirements,
+          requirementsLoading: currentState.requirementsLoading,
+          feedbackResponse: currentState.feedbackResponse,
+          feedbackLoading: currentState.feedbackLoading,
+          reviewInvitations: currentState.reviewInvitations,
+          invitationsLoading: currentState.invitationsLoading,
         ),
       );
       return e.toString();
@@ -232,8 +400,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
         documents: currentState.documents,
         totalRequirements: currentState.totalRequirements,
         aiDashboard: currentState.aiDashboard,
+        userStories: currentState.userStories,
+        userStoriesLoading: currentState.userStoriesLoading,
+        requirements: currentState.requirements,
+        requirementsLoading: currentState.requirementsLoading,
         feedbackResponse: currentState.feedbackResponse,
         feedbackLoading: true,
+        reviewInvitations: currentState.reviewInvitations,
+        invitationsLoading: currentState.invitationsLoading,
       ),
     );
 
@@ -250,8 +424,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
               documents: curr.documents,
               totalRequirements: curr.totalRequirements,
               aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: curr.userStoriesLoading,
+              requirements: curr.requirements,
+              requirementsLoading: curr.requirementsLoading,
               feedbackResponse: curr.feedbackResponse,
               feedbackLoading: false,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: curr.invitationsLoading,
             ),
           );
         }
@@ -265,8 +445,14 @@ class ResultViewCubit extends Cubit<ResultViewState> {
               documents: curr.documents,
               totalRequirements: curr.totalRequirements,
               aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: curr.userStoriesLoading,
+              requirements: curr.requirements,
+              requirementsLoading: curr.requirementsLoading,
               feedbackResponse: feedbackResponse,
               feedbackLoading: false,
+              reviewInvitations: curr.reviewInvitations,
+              invitationsLoading: curr.invitationsLoading,
             ),
           );
         }
@@ -274,20 +460,25 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     );
   }
 
-  Future<String?> resolveFeedback(String projectId, String feedbackId, String? resolutionNote) async {
+  Future<String?> resolveFeedback(
+    String projectId,
+    String feedbackId,
+    String? resolutionNote,
+  ) async {
     final currentState = state;
     if (currentState is! ResultViewLoaded) return 'State not loaded';
 
-    final result = await _resolveFeedback(projectId, feedbackId, resolutionNote);
-
-    return result.fold(
-      (failure) => failure.message,
-      (_) {
-        // Refetch feedback on success
-        fetchStakeholderFeedback(projectId);
-        return null; // Success
-      },
+    final result = await _resolveFeedback(
+      projectId,
+      feedbackId,
+      resolutionNote,
     );
+
+    return result.fold((failure) => failure.message, (_) {
+      // Refetch feedback on success
+      fetchStakeholderFeedback(projectId);
+      return null; // Success
+    });
   }
 
   Future<void> fetchReviewInvitations(String projectId) async {
@@ -300,6 +491,10 @@ class ResultViewCubit extends Cubit<ResultViewState> {
         documents: currentState.documents,
         totalRequirements: currentState.totalRequirements,
         aiDashboard: currentState.aiDashboard,
+        userStories: currentState.userStories,
+        userStoriesLoading: currentState.userStoriesLoading,
+        requirements: currentState.requirements,
+        requirementsLoading: currentState.requirementsLoading,
         feedbackResponse: currentState.feedbackResponse,
         feedbackLoading: currentState.feedbackLoading,
         reviewInvitations: currentState.reviewInvitations,
@@ -319,6 +514,10 @@ class ResultViewCubit extends Cubit<ResultViewState> {
               documents: curr.documents,
               totalRequirements: curr.totalRequirements,
               aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: curr.userStoriesLoading,
+              requirements: curr.requirements,
+              requirementsLoading: curr.requirementsLoading,
               feedbackResponse: curr.feedbackResponse,
               feedbackLoading: curr.feedbackLoading,
               reviewInvitations: curr.reviewInvitations,
@@ -336,6 +535,10 @@ class ResultViewCubit extends Cubit<ResultViewState> {
               documents: curr.documents,
               totalRequirements: curr.totalRequirements,
               aiDashboard: curr.aiDashboard,
+              userStories: curr.userStories,
+              userStoriesLoading: curr.userStoriesLoading,
+              requirements: curr.requirements,
+              requirementsLoading: curr.requirementsLoading,
               feedbackResponse: curr.feedbackResponse,
               feedbackLoading: curr.feedbackLoading,
               reviewInvitations: reviewInvitations,
@@ -354,14 +557,17 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required String permission,
     String? expiresAt,
   }) async {
-    final result = await _sendReviewInvitation(projectId, displayName, email, permission, expiresAt);
-    return result.fold(
-      (failure) => failure.message,
-      (_) {
-        fetchReviewInvitations(projectId);
-        return null;
-      },
+    final result = await _sendReviewInvitation(
+      projectId,
+      displayName,
+      email,
+      permission,
+      expiresAt,
     );
+    return result.fold((failure) => failure.message, (_) {
+      fetchReviewInvitations(projectId);
+      return null;
+    });
   }
 
   Future<String?> resendReviewInvitation({
@@ -369,13 +575,10 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required String invitationId,
   }) async {
     final result = await _resendReviewInvitation(projectId, invitationId);
-    return result.fold(
-      (failure) => failure.message,
-      (_) {
-        fetchReviewInvitations(projectId);
-        return null;
-      },
-    );
+    return result.fold((failure) => failure.message, (_) {
+      fetchReviewInvitations(projectId);
+      return null;
+    });
   }
 
   Future<String?> revokeReviewInvitation({
@@ -383,54 +586,72 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required String invitationId,
   }) async {
     final result = await _revokeReviewInvitation(projectId, invitationId);
-    return result.fold(
-      (failure) => failure.message,
-      (_) {
-        fetchReviewInvitations(projectId);
-        return null;
-      },
-    );
+    return result.fold((failure) => failure.message, (_) {
+      fetchReviewInvitations(projectId);
+      return null;
+    });
   }
 
   Future<String?> updateRequirementStatus(
-      String projectId, String requirementId, String status,
-      {String? reviewFeedback}) async {
+    String projectId,
+    String requirementId,
+    String status, {
+    String? reviewFeedback,
+  }) async {
     final currentState = state;
-    if (currentState is! ResultViewLoaded ||
-        currentState.aiDashboard == null) {
+    if (currentState is! ResultViewLoaded) {
       return 'State not loaded';
     }
 
+    final req = currentState.requirements?.firstWhere(
+      (r) => r.id == requirementId,
+      orElse: () => throw Exception('Requirement not found'),
+    );
+    final int version = req?.version ?? 0;
+
     final result = await _updateRequirementStatus(
-        projectId, requirementId, status,
-        reviewFeedback: reviewFeedback);
+      projectId,
+      requirementId,
+      version,
+      status,
+      reviewFeedback: reviewFeedback,
+    );
 
     return result.fold(
-      (failure) => failure.message,
-      (_) {
-        // Update local state
-        final currentDashboard = currentState.aiDashboard!;
-        final updatedRequirements =
-            currentDashboard.requirements.map((req) {
-          if (req.id == requirementId) {
-            return req.copyWith(workflowStatus: status);
+      (failure) {
+        if (failure.message == 'CONCURRENCY_ERROR') {
+          fetchRequirements(projectId);
+          return 'This item was modified by someone else. The list has been refreshed. Please review the new version and try again.';
+        }
+        return failure.message;
+      },
+      (response) {
+        final int? newVersion =
+            response['data']?['version'] ?? response['version'];
+        // Update the separately fetched requirements list
+        final updatedRequirements = currentState.requirements?.map((r) {
+          if (r.id == requirementId) {
+            return r.copyWith(workflowStatus: status, version: newVersion);
           }
-          return req;
+          return r;
         }).toList();
 
-        final updatedDashboard =
-            currentDashboard.copyWith(requirements: updatedRequirements);
-
-        emit(ResultViewLoaded(
-          projectDetails: currentState.projectDetails,
-          documents: currentState.documents,
-          totalRequirements: currentState.totalRequirements,
-          aiDashboard: updatedDashboard,
-          feedbackResponse: currentState.feedbackResponse,
-          feedbackLoading: currentState.feedbackLoading,
-          reviewInvitations: currentState.reviewInvitations,
-          invitationsLoading: currentState.invitationsLoading,
-        ));
+        emit(
+          ResultViewLoaded(
+            projectDetails: currentState.projectDetails,
+            documents: currentState.documents,
+            totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
+            userStories: currentState.userStories,
+            userStoriesLoading: currentState.userStoriesLoading,
+            requirements: updatedRequirements ?? currentState.requirements,
+            requirementsLoading: currentState.requirementsLoading,
+            feedbackResponse: currentState.feedbackResponse,
+            feedbackLoading: currentState.feedbackLoading,
+            reviewInvitations: currentState.reviewInvitations,
+            invitationsLoading: currentState.invitationsLoading,
+          ),
+        );
         return null; // Success
       },
     );
@@ -445,14 +666,20 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required String priority,
   }) async {
     final currentState = state;
-    if (currentState is! ResultViewLoaded ||
-        currentState.aiDashboard == null) {
+    if (currentState is! ResultViewLoaded) {
       return 'State not loaded';
     }
+
+    final req = currentState.requirements?.firstWhere(
+      (r) => r.id == requirementId,
+      orElse: () => throw Exception('Requirement not found'),
+    );
+    final int version = req?.version ?? 0;
 
     final result = await _updateRequirement(
       projectId,
       requirementId,
+      version,
       title: title,
       description: description,
       type: type,
@@ -460,79 +687,111 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     );
 
     return result.fold(
-      (failure) => failure.message,
-      (_) {
-        // Update local state
-        final currentDashboard = currentState.aiDashboard!;
-        final updatedRequirements =
-            currentDashboard.requirements.map((req) {
-          if (req.id == requirementId) {
-            return req.copyWith(
+      (failure) {
+        if (failure.message == 'CONCURRENCY_ERROR') {
+          fetchRequirements(projectId);
+          return 'This item was modified by someone else. The list has been refreshed. Please review the new version and try again.';
+        }
+        return failure.message;
+      },
+      (response) {
+        final int? newVersion =
+            response['data']?['version'] ?? response['version'];
+        // Update the separately fetched requirements list
+        final updatedRequirements = currentState.requirements?.map((r) {
+          if (r.id == requirementId) {
+            return r.copyWith(
               title: title,
               description: description,
               type: type,
               priority: priority,
+              version: newVersion,
             );
           }
-          return req;
+          return r;
         }).toList();
 
-        final updatedDashboard =
-            currentDashboard.copyWith(requirements: updatedRequirements);
-
-        emit(ResultViewLoaded(
-          projectDetails: currentState.projectDetails,
-          documents: currentState.documents,
-          totalRequirements: currentState.totalRequirements,
-          aiDashboard: updatedDashboard,
-          feedbackResponse: currentState.feedbackResponse,
-          feedbackLoading: currentState.feedbackLoading,
-          reviewInvitations: currentState.reviewInvitations,
-          invitationsLoading: currentState.invitationsLoading,
-        ));
+        emit(
+          ResultViewLoaded(
+            projectDetails: currentState.projectDetails,
+            documents: currentState.documents,
+            totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
+            userStories: currentState.userStories,
+            userStoriesLoading: currentState.userStoriesLoading,
+            requirements: updatedRequirements ?? currentState.requirements,
+            requirementsLoading: currentState.requirementsLoading,
+            feedbackResponse: currentState.feedbackResponse,
+            feedbackLoading: currentState.feedbackLoading,
+            reviewInvitations: currentState.reviewInvitations,
+            invitationsLoading: currentState.invitationsLoading,
+          ),
+        );
         return null; // Success
       },
     );
   }
 
   Future<String?> updateUserStoryStatus(
-      String projectId, String storyId, String status,
-      {String? reviewFeedback}) async {
+    String projectId,
+    String storyId,
+    String status, {
+    String? reviewFeedback,
+  }) async {
     final currentState = state;
-    if (currentState is! ResultViewLoaded ||
-        currentState.aiDashboard == null) {
+    if (currentState is! ResultViewLoaded) {
       return 'State not loaded';
     }
 
+    final story = currentState.userStories?.firstWhere(
+      (s) => s.id == storyId,
+      orElse: () => throw Exception('User story not found'),
+    );
+    final int version = story?.version ?? 0;
+
     final result = await _updateUserStoryStatus(
-        projectId, storyId, status,
-        reviewFeedback: reviewFeedback);
+      projectId,
+      storyId,
+      version,
+      status,
+      reviewFeedback: reviewFeedback,
+    );
 
     return result.fold(
-      (failure) => failure.message,
-      (_) {
-        final currentDashboard = currentState.aiDashboard!;
-        final updatedStories =
-            currentDashboard.userStories.map((story) {
-          if (story.id == storyId) {
-            return story.copyWith(workflowStatus: status);
+      (failure) {
+        if (failure.message == 'CONCURRENCY_ERROR') {
+          fetchUserStories(projectId);
+          return 'This item was modified by someone else. The list has been refreshed. Please review the new version and try again.';
+        }
+        return failure.message;
+      },
+      (response) {
+        final int? newVersion =
+            response['data']?['version'] ?? response['version'];
+        // Update the separately fetched user stories list
+        final updatedStories = currentState.userStories?.map((s) {
+          if (s.id == storyId) {
+            return s.copyWith(workflowStatus: status, version: newVersion);
           }
-          return story;
+          return s;
         }).toList();
 
-        final updatedDashboard =
-            currentDashboard.copyWith(userStories: updatedStories);
-
-        emit(ResultViewLoaded(
-          projectDetails: currentState.projectDetails,
-          documents: currentState.documents,
-          totalRequirements: currentState.totalRequirements,
-          aiDashboard: updatedDashboard,
-          feedbackResponse: currentState.feedbackResponse,
-          feedbackLoading: currentState.feedbackLoading,
-          reviewInvitations: currentState.reviewInvitations,
-          invitationsLoading: currentState.invitationsLoading,
-        ));
+        emit(
+          ResultViewLoaded(
+            projectDetails: currentState.projectDetails,
+            documents: currentState.documents,
+            totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
+            userStories: updatedStories ?? currentState.userStories,
+            userStoriesLoading: currentState.userStoriesLoading,
+            requirements: currentState.requirements,
+            requirementsLoading: currentState.requirementsLoading,
+            feedbackResponse: currentState.feedbackResponse,
+            feedbackLoading: currentState.feedbackLoading,
+            reviewInvitations: currentState.reviewInvitations,
+            invitationsLoading: currentState.invitationsLoading,
+          ),
+        );
         return null; // Success
       },
     );
@@ -547,14 +806,20 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     required String priority,
   }) async {
     final currentState = state;
-    if (currentState is! ResultViewLoaded ||
-        currentState.aiDashboard == null) {
+    if (currentState is! ResultViewLoaded) {
       return 'State not loaded';
     }
+
+    final story = currentState.userStories?.firstWhere(
+      (s) => s.id == storyId,
+      orElse: () => throw Exception('User story not found'),
+    );
+    final int version = story?.version ?? 0;
 
     final result = await _updateUserStory(
       projectId,
       storyId,
+      version,
       title: title,
       description: description,
       acceptanceCriteria: acceptanceCriteria,
@@ -562,58 +827,113 @@ class ResultViewCubit extends Cubit<ResultViewState> {
     );
 
     return result.fold(
-      (failure) => failure.message,
-      (_) {
-        final currentDashboard = currentState.aiDashboard!;
-        final updatedStories =
-            currentDashboard.userStories.map((story) {
-          if (story.id == storyId) {
-            return story.copyWith(
+      (failure) {
+        if (failure.message == 'CONCURRENCY_ERROR') {
+          fetchUserStories(projectId);
+          return 'This item was modified by someone else. The list has been refreshed. Please review the new version and try again.';
+        }
+        return failure.message;
+      },
+      (response) {
+        final int? newVersion =
+            response['data']?['version'] ?? response['version'];
+        // Update the separately fetched user stories list
+        final updatedStories = currentState.userStories?.map((s) {
+          if (s.id == storyId) {
+            return s.copyWith(
               title: title,
               description: description,
               acceptanceCriteria: acceptanceCriteria,
               priority: priority,
+              version: newVersion,
             );
           }
-          return story;
+          return s;
         }).toList();
 
-        final updatedDashboard =
-            currentDashboard.copyWith(userStories: updatedStories);
-
-        emit(ResultViewLoaded(
-          projectDetails: currentState.projectDetails,
-          documents: currentState.documents,
-          totalRequirements: currentState.totalRequirements,
-          aiDashboard: updatedDashboard,
-          feedbackResponse: currentState.feedbackResponse,
-          feedbackLoading: currentState.feedbackLoading,
-          reviewInvitations: currentState.reviewInvitations,
-          invitationsLoading: currentState.invitationsLoading,
-        ));
+        emit(
+          ResultViewLoaded(
+            projectDetails: currentState.projectDetails,
+            documents: currentState.documents,
+            totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
+            userStories: updatedStories ?? currentState.userStories,
+            userStoriesLoading: currentState.userStoriesLoading,
+            requirements: currentState.requirements,
+            requirementsLoading: currentState.requirementsLoading,
+            feedbackResponse: currentState.feedbackResponse,
+            feedbackLoading: currentState.feedbackLoading,
+            reviewInvitations: currentState.reviewInvitations,
+            invitationsLoading: currentState.invitationsLoading,
+          ),
+        );
         return null; // Success
       },
     );
   }
 
   Future<String?> regenerateUserStory(
-      String projectId, String storyId, String feedback) async {
+    String projectId,
+    String storyId,
+    String feedback,
+  ) async {
     final currentState = state;
     if (currentState is! ResultViewLoaded) {
       return 'State not loaded';
     }
 
-    final result = await _regenerateUserStory(projectId, storyId, feedback);
+    final story = currentState.userStories?.firstWhere(
+      (s) => s.id == storyId,
+      orElse: () => throw Exception('User story not found'),
+    );
+    final int version = story?.version ?? 0;
+
+    final result = await _regenerateUserStory(
+      projectId,
+      storyId,
+      version,
+      feedback,
+    );
 
     return result.fold(
-      (failure) => failure.message,
-      (_) {
-        // Since regenerate replaces the object in backend, and likely modifies
-        // revision details, we should re-fetch the dashboard to get fresh data
-        fetchResultView(projectId, totalRequirements: currentState.totalRequirements);
-        return null; // Success
+      (failure) {
+        if (failure.message == 'CONCURRENCY_ERROR') {
+          fetchUserStories(projectId);
+          return 'This item was modified by someone else. The list has been refreshed. Please review the new version and try again.';
+        }
+        return failure.message;
+      },
+      (response) {
+        final int? newVersion =
+            response['data']?['version'] ?? response['version'];
+        final updatedStories = currentState.userStories?.map((s) {
+          if (s.id == storyId) {
+            return s.copyWith(
+              workflowStatus: 'GENERATED',
+              version: newVersion,
+            ); // Usually resets status
+          }
+          return s;
+        }).toList();
+
+        emit(
+          ResultViewLoaded(
+            projectDetails: currentState.projectDetails,
+            documents: currentState.documents,
+            totalRequirements: currentState.totalRequirements,
+            aiDashboard: currentState.aiDashboard,
+            userStories: updatedStories ?? currentState.userStories,
+            userStoriesLoading: currentState.userStoriesLoading,
+            requirements: currentState.requirements,
+            requirementsLoading: currentState.requirementsLoading,
+            feedbackResponse: currentState.feedbackResponse,
+            feedbackLoading: currentState.feedbackLoading,
+            reviewInvitations: currentState.reviewInvitations,
+            invitationsLoading: currentState.invitationsLoading,
+          ),
+        );
+        return null;
       },
     );
   }
 }
-

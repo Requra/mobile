@@ -77,30 +77,13 @@ class _EditRequirementDialogState extends State<EditRequirementDialog> {
       priority: _selectedPriority,
     );
 
-    if (error != null) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        AppSnackbar.showError(context, 'Error updating content: $error');
-      }
-      return;
-    }
-
-    // 2. Update status to EDITED
-    final statusError = await cubit.updateRequirementStatus(
-      widget.projectId,
-      widget.requirement.id,
-      'EDITED',
-    );
-
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
 
-      if (statusError != null) {
-        AppSnackbar.showError(context, 'Error updating status: $statusError');
+      if (error != null) {
+        AppSnackbar.showError(context, 'Error updating content: $error');
       } else {
         AppSnackbar.showSuccess(context, 'Requirement updated successfully');
         Navigator.of(context).pop();

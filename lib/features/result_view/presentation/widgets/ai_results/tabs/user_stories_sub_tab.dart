@@ -6,6 +6,7 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 import 'package:requra/features/result_view/domain/entities/ai_results_dashboard.dart';
 import 'package:requra/features/result_view/presentation/cubit/result_view_cubit.dart';
+import 'package:requra/features/result_view/presentation/cubit/result_view_state.dart';
 import 'package:requra/features/result_view/presentation/pages/user_story_detail_screen.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/edit_user_story_dialog.dart';
 import 'package:requra/features/result_view/presentation/widgets/ai_results/regenerate_user_story_dialog.dart';
@@ -14,7 +15,7 @@ import 'package:requra/features/result_view/presentation/widgets/ai_results/shar
 import 'package:requra/features/result_view/presentation/widgets/ai_results/shared/review_action_popup_menu.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
 
-class UserStoriesSubTab extends StatelessWidget {
+class UserStoriesSubTab extends StatefulWidget {
   final AiResultsDashboard dashboard;
   final String projectId;
 
@@ -25,26 +26,57 @@ class UserStoriesSubTab extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    if (dashboard.userStories.isEmpty) {
-      return Center(
-        child: Text(
-          'No user stories available',
-          style: regularStyle(fontSize: FontSize.font16, color: AppColors.grey),
-        ),
-      );
-    }
+  State<UserStoriesSubTab> createState() => _UserStoriesSubTabState();
+}
 
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-      itemCount: dashboard.userStories.length,
-      separatorBuilder: (context, index) => SizedBox(height: 16.h),
-      itemBuilder: (context, index) {
-        final story = dashboard.userStories[index];
-        return AiUserStoryCard(
-          story: story,
-          projectId: projectId,
+class _UserStoriesSubTabState extends State<UserStoriesSubTab> {
+  bool _hasFetched = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasFetched) {
+      _hasFetched = true;
+      context.read<ResultViewCubit>().fetchUserStories(widget.projectId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ResultViewCubit, ResultViewState>(
+      builder: (context, state) {
+        if (state is! ResultViewLoaded) {
+          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+        }
+
+        if (state.userStoriesLoading) {
+          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+        }
+
+        final stories = state.userStories ?? [];
+
+        if (stories.isEmpty) {
+          return Center(
+            child: Text(
+              'No user stories available',
+              style: regularStyle(fontSize: FontSize.font16, color: AppColors.grey),
+            ),
+          );
+        }
+
+        return ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          itemCount: stories.length,
+          separatorBuilder: (context, index) => SizedBox(height: 16.h),
+          itemBuilder: (context, index) {
+            final story = stories[index];
+            return AiUserStoryCard(
+              story: story,
+              projectId: widget.projectId,
+              displayIndex: index + 1,
+            );
+          },
         );
       },
     );
@@ -54,11 +86,13 @@ class UserStoriesSubTab extends StatelessWidget {
 class AiUserStoryCard extends StatefulWidget {
   final AiUserStory story;
   final String projectId;
+  final int displayIndex;
 
   const AiUserStoryCard({
     super.key,
     required this.story,
     required this.projectId,
+    required this.displayIndex,
   });
 
   @override
@@ -209,7 +243,7 @@ class _AiUserStoryCardState extends State<AiUserStoryCard> {
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                         child: Text(
-                          widget.story.id,
+                          'US-${widget.displayIndex.toString().padLeft(3, '0')}',
                           style: semiBoldStyle(
                             fontSize: FontSize.font12,
                             color: AppColors.grey,
@@ -256,33 +290,6 @@ class _AiUserStoryCardState extends State<AiUserStoryCard> {
                   iconColor: AppColors.grey,
                 ),
               ],
-            ),
-            SizedBox(height: 12.h),
-
-            // Linked Requirement Indicator
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEBF5FF),
-                borderRadius: BorderRadius.circular(4.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.link, size: 14.sp, color: const Color(0xFF1D4ED8)),
-                  SizedBox(width: 4.w),
-                  Flexible(
-                    child: Text(
-                      widget.story.requirementId,
-                      overflow: TextOverflow.ellipsis,
-                      style: semiBoldStyle(
-                        fontSize: FontSize.font12,
-                        color: const Color(0xFF1D4ED8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
             SizedBox(height: 12.h),
 

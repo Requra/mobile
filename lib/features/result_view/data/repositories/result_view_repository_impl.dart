@@ -29,7 +29,8 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
 
   @override
   Future<Either<Failure, List<Document>>> getProjectDocuments(
-      String projectId) async {
+    String projectId,
+  ) async {
     try {
       final result = await remoteDataSource.getProjectDocuments(projectId);
       return Right(result);
@@ -68,7 +69,8 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
 
   @override
   Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(
-      String projectId) async {
+    String projectId,
+  ) async {
     try {
       final result = await remoteDataSource.getAiResultsDashboard(projectId);
       return Right(result);
@@ -80,7 +82,37 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
   }
 
   @override
-  Future<Either<Failure, StakeholderFeedbackResponse>> getStakeholderFeedback(String projectId) async {
+  Future<Either<Failure, List<AiUserStory>>> getUserStories(
+    String projectId,
+  ) async {
+    try {
+      final result = await remoteDataSource.getUserStories(projectId);
+      return Right(result.items);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'A network error occurred.'));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AiRequirement>>> getRequirements(
+    String projectId,
+  ) async {
+    try {
+      final result = await remoteDataSource.getRequirements(projectId);
+      return Right(result.items);
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'A network error occurred.'));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, StakeholderFeedbackResponse>> getStakeholderFeedback(
+    String projectId,
+  ) async {
     try {
       final result = await remoteDataSource.getStakeholderFeedback(projectId);
       return Right(result);
@@ -92,9 +124,17 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
   }
 
   @override
-  Future<Either<Failure, void>> resolveFeedback(String projectId, String feedbackId, String? resolutionNote) async {
+  Future<Either<Failure, void>> resolveFeedback(
+    String projectId,
+    String feedbackId,
+    String? resolutionNote,
+  ) async {
     try {
-      await remoteDataSource.resolveFeedback(projectId, feedbackId, resolutionNote);
+      await remoteDataSource.resolveFeedback(
+        projectId,
+        feedbackId,
+        resolutionNote,
+      );
       return const Right(null);
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'A network error occurred.'));
@@ -104,52 +144,96 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
   }
 
   @override
-  Future<Either<Failure, ReviewInvitationResponse>> getReviewInvitations(String projectId) async {
+  Future<Either<Failure, ReviewInvitationResponse>> getReviewInvitations(
+    String projectId,
+  ) async {
     try {
       final response = await remoteDataSource.getReviewInvitations(projectId);
       return Right(response);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, void>> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt) async {
+  Future<Either<Failure, void>> sendReviewInvitation(
+    String projectId,
+    String displayName,
+    String email,
+    String permission,
+    String? expiresAt,
+  ) async {
     try {
-      await remoteDataSource.sendReviewInvitation(projectId, displayName, email, permission, expiresAt);
+      await remoteDataSource.sendReviewInvitation(
+        projectId,
+        displayName,
+        email,
+        permission,
+        expiresAt,
+      );
       return const Right(null);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, void>> resendReviewInvitation(String projectId, String invitationId) async {
+  Future<Either<Failure, void>> resendReviewInvitation(
+    String projectId,
+    String invitationId,
+  ) async {
     try {
       await remoteDataSource.resendReviewInvitation(projectId, invitationId);
       return const Right(null);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, void>> revokeReviewInvitation(String projectId, String invitationId) async {
+  Future<Either<Failure, void>> revokeReviewInvitation(
+    String projectId,
+    String invitationId,
+  ) async {
     try {
       await remoteDataSource.revokeReviewInvitation(projectId, invitationId);
       return const Right(null);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
@@ -157,16 +241,33 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> updateRequirementStatus(
-      String projectId, String requirementId, String workflowStatus,
-      {String? reviewFeedback}) async {
+    String projectId,
+    String requirementId,
+    int version,
+    String workflowStatus, {
+    String? reviewFeedback,
+  }) async {
     try {
       final result = await remoteDataSource.updateRequirementStatus(
-          projectId, requirementId, workflowStatus,
-          reviewFeedback: reviewFeedback);
+        projectId,
+        requirementId,
+        version,
+        workflowStatus,
+        reviewFeedback: reviewFeedback,
+      );
       return Right(result);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        if (e.response?.statusCode == 412 || e.response?.statusCode == 409) {
+          return const Left(ServerFailure('CONCURRENCY_ERROR'));
+        }
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
@@ -175,7 +276,8 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
   @override
   Future<Either<Failure, Map<String, dynamic>>> updateRequirement(
     String projectId,
-    String requirementId, {
+    String requirementId,
+    int version, {
     required String title,
     required String description,
     required String type,
@@ -185,6 +287,7 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       final result = await remoteDataSource.updateRequirement(
         projectId,
         requirementId,
+        version,
         title: title,
         description: description,
         type: type,
@@ -193,7 +296,16 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       return Right(result);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        if (e.response?.statusCode == 412 || e.response?.statusCode == 409) {
+          return const Left(ServerFailure('CONCURRENCY_ERROR'));
+        }
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
@@ -201,16 +313,33 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> updateUserStoryStatus(
-      String projectId, String storyId, String workflowStatus,
-      {String? reviewFeedback}) async {
+    String projectId,
+    String storyId,
+    int version,
+    String workflowStatus, {
+    String? reviewFeedback,
+  }) async {
     try {
       final result = await remoteDataSource.updateUserStoryStatus(
-          projectId, storyId, workflowStatus,
-          reviewFeedback: reviewFeedback);
+        projectId,
+        storyId,
+        version,
+        workflowStatus,
+        reviewFeedback: reviewFeedback,
+      );
       return Right(result);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        if (e.response?.statusCode == 412 || e.response?.statusCode == 409) {
+          return const Left(ServerFailure('CONCURRENCY_ERROR'));
+        }
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
@@ -219,7 +348,8 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
   @override
   Future<Either<Failure, Map<String, dynamic>>> updateUserStory(
     String projectId,
-    String storyId, {
+    String storyId,
+    int version, {
     required String title,
     required String description,
     required List<String> acceptanceCriteria,
@@ -229,6 +359,7 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       final result = await remoteDataSource.updateUserStory(
         projectId,
         storyId,
+        version,
         title: title,
         description: description,
         acceptanceCriteria: acceptanceCriteria,
@@ -237,7 +368,16 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
       return Right(result);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        if (e.response?.statusCode == 412 || e.response?.statusCode == 409) {
+          return const Left(ServerFailure('CONCURRENCY_ERROR'));
+        }
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
@@ -245,17 +385,33 @@ class ResultViewRepositoryImpl implements ResultViewRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> regenerateUserStory(
-      String projectId, String storyId, String feedback) async {
+    String projectId,
+    String storyId,
+    int version,
+    String feedback,
+  ) async {
     try {
       final result = await remoteDataSource.regenerateUserStory(
-          projectId, storyId, feedback);
+        projectId,
+        storyId,
+        version,
+        feedback,
+      );
       return Right(result);
     } catch (e) {
       if (e is DioException) {
-        return Left(ServerFailure(e.response?.data['message'] ?? e.message));
+        if (e.response?.statusCode == 412 || e.response?.statusCode == 409) {
+          return const Left(ServerFailure('CONCURRENCY_ERROR'));
+        }
+        String errorMessage = e.message ?? 'An error occurred';
+        if (e.response?.data is Map<String, dynamic>) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.response?.data is String) {
+          errorMessage = e.response?.data;
+        }
+        return Left(ServerFailure(errorMessage));
       }
       return Left(ServerFailure(e.toString()));
     }
   }
 }
-

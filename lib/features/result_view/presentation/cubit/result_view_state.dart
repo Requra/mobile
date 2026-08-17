@@ -21,6 +21,10 @@ class ResultViewLoaded extends ResultViewState {
   final List<Document> documents;
   final int totalRequirements;
   final AiResultsDashboard? aiDashboard;
+  final List<AiUserStory>? userStories;
+  final bool userStoriesLoading;
+  final List<AiRequirement>? requirements;
+  final bool requirementsLoading;
   final StakeholderFeedbackResponse? feedbackResponse;
   final bool feedbackLoading;
   final ReviewInvitationResponse? reviewInvitations;
@@ -31,6 +35,10 @@ class ResultViewLoaded extends ResultViewState {
     required this.documents,
     required this.totalRequirements,
     this.aiDashboard,
+    this.userStories,
+    this.userStoriesLoading = false,
+    this.requirements,
+    this.requirementsLoading = false,
     this.feedbackResponse,
     this.feedbackLoading = false,
     this.reviewInvitations,
@@ -43,6 +51,10 @@ class ResultViewLoaded extends ResultViewState {
         documents,
         totalRequirements,
         aiDashboard,
+        userStories,
+        userStoriesLoading,
+        requirements,
+        requirementsLoading,
         feedbackResponse,
         feedbackLoading,
         reviewInvitations,

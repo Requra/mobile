@@ -7,6 +7,8 @@ import 'package:requra/features/result_view/data/models/document_model.dart';
 import 'package:requra/features/result_view/data/models/ai_results_dashboard_model.dart';
 import 'package:requra/features/result_view/data/models/stakeholder_feedback_model.dart';
 import 'package:requra/features/result_view/data/models/review_invitation_model.dart';
+import 'package:requra/features/result_view/data/models/user_story_list_model.dart';
+import 'package:requra/features/result_view/data/models/requirement_list_model.dart';
 
 abstract class ResultViewRemoteDataSource {
   Future<ProjectDetailsModel> getProjectDetails(String id);
@@ -20,36 +22,64 @@ abstract class ResultViewRemoteDataSource {
     String? meetingId,
   });
   Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId);
-  Future<StakeholderFeedbackResponseModel> getStakeholderFeedback(String projectId);
-  Future<void> resolveFeedback(String projectId, String feedbackId, String? resolutionNote);
+  Future<UserStoryListResponse> getUserStories(String projectId);
+  Future<RequirementListResponse> getRequirements(String projectId);
+  Future<StakeholderFeedbackResponseModel> getStakeholderFeedback(
+    String projectId,
+  );
+  Future<void> resolveFeedback(
+    String projectId,
+    String feedbackId,
+    String? resolutionNote,
+  );
   Future<ReviewInvitationResponseModel> getReviewInvitations(String projectId);
-  Future<void> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt);
+  Future<void> sendReviewInvitation(
+    String projectId,
+    String displayName,
+    String email,
+    String permission,
+    String? expiresAt,
+  );
   Future<void> resendReviewInvitation(String projectId, String invitationId);
   Future<void> revokeReviewInvitation(String projectId, String invitationId);
   Future<Map<String, dynamic>> updateRequirementStatus(
-      String projectId, String requirementId, String workflowStatus,
-      {String? reviewFeedback});
+    String projectId,
+    String requirementId,
+    int version,
+    String workflowStatus, {
+    String? reviewFeedback,
+  });
   Future<Map<String, dynamic>> updateRequirement(
     String projectId,
-    String requirementId, {
+    String requirementId,
+    int version, {
     required String title,
     required String description,
     required String type,
     required String priority,
   });
   Future<Map<String, dynamic>> updateUserStoryStatus(
-      String projectId, String storyId, String workflowStatus,
-      {String? reviewFeedback});
+    String projectId,
+    String storyId,
+    int version,
+    String workflowStatus, {
+    String? reviewFeedback,
+  });
   Future<Map<String, dynamic>> updateUserStory(
     String projectId,
-    String storyId, {
+    String storyId,
+    int version, {
     required String title,
     required String description,
     required List<String> acceptanceCriteria,
     required String priority,
   });
   Future<Map<String, dynamic>> regenerateUserStory(
-      String projectId, String storyId, String feedback);
+    String projectId,
+    String storyId,
+    int version,
+    String feedback,
+  );
 }
 
 class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
@@ -60,8 +90,7 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   @override
   Future<ProjectDetailsModel> getProjectDetails(String id) async {
     try {
-      final response =
-          await apiClient.dio.get('${ApiConstants.projects}/$id');
+      final response = await apiClient.dio.get('${ApiConstants.projects}/$id');
 
       Map<String, dynamic> data;
       if (response.data['data'] != null) {
@@ -86,7 +115,9 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
       );
 
       // Handle 204 No Content or empty data
-      if (response.statusCode == 204 || response.data == null || response.data == '') {
+      if (response.statusCode == 204 ||
+          response.data == null ||
+          response.data == '') {
         return [];
       }
 
@@ -119,7 +150,7 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }) async {
     try {
       final fileName = file.path.split('/').last;
-      
+
       // Use PascalCase as required by the backend API
       final formData = FormData.fromMap({
         'File': await MultipartFile.fromFile(file.path, filename: fileName),
@@ -149,7 +180,9 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }
 
   @override
-  Future<AiResultsDashboardModel> getAiResultsDashboard(String projectId) async {
+  Future<AiResultsDashboardModel> getAiResultsDashboard(
+    String projectId,
+  ) async {
     try {
       final response = await apiClient.dio.get(
         ApiConstants.aiResultsDashboard(projectId),
@@ -169,7 +202,49 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }
 
   @override
-  Future<StakeholderFeedbackResponseModel> getStakeholderFeedback(String projectId) async {
+  Future<UserStoryListResponse> getUserStories(String projectId) async {
+    try {
+      final response = await apiClient.dio.get(
+        ApiConstants.userStoriesList(projectId),
+      );
+
+      Map<String, dynamic> data;
+      if (response.data['data'] != null) {
+        data = response.data['data'];
+      } else {
+        data = response.data;
+      }
+
+      return UserStoryListResponse.fromJson(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<RequirementListResponse> getRequirements(String projectId) async {
+    try {
+      final response = await apiClient.dio.get(
+        ApiConstants.requirementsList(projectId),
+      );
+
+      Map<String, dynamic> data;
+      if (response.data['data'] != null) {
+        data = response.data['data'];
+      } else {
+        data = response.data;
+      }
+
+      return RequirementListResponse.fromJson(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<StakeholderFeedbackResponseModel> getStakeholderFeedback(
+    String projectId,
+  ) async {
     try {
       final response = await apiClient.dio.get(
         ApiConstants.feedback(projectId),
@@ -189,13 +264,18 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }
 
   @override
-  Future<void> resolveFeedback(String projectId, String feedbackId, String? resolutionNote) async {
+  Future<void> resolveFeedback(
+    String projectId,
+    String feedbackId,
+    String? resolutionNote,
+  ) async {
     try {
       await apiClient.dio.patch(
         ApiConstants.resolveFeedback(projectId, feedbackId),
         data: {
           "status": "RESOLVED",
-          if (resolutionNote != null && resolutionNote.isNotEmpty) "resolutionNote": resolutionNote,
+          if (resolutionNote != null && resolutionNote.isNotEmpty)
+            "resolutionNote": resolutionNote,
           "isRead": true,
         },
       );
@@ -205,9 +285,13 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }
 
   @override
-  Future<ReviewInvitationResponseModel> getReviewInvitations(String projectId) async {
+  Future<ReviewInvitationResponseModel> getReviewInvitations(
+    String projectId,
+  ) async {
     try {
-      final response = await apiClient.dio.get(ApiConstants.reviewInvitations(projectId));
+      final response = await apiClient.dio.get(
+        ApiConstants.reviewInvitations(projectId),
+      );
       return ReviewInvitationResponseModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
@@ -215,16 +299,19 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }
 
   @override
-  Future<void> sendReviewInvitation(String projectId, String displayName, String email, String permission, String? expiresAt) async {
+  Future<void> sendReviewInvitation(
+    String projectId,
+    String displayName,
+    String email,
+    String permission,
+    String? expiresAt,
+  ) async {
     try {
       await apiClient.dio.post(
         ApiConstants.reviewInvitations(projectId),
         data: {
           "stakeholders": [
-            {
-              "displayName": displayName,
-              "email": email,
-            }
+            {"displayName": displayName, "email": email},
           ],
           "permission": permission,
           if (expiresAt != null) "expiresAt": expiresAt,
@@ -236,19 +323,29 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   }
 
   @override
-  Future<void> resendReviewInvitation(String projectId, String invitationId) async {
+  Future<void> resendReviewInvitation(
+    String projectId,
+    String invitationId,
+  ) async {
     try {
-      await apiClient.dio.post(ApiConstants.resendInvitation(projectId, invitationId));
+      await apiClient.dio.post(
+        ApiConstants.resendInvitation(projectId, invitationId),
+      );
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> revokeReviewInvitation(String projectId, String invitationId) async {
+  Future<void> revokeReviewInvitation(
+    String projectId,
+    String invitationId,
+  ) async {
     try {
       // It's a DELETE endpoint
-      await apiClient.dio.delete('${ApiConstants.reviewInvitations(projectId)}/$invitationId');
+      await apiClient.dio.delete(
+        '${ApiConstants.reviewInvitations(projectId)}/$invitationId',
+      );
     } catch (e) {
       rethrow;
     }
@@ -256,18 +353,23 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> updateRequirementStatus(
-      String projectId, String requirementId, String workflowStatus,
-      {String? reviewFeedback}) async {
+    String projectId,
+    String requirementId,
+    int version,
+    String workflowStatus, {
+    String? reviewFeedback,
+  }) async {
     try {
       final response = await apiClient.dio.patch(
         ApiConstants.requirementStatus(projectId, requirementId),
+        options: Options(headers: {'If-Match': '"$version"'}),
         data: {
           "workflowStatus": workflowStatus,
           if (reviewFeedback != null && reviewFeedback.isNotEmpty)
             "reviewFeedback": reviewFeedback,
         },
       );
-      
+
       return response.data;
     } catch (e) {
       rethrow;
@@ -277,15 +379,17 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   @override
   Future<Map<String, dynamic>> updateRequirement(
     String projectId,
-    String requirementId, {
+    String requirementId,
+    int version, {
     required String title,
     required String description,
     required String type,
     required String priority,
   }) async {
     try {
-      final response = await apiClient.dio.put(
+      final response = await apiClient.dio.patch(
         ApiConstants.requirementById(projectId, requirementId),
+        options: Options(headers: {'If-Match': '"$version"'}),
         data: {
           "title": title,
           "description": description,
@@ -302,18 +406,23 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> updateUserStoryStatus(
-      String projectId, String storyId, String workflowStatus,
-      {String? reviewFeedback}) async {
+    String projectId,
+    String storyId,
+    int version,
+    String workflowStatus, {
+    String? reviewFeedback,
+  }) async {
     try {
       final response = await apiClient.dio.patch(
         ApiConstants.userStoryStatus(projectId, storyId),
+        options: Options(headers: {'If-Match': '"$version"'}),
         data: {
           "workflowStatus": workflowStatus,
           if (reviewFeedback != null && reviewFeedback.isNotEmpty)
             "reviewFeedback": reviewFeedback,
         },
       );
-      
+
       return response.data;
     } catch (e) {
       rethrow;
@@ -323,7 +432,8 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
   @override
   Future<Map<String, dynamic>> updateUserStory(
     String projectId,
-    String storyId, {
+    String storyId,
+    int version, {
     required String title,
     required String description,
     required List<String> acceptanceCriteria,
@@ -332,6 +442,7 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
     try {
       final response = await apiClient.dio.patch(
         ApiConstants.userStoryById(projectId, storyId),
+        options: Options(headers: {'If-Match': '"$version"'}),
         data: {
           "title": title,
           "description": description,
@@ -348,13 +459,16 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> regenerateUserStory(
-      String projectId, String storyId, String feedback) async {
+    String projectId,
+    String storyId,
+    int version,
+    String feedback,
+  ) async {
     try {
       final response = await apiClient.dio.post(
         ApiConstants.userStoryRegenerate(projectId, storyId),
-        data: {
-          "feedback": feedback,
-        },
+        options: Options(headers: {'If-Match': '"$version"'}),
+        data: {"feedback": feedback},
       );
 
       return response.data;

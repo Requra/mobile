@@ -119,18 +119,24 @@ class ApiConstants {
       '/api/projects/$projectId/review-invitations/$invitationId/resend';
 
   // ── Requirements ──
+  static String requirementsList(String projectId) =>
+      'https://requra-ai.runasp.net/api/requirements/projects/$projectId/requirements';
+
   static String requirementStatus(String projectId, String requirementId) =>
-      '/api/projects/$projectId/requirements/$requirementId/status';
+      'https://requra-ai.runasp.net/api/Requirements/$projectId/requirements/$requirementId/status';
 
   static String requirementById(String projectId, String requirementId) =>
-      '/api/projects/$projectId/requirements/$requirementId';
+      'https://requra-ai.runasp.net/api/Requirements/$projectId/requirements/$requirementId';
 
   // ── User Stories ──
+  static String userStoriesList(String projectId) =>
+      'https://requra-ai.runasp.net/api/projects/$projectId/results/user-stories';
+
   static String userStoryStatus(String projectId, String storyId) =>
-      '/api/projects/$projectId/user-stories/$storyId/status';
+      'https://requra-ai.runasp.net/api/projects/$projectId/user-stories/$storyId/status';
 
   static String userStoryById(String projectId, String storyId) =>
-      '/api/projects/$projectId/user-stories/$storyId';
+      'https://requra-ai.runasp.net/api/projects/$projectId/user-stories/$storyId';
 
   static String userStoryRegenerate(String projectId, String storyId) =>
       '/api/projects/$projectId/user-stories/$storyId/regenerate';

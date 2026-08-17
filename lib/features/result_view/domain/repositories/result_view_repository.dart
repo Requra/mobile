@@ -19,6 +19,8 @@ abstract class ResultViewRepository {
     String? meetingId,
   });
   Future<Either<Failure, AiResultsDashboard>> getAiResultsDashboard(String projectId);
+  Future<Either<Failure, List<AiUserStory>>> getUserStories(String projectId);
+  Future<Either<Failure, List<AiRequirement>>> getRequirements(String projectId);
   Future<Either<Failure, StakeholderFeedbackResponse>> getStakeholderFeedback(String projectId);
   Future<Either<Failure, void>> resolveFeedback(String projectId, String feedbackId, String? resolutionNote);
   Future<Either<Failure, ReviewInvitationResponse>> getReviewInvitations(String projectId);
@@ -26,27 +28,29 @@ abstract class ResultViewRepository {
   Future<Either<Failure, void>> resendReviewInvitation(String projectId, String invitationId);
   Future<Either<Failure, void>> revokeReviewInvitation(String projectId, String invitationId);
   Future<Either<Failure, Map<String, dynamic>>> updateRequirementStatus(
-      String projectId, String requirementId, String workflowStatus,
+      String projectId, String requirementId, int version, String workflowStatus,
       {String? reviewFeedback});
   Future<Either<Failure, Map<String, dynamic>>> updateRequirement(
     String projectId,
-    String requirementId, {
+    String requirementId,
+    int version, {
     required String title,
     required String description,
     required String type,
     required String priority,
   });
   Future<Either<Failure, Map<String, dynamic>>> updateUserStoryStatus(
-      String projectId, String storyId, String workflowStatus,
+      String projectId, String storyId, int version, String workflowStatus,
       {String? reviewFeedback});
   Future<Either<Failure, Map<String, dynamic>>> updateUserStory(
     String projectId,
-    String storyId, {
+    String storyId,
+    int version, {
     required String title,
     required String description,
     required List<String> acceptanceCriteria,
     required String priority,
   });
   Future<Either<Failure, Map<String, dynamic>>> regenerateUserStory(
-      String projectId, String storyId, String feedback);
+      String projectId, String storyId, int version, String feedback);
 }

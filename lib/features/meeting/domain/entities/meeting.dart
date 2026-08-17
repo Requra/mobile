@@ -12,6 +12,7 @@ class Meeting extends Equatable {
   final DateTime? endedAt;
   final DateTime? createdAt;
   final int participantsCount;
+  final String? activeRecordingId;
 
   const Meeting({
     required this.id,
@@ -25,6 +26,7 @@ class Meeting extends Equatable {
     this.endedAt,
     this.createdAt,
     required this.participantsCount,
+    this.activeRecordingId,
   });
 
   @override
@@ -40,6 +42,7 @@ class Meeting extends Equatable {
         endedAt,
         createdAt,
         participantsCount,
+        activeRecordingId,
       ];
 
   Meeting copyWith({
@@ -54,6 +57,7 @@ class Meeting extends Equatable {
     DateTime? endedAt,
     DateTime? createdAt,
     int? participantsCount,
+    String? activeRecordingId,
   }) {
     return Meeting(
       id: id ?? this.id,
@@ -67,6 +71,7 @@ class Meeting extends Equatable {
       endedAt: endedAt ?? this.endedAt,
       createdAt: createdAt ?? this.createdAt,
       participantsCount: participantsCount ?? this.participantsCount,
+      activeRecordingId: activeRecordingId ?? this.activeRecordingId,
     );
   }
 }

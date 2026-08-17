@@ -20,7 +20,7 @@ class MeetingLifecycleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MeetingDetailsCard(
       children: [
-        const MeetingDetailsCardHeader(emoji: '⏱', title: 'Lifecycle'),
+        const MeetingDetailsCardHeader(icon: Icons.timer_outlined, title: 'Lifecycle'),
         const MeetingFieldLabel('Status'),
         _statusRow(_status, MeetingDetailsColors.dotColor(_status)),
 

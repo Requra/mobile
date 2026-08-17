@@ -1228,16 +1228,18 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
                   SizedBox(width: 6.w),
                 ],
                 Flexible(
-                  child: Text(
-                    recActive
-                        ? '${recStatus.label} · ${_formatTimer(_recordingElapsedSeconds)}'
-                        : recStatus.label,
-                    style: semiBoldStyle(
-                      fontSize: FontSize.font16,
-                      color: AppColors.white,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      recActive
+                          ? '${recStatus.label} · ${_formatTimer(_recordingElapsedSeconds)}'
+                          : recStatus.label,
+                      style: semiBoldStyle(
+                        fontSize: FontSize.font16,
+                        color: AppColors.white,
+                      ),
+                      maxLines: 1,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

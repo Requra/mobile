@@ -13,6 +13,7 @@ class MeetingModel extends Meeting {
     super.endedAt,
     super.createdAt,
     required super.participantsCount,
+    super.activeRecordingId,
   });
 
   factory MeetingModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +38,7 @@ class MeetingModel extends Meeting {
           : null,
       // Mock API sometimes returns negative values
       participantsCount: (json['participantsCount'] ?? 0).abs(),
+      activeRecordingId: json['activeRecordingId']?.toString(),
     );
   }
 }

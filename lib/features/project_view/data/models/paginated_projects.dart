@@ -21,11 +21,15 @@ class PaginatedProjects {
           .toList();
     }
     
+    int totalCount = json['totalCount'] ?? 0;
+    int parsedTotalPages = json['totalPages'] ?? 0;
+    int totalPages = parsedTotalPages > 0 ? parsedTotalPages : (totalCount > 0 ? (totalCount / 10).ceil() : 0);
+    
     return PaginatedProjects(
       items: itemsList,
-      totalCount: json['totalCount'] ?? 0,
-      totalPages: json['totalPages'] ?? 0,
-      currentPage: json['pageNumber'] ?? 1,
+      totalCount: totalCount,
+      totalPages: totalPages,
+      currentPage: json['pageNumber'] ?? json['currentPage'] ?? 1,
     );
   }
 }

@@ -91,16 +91,19 @@ class MeetingActionButtons extends StatelessWidget {
       showDialog(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Cancel Meeting'),
-          content: const Text(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text('Cancel Meeting', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: MeetingDetailsColors.ink, fontFamily: FontConstants.fontFamily)),
+          content: Text(
             'Are you sure you want to cancel this meeting? This action cannot be undone.',
+            style: TextStyle(fontSize: 14.sp, color: MeetingDetailsColors.inkSoft, fontFamily: FontConstants.fontFamily),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('No, Keep It'),
+              child: Text('No, Keep It', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: MeetingDetailsColors.purple, fontFamily: FontConstants.fontFamily)),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 if (!context.mounted) return;
@@ -117,8 +120,13 @@ class MeetingActionButtons extends StatelessWidget {
                   }
                 }
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Yes, Cancel Meeting'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB3261E),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                elevation: 0,
+              ),
+              child: Text('Yes, Cancel Meeting', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: FontConstants.fontFamily)),
             ),
           ],
         ),
@@ -130,16 +138,19 @@ class MeetingActionButtons extends StatelessWidget {
       showDialog(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('End Meeting'),
-          content: const Text(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text('End Meeting', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: MeetingDetailsColors.ink, fontFamily: FontConstants.fontFamily)),
+          content: Text(
             'Are you sure you want to end this live meeting? This action cannot be undone.',
+            style: TextStyle(fontSize: 14.sp, color: MeetingDetailsColors.inkSoft, fontFamily: FontConstants.fontFamily),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: MeetingDetailsColors.purple, fontFamily: FontConstants.fontFamily)),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 if (!context.mounted) return;
@@ -156,8 +167,13 @@ class MeetingActionButtons extends StatelessWidget {
                   }
                 }
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Yes, End Meeting'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB3261E),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                elevation: 0,
+              ),
+              child: Text('Yes, End Meeting', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: FontConstants.fontFamily)),
             ),
           ],
         ),

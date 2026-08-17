@@ -20,7 +20,7 @@ dependencies {
 }
 android {
     namespace = "com.example.requra"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

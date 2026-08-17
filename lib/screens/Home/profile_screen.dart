@@ -11,7 +11,7 @@ import 'package:requra/features/profile/data/services/profile_screen_service.dar
 import 'package:requra/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:requra/features/profile/presentation/widgets/danger_zone_card.dart';
 import 'package:requra/features/profile/presentation/widgets/profile_card.dart';
-import 'package:requra/widgets/app_top_bar.dart';
+import 'package:requra/core/global_widgets/customAppBar.dart';
 import 'package:requra/widgets/section_label.dart';
 import 'package:requra/widgets/settings_tile.dart';
 
@@ -95,12 +95,12 @@ class _ProfileViewState extends State<_ProfileView> {
 
         return Scaffold(
           backgroundColor: AppColors.backgroundHomeScreen,
+          appBar: const CustomAppBar(),
           body: SafeArea(
             child: Stack(
               children: [
                 Column(
                   children: [
-                    Container(height: 2.h, color: AppColors.statusInProgress),
                     Expanded(
                       child: RefreshIndicator(
                         color: AppColors.primary,
@@ -116,7 +116,6 @@ class _ProfileViewState extends State<_ProfileView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const AppTopBar(),
                               SizedBox(height: 18.h),
                               Text(
                                 'Profile Settings',

@@ -12,7 +12,7 @@ class MeetingLiveRoomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MeetingDetailsCard(
       children: [
-        const MeetingDetailsCardHeader(emoji: '📹', title: 'Live Meeting Room'),
+        const MeetingDetailsCardHeader(icon: Icons.videocam_outlined, title: 'Live Meeting Room'),
         Text(
           'The immersive live meeting room features high-end video, screen sharing, and real-time collaboration.',
           style: TextStyle(

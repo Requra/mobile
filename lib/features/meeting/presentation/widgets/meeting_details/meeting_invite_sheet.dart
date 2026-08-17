@@ -344,7 +344,7 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
 
   // ── Tab 1: Link ──
   Widget _buildLinkTab() {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +567,7 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
 
   // ── Tab 3: Guest ──
   Widget _buildGuestTab(MeetingInviteState state) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

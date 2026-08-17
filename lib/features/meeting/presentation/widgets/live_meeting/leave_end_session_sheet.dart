@@ -120,9 +120,10 @@ class LeaveEndSessionSheet extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 12.h,
+                  padding: EdgeInsets.only(
+                    right: 12.w,
+                    top: 12.h,
+                    bottom: 12.h,
                   ),
                   child: Text(
                     'Cancel',
@@ -134,29 +135,32 @@ class LeaveEndSessionSheet extends StatelessWidget {
                 ),
               ),
 
-              const Spacer(),
-
               // Leave Only
-              SizedBox(
-                height: 44.h,
-                child: OutlinedButton(
-                  onPressed: () =>
-                      Navigator.pop(context, LeaveEndResult.leaveOnly),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: AppColors.meetingCardBorder,
-                      width: 1.5,
+              Expanded(
+                child: SizedBox(
+                  height: 44.h,
+                  child: OutlinedButton(
+                    onPressed: () =>
+                        Navigator.pop(context, LeaveEndResult.leaveOnly),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: AppColors.meetingCardBorder,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  ),
-                  child: Text(
-                    'Leave Only',
-                    style: semiBoldStyle(
-                      fontSize: FontSize.font14,
-                      color: AppColors.white,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Leave Only',
+                        style: semiBoldStyle(
+                          fontSize: FontSize.font14,
+                          color: AppColors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -164,26 +168,31 @@ class LeaveEndSessionSheet extends StatelessWidget {
 
               // End for All (host only)
               if (isHost) ...[
-                SizedBox(width: 10.w),
-                SizedBox(
-                  height: 44.h,
-                  child: ElevatedButton(
-                    onPressed: () =>
-                        Navigator.pop(context, LeaveEndResult.endForAll),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.liveRed,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.r),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: SizedBox(
+                    height: 44.h,
+                    child: ElevatedButton(
+                      onPressed: () =>
+                          Navigator.pop(context, LeaveEndResult.endForAll),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.liveRed,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        elevation: 0,
+                        padding: EdgeInsets.symmetric(horizontal: 8.w),
                       ),
-                      elevation: 0,
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    ),
-                    child: Text(
-                      'End for All',
-                      style: semiBoldStyle(
-                        fontSize: FontSize.font14,
-                        color: AppColors.white,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'End for All',
+                          style: semiBoldStyle(
+                            fontSize: FontSize.font14,
+                            color: AppColors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),

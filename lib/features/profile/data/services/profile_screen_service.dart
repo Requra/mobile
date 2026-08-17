@@ -45,21 +45,27 @@ class ProfileScreenService {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete account'),
-          content: const Text(
+          backgroundColor: AppColors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text('Delete Account', style: boldStyle(fontSize: FontSize.font18, color: AppColors.darkgrey)),
+          content: Text(
             'This action will permanently remove your account and data. Proceed?',
+            style: regularStyle(fontSize: FontSize.font14, color: AppColors.lightgrey),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.primaryText)),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFD04A2B),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD04A2B),
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                elevation: 0,
               ),
-              child: const Text('Delete'),
+              child: Text('Delete', style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.white)),
             ),
           ],
         );
@@ -135,19 +141,27 @@ class ProfileScreenService {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Log Out'),
-          content: const Text('Are you sure you want to log out?'),
+          backgroundColor: AppColors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text('Log Out', style: boldStyle(fontSize: FontSize.font18, color: AppColors.darkgrey)),
+          content: Text(
+            'Are you sure you want to log out?',
+            style: regularStyle(fontSize: FontSize.font14, color: AppColors.lightgrey),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.primaryText)),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFD04A2B),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                elevation: 0,
               ),
-              child: const Text('Log Out'),
+              child: Text('Log Out', style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.white)),
             ),
           ],
         );

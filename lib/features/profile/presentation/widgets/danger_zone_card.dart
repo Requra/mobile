@@ -18,54 +18,59 @@ class DangerZoneCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: const Color(0xFFF0C9C0)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFECE7),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(
-              Icons.warning_rounded,
-              color: const Color(0xFFD04A2B),
-              size: 20.sp,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Delete Account',
-                  style: semiBoldStyle(
-                    fontSize: FontSize.font14,
-                    color: AppColors.darkgrey,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFECE7),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  'Permanently remove your account and all associated data.',
-                  style: regularStyle(
-                    fontSize: FontSize.font12,
-                    color: AppColors.lightgrey,
-                  ),
+                child: Icon(
+                  Icons.warning_rounded,
+                  color: const Color(0xFFD04A2B),
+                  size: 20.sp,
                 ),
-              ],
-            ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Delete Account',
+                      style: semiBoldStyle(
+                        fontSize: FontSize.font14,
+                        color: AppColors.darkgrey,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      'Permanently remove your account and all associated data.',
+                      style: regularStyle(
+                        fontSize: FontSize.font12,
+                        color: AppColors.lightgrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 10.w),
+          SizedBox(height: 16.h),
           SizedBox(
-            height: 36.h,
+            height: 40.h,
             child: ElevatedButton(
               onPressed: onDelete,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD04A2B),
                 foregroundColor: AppColors.white,
                 elevation: 0,
-                padding: EdgeInsets.symmetric(horizontal: 14.w),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.r),
                 ),
@@ -73,7 +78,7 @@ class DangerZoneCard extends StatelessWidget {
               child: Text(
                 'Delete Account',
                 style: semiBoldStyle(
-                  fontSize: FontSize.font12,
+                  fontSize: FontSize.font13,
                   color: AppColors.white,
                 ),
               ),

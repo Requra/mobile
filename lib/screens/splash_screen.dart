@@ -5,6 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:requra/core/theme/color_manager.dart';
 
+import 'package:requra/core/services/deep_link_service.dart';
+import 'package:requra/core/services/deep_link_handler.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -50,7 +53,18 @@ class _SplashScreenState extends State<SplashScreen>
     return BlocListener<AuthCubit, AuthState>(
       listener: (BuildContext context, AuthState state) {
         if (state is AuthAuthenticated) {
-          Navigator.pushReplacementNamed(context, '/main');
+          // Check if there's a pending deep link to handle
+          final pendingId = DeepLinkService.instance.pendingMeetingId;
+          if (pendingId != null) {
+            DeepLinkService.instance.clearPending();
+            Navigator.pushReplacementNamed(context, '/main');
+            // Handle after main screen is loaded
+            Future.delayed(const Duration(milliseconds: 300), () {
+              DeepLinkHandler.handleMeetingLink(pendingId);
+            });
+          } else {
+            Navigator.pushReplacementNamed(context, '/main');
+          }
         } else if (state is AuthUnauthenticated) {
           Navigator.pushReplacementNamed(context, '/onboarding');
         }

@@ -72,5 +72,7 @@
 	<string>This app requires microphone access to allow you to communicate in video meetings.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app requires Bluetooth access to route audio to Bluetooth headsets during meetings.</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 </dict>
 </plist>

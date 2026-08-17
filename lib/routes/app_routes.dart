@@ -25,6 +25,8 @@ import 'package:requra/widgets/userstories_tabView.dart';
 import 'package:requra/features/main_layout/presentation/pages/main_navigation.dart';
 import 'package:requra/screens/splash_screen.dart';
 import 'package:requra/screens/onboarding/onboarding_screen.dart';
+import 'package:requra/features/meeting/presentation/pages/pre_join_meeting_screen.dart';
+import 'package:requra/features/meeting/domain/entities/meeting.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -46,6 +48,7 @@ class AppRoutes {
   static const String meetingFinished = '/meetingFinished';
   static const String addProject = '/addProject';
   static const String editProject = '/editProject';
+  static const String preJoinMeeting = '/preJoinMeeting';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -95,6 +98,10 @@ class AppRoutes {
       editProject: (context) {
         final project = ModalRoute.of(context)!.settings.arguments as Project;
         return EditProjectScreen(project: project);
+      },
+      preJoinMeeting: (context) {
+        final meeting = ModalRoute.of(context)!.settings.arguments as Meeting;
+        return PreJoinMeetingScreen(meeting: meeting);
       },
     };
   }

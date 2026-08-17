@@ -9,14 +9,31 @@ import 'package:requra/features/project_view/presentation/cubit/project_cubit.da
 import 'package:requra/core/di/di_project.dart';
 import 'package:requra/routes/app_routes.dart';
 import 'package:requra/core/navigation/navigator_key.dart';
+import 'package:requra/core/services/deep_link_service.dart';
+import 'package:requra/core/services/deep_link_handler.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   initProjectDI();
+  await DeepLinkService.instance.init();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    DeepLinkService.instance.onDeepLink.listen((meetingId) {
+      DeepLinkHandler.handleMeetingLink(meetingId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

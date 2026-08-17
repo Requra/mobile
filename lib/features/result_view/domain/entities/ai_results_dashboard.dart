@@ -332,6 +332,8 @@ class AiRequirement extends Equatable {
   final int? version;
   final String? qualityStatus;
 
+  final String? sourceRequirementId;
+
   const AiRequirement({
     required this.id,
     required this.title,
@@ -347,6 +349,7 @@ class AiRequirement extends Equatable {
     this.workflowStatus,
     this.version,
     this.qualityStatus,
+    this.sourceRequirementId,
   });
 
   @override
@@ -365,6 +368,7 @@ class AiRequirement extends Equatable {
         workflowStatus,
         version,
         qualityStatus,
+        sourceRequirementId,
       ];
 
   AiRequirement copyWith({
@@ -382,6 +386,7 @@ class AiRequirement extends Equatable {
     String? workflowStatus,
     int? version,
     String? qualityStatus,
+    String? sourceRequirementId,
   }) {
     return AiRequirement(
       id: id ?? this.id,
@@ -398,6 +403,7 @@ class AiRequirement extends Equatable {
       workflowStatus: workflowStatus ?? this.workflowStatus,
       version: version ?? this.version,
       qualityStatus: qualityStatus ?? this.qualityStatus,
+      sourceRequirementId: sourceRequirementId ?? this.sourceRequirementId,
     );
   }
 }
@@ -418,6 +424,8 @@ class AiUserStory extends Equatable {
   final String? qualityStatus;
   final int? revisionNumber;
   final String? revisionSource;
+  final String? sourceUserStoryId;
+  final String? sourceRequirementId;
 
   const AiUserStory({
     required this.id,
@@ -435,6 +443,8 @@ class AiUserStory extends Equatable {
     this.qualityStatus,
     this.revisionNumber,
     this.revisionSource,
+    this.sourceUserStoryId,
+    this.sourceRequirementId,
   });
 
   @override
@@ -453,6 +463,8 @@ class AiUserStory extends Equatable {
         version,
         qualityStatus,
         revisionSource,
+        sourceUserStoryId,
+        sourceRequirementId,
       ];
 
   AiUserStory copyWith({
@@ -471,6 +483,8 @@ class AiUserStory extends Equatable {
     String? qualityStatus,
     int? revisionNumber,
     String? revisionSource,
+    String? sourceUserStoryId,
+    String? sourceRequirementId,
   }) {
     return AiUserStory(
       id: id ?? this.id,
@@ -488,6 +502,8 @@ class AiUserStory extends Equatable {
       qualityStatus: qualityStatus ?? this.qualityStatus,
       revisionNumber: revisionNumber ?? this.revisionNumber,
       revisionSource: revisionSource ?? this.revisionSource,
+      sourceUserStoryId: sourceUserStoryId ?? this.sourceUserStoryId,
+      sourceRequirementId: sourceRequirementId ?? this.sourceRequirementId,
     );
   }
 }

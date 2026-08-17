@@ -71,16 +71,6 @@ class _EditUserStoryDialogState extends State<EditUserStoryDialog> {
       acceptanceCriteria: acList,
       priority: _selectedPriority,
     );
-
-    if (error == null && mounted) {
-      // Also automatically mark it as EDITED
-      await cubit.updateUserStoryStatus(
-        widget.projectId,
-        widget.userStory.id,
-        'EDITED',
-      );
-    }
-
     if (mounted) {
       setState(() {
         _isLoading = false;

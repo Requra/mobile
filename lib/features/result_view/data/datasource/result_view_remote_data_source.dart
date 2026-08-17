@@ -418,8 +418,7 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
         options: Options(headers: {'If-Match': '"$version"'}),
         data: {
           "workflowStatus": workflowStatus,
-          if (reviewFeedback != null && reviewFeedback.isNotEmpty)
-            "reviewFeedback": reviewFeedback,
+          "feedback": (reviewFeedback != null && reviewFeedback.isNotEmpty) ? reviewFeedback : null,
         },
       );
 
@@ -446,7 +445,7 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
         data: {
           "title": title,
           "description": description,
-          "acceptanceCriteria": acceptanceCriteria,
+          "acceptanceCriteria": acceptanceCriteria.map((ac) => {"text": ac}).toList(),
           "priority": priority,
         },
       );

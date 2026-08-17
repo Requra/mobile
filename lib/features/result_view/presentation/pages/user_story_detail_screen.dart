@@ -65,9 +65,12 @@ class _UserStoryDetailScreenState extends State<UserStoryDetailScreen> {
   void _showEditDialog(AiUserStory story) {
     showDialog(
       context: context,
-      builder: (context) => EditUserStoryDialog(
-        userStory: story,
-        projectId: widget.projectId,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<ResultViewCubit>(),
+        child: EditUserStoryDialog(
+          userStory: story,
+          projectId: widget.projectId,
+        ),
       ),
     );
   }
@@ -75,29 +78,35 @@ class _UserStoryDetailScreenState extends State<UserStoryDetailScreen> {
   void _showRegenerateDialog(AiUserStory story) {
     showDialog(
       context: context,
-      builder: (context) => RegenerateUserStoryDialog(
-        userStory: story,
-        projectId: widget.projectId,
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<ResultViewCubit>(),
+        child: RegenerateUserStoryDialog(
+          userStory: story,
+          projectId: widget.projectId,
+        ),
       ),
     );
   }
 
   void _showRejectDialog(AiUserStory story) {
+    final cubit = context.read<ResultViewCubit>();
     showDialog(
       context: context,
-      builder: (context) => RejectItemDialog(
-        title: 'Reject user story',
-        subtitle: 'Explain what must change so the decision remains useful and auditable.',
-        successMessage: 'User story rejected successfully',
-        onReject: (feedback) async {
-          final cubit = context.read<ResultViewCubit>();
-          return await cubit.updateUserStoryStatus(
-            widget.projectId,
-            story.id,
-            'REJECTED',
-            reviewFeedback: feedback,
-          );
-        },
+      builder: (ctx) => BlocProvider.value(
+        value: cubit,
+        child: RejectItemDialog(
+          title: 'Reject user story',
+          subtitle: 'Explain what must change so the decision remains useful and auditable.',
+          successMessage: 'User story rejected successfully',
+          onReject: (feedback) async {
+            return await cubit.updateUserStoryStatus(
+              widget.projectId,
+              story.id,
+              'REJECTED',
+              reviewFeedback: feedback,
+            );
+          },
+        ),
       ),
     );
   }
@@ -190,7 +199,7 @@ class _UserStoryDetailScreenState extends State<UserStoryDetailScreen> {
                               borderRadius: BorderRadius.circular(4.r),
                             ),
                             child: Text(
-                              story.id,
+                              story.sourceUserStoryId ?? story.id,
                               style: semiBoldStyle(
                                 fontSize: FontSize.font12,
                                 color: AppColors.grey,
@@ -238,7 +247,7 @@ class _UserStoryDetailScreenState extends State<UserStoryDetailScreen> {
                                 SizedBox(width: 4.w),
                                 Flexible(
                                   child: Text(
-                                    story.requirementId,
+                                    story.sourceRequirementId ?? story.requirementId,
                                     overflow: TextOverflow.ellipsis,
                                     style: semiBoldStyle(
                                       fontSize: FontSize.font12,

@@ -94,10 +94,10 @@ class ApiConstants {
   static String projectMembers(String id) =>
       'https://requra-ai.runasp.net/api/projects/$id/members';
 
-  static const String documents = 'http://192.168.100.12:5099/api/Documents';
+  static const String documents = 'https://requra-ai.runasp.net/api/Documents';
 
   static String aiResultsDashboard(String projectId) =>
-      'http://192.168.100.12:5099/api/projects/$projectId/ai/results-dashboard';
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';
 
   static String startAiRun(String projectId) =>
       'http://192.168.100.12:5099/api/projects/$projectId/ai/runs';

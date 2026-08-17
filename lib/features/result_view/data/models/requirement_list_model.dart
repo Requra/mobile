@@ -3,7 +3,7 @@ import 'package:requra/features/result_view/domain/entities/ai_results_dashboard
 /// Model for parsing requirements from the dedicated
 /// GET /api/requirements/projects/{projectId}/requirements endpoint.
 ///
-/// The response uses camelCase keys and has a different shape 
+/// The response uses camelCase keys and has a different shape
 /// from the AI results dashboard requirements.
 class RequirementFromListModel extends AiRequirement {
   const RequirementFromListModel({
@@ -21,6 +21,7 @@ class RequirementFromListModel extends AiRequirement {
     super.workflowStatus,
     super.version,
     super.qualityStatus,
+    super.sourceRequirementId,
   });
 
   factory RequirementFromListModel.fromJson(Map<String, dynamic> json) {
@@ -49,18 +50,44 @@ class RequirementFromListModel extends AiRequirement {
 
     // Map quality score
     QualityInfo? quality;
-    if (json['qualityScore'] != null) {
+    if (json['quality'] != null) {
+      final qJson = json['quality'] as Map<String, dynamic>;
+      quality = QualityInfo(
+        score: qJson['score'] != null
+            ? (qJson['score'] as num).toDouble()
+            : null,
+        level: qJson['level']?.toString(),
+        issues:
+            (qJson['issues'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        warnings:
+            (qJson['warnings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      );
+    } else if (json['qualityScore'] != null) {
       quality = QualityInfo(
         score: (json['qualityScore'] as num).toDouble(),
-        issues: (json['qualityIssues'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-        warnings: (json['qualityWarnings'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        issues:
+            (json['qualityIssues'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        warnings:
+            (json['qualityWarnings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
       );
     }
 
     // Extract source document IDs
     List<String> sourceDocumentIds = [];
     List<SourceRef> sourceRefs = [];
-    
+
     if (json['sourceRefs'] != null) {
       for (var ref in json['sourceRefs']) {
         if (ref['documentName'] != null) {
@@ -68,15 +95,17 @@ class RequirementFromListModel extends AiRequirement {
         } else if (ref['sourceId'] != null) {
           sourceDocumentIds.add(ref['sourceId'].toString());
         }
-        
-        sourceRefs.add(SourceRef(
-          quote: ref['quote']?.toString(),
-          documentTitle: ref['documentName']?.toString(),
-          sourceId: ref['sourceId']?.toString(),
-          chunkId: ref['chunkId']?.toString(),
-          sourceType: ref['sourceType']?.toString(),
-          confidenceScore: (ref['confidenceScore'] as num?)?.toDouble(),
-        ));
+
+        sourceRefs.add(
+          SourceRef(
+            quote: ref['quote']?.toString(),
+            documentTitle: ref['documentName']?.toString(),
+            sourceId: ref['sourceId']?.toString(),
+            chunkId: ref['chunkId']?.toString(),
+            sourceType: ref['sourceType']?.toString(),
+            confidenceScore: (ref['confidenceScore'] as num?)?.toDouble(),
+          ),
+        );
       }
     }
 
@@ -95,6 +124,7 @@ class RequirementFromListModel extends AiRequirement {
       workflowStatus: workflowStatus,
       version: json['version'] as int?,
       qualityStatus: json['qualityStatus']?.toString(),
+      sourceRequirementId: json['sourceRequirementId']?.toString(),
     );
   }
 }
@@ -116,7 +146,9 @@ class RequirementListResponse {
   factory RequirementListResponse.fromJson(Map<String, dynamic> json) {
     final rawItems = (json['items'] as List<dynamic>?) ?? [];
     final items = rawItems
-        .map((e) => RequirementFromListModel.fromJson(e as Map<String, dynamic>))
+        .map(
+          (e) => RequirementFromListModel.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
 
     return RequirementListResponse(

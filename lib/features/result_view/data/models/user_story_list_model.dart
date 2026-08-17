@@ -22,6 +22,8 @@ class UserStoryFromListModel extends AiUserStory {
     super.qualityStatus,
     super.revisionNumber,
     super.revisionSource,
+    super.sourceUserStoryId,
+    super.sourceRequirementId,
   });
 
   factory UserStoryFromListModel.fromJson(Map<String, dynamic> json) {
@@ -62,17 +64,67 @@ class UserStoryFromListModel extends AiUserStory {
       }
     }
 
+    // Parse QualityInfo (camelCase)
+    QualityInfo? quality;
+    if (json['quality'] != null) {
+      final qJson = json['quality'] as Map<String, dynamic>;
+      quality = QualityInfo(
+        score: qJson['score'] != null
+            ? (qJson['score'] as num).toDouble()
+            : null,
+        level: qJson['level']?.toString(),
+        issues: (qJson['issues'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList(),
+        warnings: (qJson['warnings'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList(),
+      );
+    }
+
+    // Parse SourceRefs (camelCase)
+    List<SourceRef> sourceRefs = [];
+    if (json['sourceRefs'] != null) {
+      sourceRefs = (json['sourceRefs'] as List<dynamic>).map((e) {
+        final rJson = e as Map<String, dynamic>;
+        return SourceRef(
+          sourceId: rJson['sourceId']?.toString(),
+          sourceType: rJson['sourceType']?.toString(),
+          documentTitle:
+              rJson['documentName']?.toString() ??
+              rJson['documentTitle']?.toString(),
+          chunkId: rJson['chunkId']?.toString(),
+          quote: rJson['quote']?.toString(),
+          confidenceScore: rJson['confidenceScore'] != null
+              ? (rJson['confidenceScore'] as num).toDouble()
+              : null,
+          fileUrl: rJson['fileUrl']?.toString(),
+          documentId: rJson['documentId']?.toString(),
+        );
+      }).toList();
+    }
+
     return UserStoryFromListModel(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      // Use description as the user story text since the API doesn't have a separate field
-      userStory: json['description']?.toString() ?? '',
+      userStory:
+          json['userStory']?.toString() ??
+          json['description']?.toString() ??
+          '',
       acceptanceCriteria: parsedAC,
       priority: json['priority']?.toString() ?? '',
+      type: json['type']?.toString(),
       requirementId: json['requirementId']?.toString() ?? '',
       workflowStatus: workflowStatus,
-      sourceRefs: const [],
+      version: json['version'] != null
+          ? int.tryParse(json['version'].toString())
+          : null,
+      qualityStatus: json['qualityStatus']?.toString(),
+      quality: quality,
+      sourceRefs: sourceRefs,
+      sourceUserStoryId: json['sourceUserStoryId']?.toString(),
+      sourceRequirementId: json['sourceRequirementId']?.toString(),
     );
   }
 }

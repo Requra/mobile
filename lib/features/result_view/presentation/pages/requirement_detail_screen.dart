@@ -142,7 +142,7 @@ class _RequirementDetailScreenState extends State<RequirementDetailScreen> {
                         runSpacing: 8.h,
                         children: [
                           Text(
-                            req.id,
+                            req.sourceRequirementId ?? req.id,
                             style: semiBoldStyle(
                                 fontSize: FontSize.font14, color: AppColors.primary),
                           ),

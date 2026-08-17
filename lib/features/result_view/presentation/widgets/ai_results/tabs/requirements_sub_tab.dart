@@ -250,7 +250,7 @@ class _AiRequirementCardState extends State<AiRequirementCard> {
               children: [
                 Expanded(
                   child: Text(
-                    'REQ-${widget.displayIndex.toString().padLeft(3, '0')}',
+                    widget.req.sourceRequirementId ?? 'REQ-${widget.displayIndex.toString().padLeft(3, '0')}',
                     style: semiBoldStyle(
                       fontSize: FontSize.font12,
                       color: AppColors.grey,

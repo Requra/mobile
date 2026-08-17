@@ -18,6 +18,10 @@ class DeepLinkService {
   // Expose stream of valid meeting IDs extracted from deep links
   Stream<String> get onDeepLink => _deepLinkController.stream;
 
+  // Expose stream of ClickUp callbacks
+  final _clickUpCallbackController = StreamController<Map<String, String>>.broadcast();
+  Stream<Map<String, String>> get onClickUpCallback => _clickUpCallbackController.stream;
+
   // Pending meeting ID saved when user is not logged in
   String? _pendingMeetingId;
   String? get pendingMeetingId => _pendingMeetingId;
@@ -48,6 +52,18 @@ class DeepLinkService {
 
   void _handleUri(Uri uri) {
     debugPrint("Received deep link: $uri");
+    
+    // ClickUp OAuth callback: requra://clickup/callback?code=XXX&state=YYY
+    if (uri.scheme == 'requra' && uri.host == 'clickup') {
+      final code = uri.queryParameters['code'];
+      final state = uri.queryParameters['state']; // = projectId
+      if (code != null && state != null) {
+        _clickUpCallbackController.add({'code': code, 'projectId': state});
+      }
+      return;
+    }
+    
+    // Existing meeting deep link logic
     final meetingId = parseMeetingId(uri);
     if (meetingId != null) {
       _deepLinkController.add(meetingId);

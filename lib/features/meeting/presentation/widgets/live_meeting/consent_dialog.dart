@@ -144,16 +144,19 @@ class ConsentDialog extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                       backgroundColor: Colors.white,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cancel_outlined, color: Colors.black, size: 18.sp),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'DECLINE',
-                          style: boldStyle(fontSize: 14.sp, color: Colors.black),
-                        ),
-                      ],
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.cancel_outlined, color: Colors.black, size: 18.sp),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'DECLINE',
+                            style: boldStyle(fontSize: 14.sp, color: Colors.black),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -170,16 +173,19 @@ class ConsentDialog extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                       elevation: 0,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle_outline, color: Colors.white, size: 18.sp),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'AGREE & JOIN',
-                          style: boldStyle(fontSize: 14.sp, color: Colors.white),
-                        ),
-                      ],
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle_outline, color: Colors.white, size: 18.sp),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'AGREE & JOIN',
+                            style: boldStyle(fontSize: 14.sp, color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

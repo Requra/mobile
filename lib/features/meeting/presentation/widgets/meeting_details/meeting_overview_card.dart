@@ -18,10 +18,10 @@ class MeetingOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MeetingDetailsCard(
       children: [
-        const MeetingDetailsCardHeader(emoji: '⚙', title: 'Meeting Overview'),
+        const MeetingDetailsCardHeader(icon: Icons.settings_outlined, title: 'Meeting Overview'),
 
         // Scheduled At
-        const MeetingFieldLabel('📅 Scheduled At'),
+        const MeetingFieldLabel('Scheduled At', icon: Icons.calendar_today_outlined),
         Text(
           meeting.scheduledAt != null
               ? MeetingDateFormatter.fullDate(meeting.scheduledAt!)
@@ -36,17 +36,17 @@ class MeetingOverviewCard extends StatelessWidget {
         SizedBox(height: 16.h),
 
         // Host Reference
-        const MeetingFieldLabel('👤 Host Reference'),
+        const MeetingFieldLabel('Host Reference', icon: Icons.person_outline),
         _pillBox('sim-part-host'),
         SizedBox(height: 16.h),
 
         // Your Role
-        const MeetingFieldLabel('ⓘ Your Role'),
+        const MeetingFieldLabel('Your Role', icon: Icons.info_outline),
         _rolePill('HOST'),
         SizedBox(height: 16.h),
 
         // Access Link
-        const MeetingFieldLabel('📹 Access Link'),
+        const MeetingFieldLabel('Access Link', icon: Icons.videocam_outlined),
         GestureDetector(
           onTap: () {
             if (meeting.joinUrl.isNotEmpty) {
@@ -75,7 +75,7 @@ class MeetingOverviewCard extends StatelessWidget {
         ),
 
         // Meeting Context & Agenda
-        const MeetingFieldLabel('ⓘ Meeting Context & Agenda'),
+        const MeetingFieldLabel('Meeting Context & Agenda', icon: Icons.info_outline),
         Container(
           width: double.infinity,
           padding: EdgeInsets.fromLTRB(18.w, 14.h, 14.w, 14.h),

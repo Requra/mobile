@@ -108,7 +108,7 @@ class _MeetingDetailsScreenState extends State<MeetingDetailsScreen> {
                 ),
                 if (isEnded) ...[
                   SizedBox(height: 14.h),
-                  const MeetingRecordingCard(),
+                  MeetingRecordingCard(meeting: currentMeeting),
                 ],
               ],
             ),

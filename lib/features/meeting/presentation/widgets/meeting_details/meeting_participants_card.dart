@@ -23,7 +23,7 @@ class MeetingParticipantsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MeetingDetailsCard(
       children: [
-        const MeetingDetailsCardHeader(emoji: '👥', title: 'Participants & Roster'),
+        const MeetingDetailsCardHeader(icon: Icons.people_outline, title: 'Participants & Roster'),
 
         // Summary strip
         Container(

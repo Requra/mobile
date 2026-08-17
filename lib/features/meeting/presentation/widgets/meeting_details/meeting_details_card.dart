@@ -30,12 +30,12 @@ class MeetingDetailsCard extends StatelessWidget {
 
 /// Section header used inside [MeetingDetailsCard] (emoji icon + title).
 class MeetingDetailsCardHeader extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final String title;
 
   const MeetingDetailsCardHeader({
     super.key,
-    required this.emoji,
+    required this.icon,
     required this.title,
   });
 
@@ -52,7 +52,7 @@ class MeetingDetailsCardHeader extends StatelessWidget {
               color: MeetingDetailsColors.purpleSoft,
               borderRadius: BorderRadius.circular(10.r),
             ),
-            child: Center(child: Text(emoji, style: TextStyle(fontSize: 16.sp))),
+            child: Center(child: Icon(icon, size: 18.sp, color: MeetingDetailsColors.purple)),
           ),
           SizedBox(width: 10.w),
           Text(
@@ -73,23 +73,34 @@ class MeetingDetailsCardHeader extends StatelessWidget {
 /// Small uppercase label used before field values.
 class MeetingFieldLabel extends StatelessWidget {
   final String text;
+  final IconData? icon;
 
-  const MeetingFieldLabel(this.text, {super.key});
+  const MeetingFieldLabel(this.text, {super.key, this.icon});
 
   @override
   Widget build(BuildContext context) {
+    final textWidget = Text(
+      text.toUpperCase(),
+      style: TextStyle(
+        fontSize: 11.sp,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.4,
+        color: MeetingDetailsColors.inkSoft,
+        fontFamily: FontConstants.fontFamily,
+      ),
+    );
+
     return Padding(
       padding: EdgeInsets.only(bottom: 6.h),
-      child: Text(
-        text.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11.sp,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          color: MeetingDetailsColors.inkSoft,
-          fontFamily: FontConstants.fontFamily,
-        ),
-      ),
+      child: icon == null
+          ? textWidget
+          : Row(
+              children: [
+                Icon(icon, size: 14.sp, color: MeetingDetailsColors.inkSoft),
+                SizedBox(width: 4.w),
+                textWidget,
+              ],
+            ),
     );
   }
 }

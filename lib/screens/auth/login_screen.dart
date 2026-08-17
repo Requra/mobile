@@ -148,40 +148,50 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 8.h),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Checkbox(
-                            value: _rememberMe,
-                            visualDensity: VisualDensity.compact,
-                            activeColor: AppColors.primaryText,
-                            onChanged: (bool? value) {
-                              setState(() => _rememberMe = value!);
-                            },
-                          ),
-                          Text(
-                            'Remember me',
-                            style: regularStyle(
-                              fontSize: FontSize.font16,
-                              color: AppColors.black,
-                            ),
-                          ),
-                          const Spacer(),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push<void>(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      const ForgotPasswordScreen(),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                visualDensity: VisualDensity.compact,
+                                activeColor: AppColors.primaryText,
+                                onChanged: (bool? value) {
+                                  setState(() => _rememberMe = value!);
+                                },
+                              ),
+                              Text(
+                                'Remember me',
+                                style: regularStyle(
+                                  fontSize: FontSize.font16,
+                                  color: AppColors.black,
                                 ),
-                              );
-                            },
-                            child: Text(
-                              'Forgot your password?',
-                              style: regularStyle(
-                                fontSize: FontSize.font16,
-                                color: AppColors.primaryText,
-                              ).copyWith(
-                                decoration: TextDecoration.underline,
+                              ),
+                            ],
+                          ),
+                          Flexible(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push<void>(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        const ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'Forgot your password?',
+                                  style: regularStyle(
+                                    fontSize: FontSize.font16,
+                                    color: AppColors.primaryText,
+                                  ).copyWith(
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
                               ),
                             ),
                           ),

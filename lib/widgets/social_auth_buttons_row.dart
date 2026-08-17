@@ -24,6 +24,7 @@ class SocialAuthButtonsRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(10.r),
       ),
       padding: EdgeInsets.symmetric(vertical: 12.h),
+      backgroundColor: AppColors.white,
     );
 
     return Column(
@@ -39,55 +40,47 @@ class SocialAuthButtonsRow extends StatelessWidget {
           ],
         ),
         SizedBox(height: 14.h),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                style: borderStyle,
-                onPressed: isGoogleLoading ? null : onGoogleTap,
-                child: isGoogleLoading
-                    ? SizedBox(
-                        width: 18.sp,
-                        height: 18.sp,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
-                      )
-                    : ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (bounds) => const SweepGradient(
-                          colors: [
-                            Color(0xFF4285F4),
-                            Color(0xFFEA4335),
-                            Color(0xFFFBBC05),
-                            Color(0xFF34A853),
-                            Color(0xFF4285F4),
-                          ],
-                          stops: [0.0, 0.28, 0.52, 0.78, 1.0],
-                        ).createShader(bounds),
-                        child: FaIcon(
-                          FontAwesomeIcons.google,
-                          color: AppColors.white,
-                          size: 20.sp,
-                        ),
-                      ),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            style: borderStyle,
+            onPressed: isGoogleLoading ? null : onGoogleTap,
+            icon: isGoogleLoading
+                ? SizedBox(
+                    width: 20.sp,
+                    height: 20.sp,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  )
+                : ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => const SweepGradient(
+                      colors: [
+                        Color(0xFF4285F4),
+                        Color(0xFFEA4335),
+                        Color(0xFFFBBC05),
+                        Color(0xFF34A853),
+                        Color(0xFF4285F4),
+                      ],
+                      stops: [0.0, 0.28, 0.52, 0.78, 1.0],
+                    ).createShader(bounds),
+                    child: FaIcon(
+                      FontAwesomeIcons.google,
+                      color: AppColors.white,
+                      size: 20.sp,
+                    ),
+                  ),
+            label: Text(
+              'Continue with Google',
+              style: semiBoldStyle(
+                fontSize: FontSize.font14,
+                color: AppColors.black,
               ),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: OutlinedButton(
-                style: borderStyle,
-                onPressed: () {},
-                child: FaIcon(
-                  FontAwesomeIcons.github,
-                  color: AppColors.black,
-                  size: 20.sp,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );

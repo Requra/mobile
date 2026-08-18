@@ -192,13 +192,6 @@ class ProjectCard extends StatelessWidget {
                   triggerColor: AppColors.lightgrey,
                   items: [
                     PopupMenuItemData(
-                      title: 'Download',
-                      icon: Icons.file_download_outlined,
-                      onTap: () {
-                        // Implement download logic here
-                      },
-                    ),
-                    PopupMenuItemData(
                       title: 'Delete',
                       icon: Icons.delete_outline,
                       color: AppColors.error,
@@ -232,63 +225,62 @@ class ProjectCard extends StatelessWidget {
 
             SizedBox(height: 8.h),
 
-            ///stats
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.checklist_outlined,
-                      size: 22.sp,
-                      color: AppColors.lightgrey,
-                    ),
-                    title: Text(
-                      'Generated',
-                      style: regularStyle(
-                        fontSize: FontSize.font12,
-                        color: AppColors.lightgrey,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${project.totalRequirements} features',
-                      overflow: TextOverflow.ellipsis,
-                      style: boldStyle(
-                        fontSize: FontSize.font14,
-                        color: AppColors.black,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.chat_bubble_outline,
-                      size: 22.sp,
-                      color: AppColors.lightgrey,
-                    ),
-                    title: Text(
-                      'Comments',
-                      style: regularStyle(
-                        fontSize: FontSize.font12,
-                        color: AppColors.lightgrey,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${project.totalComments} unsolved',
-                      overflow: TextOverflow.ellipsis,
-                      style: boldStyle(
-                        fontSize: FontSize.font14,
-                        color: AppColors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 8.h),
+            // ///stats
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: ListTile(
+            //         contentPadding: EdgeInsets.zero,
+            //         leading: Icon(
+            //           Icons.checklist_outlined,
+            //           size: 22.sp,
+            //           color: AppColors.lightgrey,
+            //         ),
+            //         title: Text(
+            //           'Generated',
+            //           style: regularStyle(
+            //             fontSize: FontSize.font12,
+            //             color: AppColors.lightgrey,
+            //           ),
+            //         ),
+            //         subtitle: Text(
+            //           '${project.totalRequirements} features',
+            //           overflow: TextOverflow.ellipsis,
+            //           style: boldStyle(
+            //             fontSize: FontSize.font14,
+            //             color: AppColors.black,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //     Expanded(
+            //       child: ListTile(
+            //         contentPadding: EdgeInsets.zero,
+            //         leading: Icon(
+            //           Icons.chat_bubble_outline,
+            //           size: 22.sp,
+            //           color: AppColors.lightgrey,
+            //         ),
+            //         title: Text(
+            //           'Comments',
+            //           style: regularStyle(
+            //             fontSize: FontSize.font12,
+            //             color: AppColors.lightgrey,
+            //           ),
+            //         ),
+            //         subtitle: Text(
+            //           '${project.totalComments} unsolved',
+            //           overflow: TextOverflow.ellipsis,
+            //           style: boldStyle(
+            //             fontSize: FontSize.font14,
+            //             color: AppColors.black,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            //SizedBox(height: 8.h),
 
             ///client Email
             Row(

@@ -36,7 +36,10 @@ class OverviewTab extends StatelessWidget {
           SizedBox(height: 12.h),
 
           /// Analysis Overview metrics card
-          AnalysisOverviewCard(totalRequirements: totalRequirements),
+          AnalysisOverviewCard(
+            totalRequirements: totalRequirements,
+            projectId: projectId,
+          ),
 
           SizedBox(height: 16.h),
 

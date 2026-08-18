@@ -9,6 +9,7 @@ import 'package:requra/features/result_view/data/models/stakeholder_feedback_mod
 import 'package:requra/features/result_view/data/models/review_invitation_model.dart';
 import 'package:requra/features/result_view/data/models/user_story_list_model.dart';
 import 'package:requra/features/result_view/data/models/requirement_list_model.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class ResultViewRemoteDataSource {
   Future<ProjectDetailsModel> getProjectDetails(String id);
@@ -464,9 +465,13 @@ class ResultViewRemoteDataSourceImpl implements ResultViewRemoteDataSource {
     String feedback,
   ) async {
     try {
+      final idempotencyKey = const Uuid().v4();
       final response = await apiClient.dio.post(
         ApiConstants.userStoryRegenerate(projectId, storyId),
-        options: Options(headers: {'If-Match': '"$version"'}),
+        options: Options(headers: {
+          'If-Match': '"$version"',
+          'Idempotency-Key': idempotencyKey,
+        }),
         data: {"feedback": feedback},
       );
 

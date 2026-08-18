@@ -106,7 +106,7 @@ class ApiConstants {
 
   static String aiResultsDashboard(String projectId) =>
       'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';
-      // 'https://mock.apidog.com/m1/1212435-1208182-default/api/projects/{projectId}/ai/results-dashboard';
+  // 'https://mock.apidog.com/m1/1212435-1208182-default/api/projects/{projectId}/ai/results-dashboard';
 
   static String startAiRun(String projectId) =>
       'http://192.168.100.12:5099/api/projects/$projectId/ai/runs';
@@ -148,7 +148,7 @@ class ApiConstants {
       'https://requra-ai.runasp.net/api/projects/$projectId/user-stories/$storyId';
 
   static String userStoryRegenerate(String projectId, String storyId) =>
-      '/api/projects/$projectId/user-stories/$storyId/regenerate';
+      'http://192.168.100.12:5099/api/projects/$projectId/user-stories/$storyId/regenerate';
 
   // ── ClickUp Integration ──
   static const String _clickUpBase = 'https://requra-ai.runasp.net/api/ClickUp';

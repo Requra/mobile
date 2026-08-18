@@ -7,6 +7,8 @@ class SecureTokenStorage {
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _guestAccessTokenKey = 'guest_access_token';
+  static const String _guestDisplayNameKey = 'guest_display_name';
 
   final FlutterSecureStorage _secureStorage;
 
@@ -33,6 +35,32 @@ class SecureTokenStorage {
       _secureStorage.delete(key: _accessTokenKey),
       _secureStorage.delete(key: _refreshTokenKey),
     ]);
+  }
+
+  // ── Guest Meeting Tokens ──
+  
+  Future<void> writeGuestAccessToken(String token) {
+    return _secureStorage.write(key: _guestAccessTokenKey, value: token);
+  }
+
+  Future<String?> readGuestAccessToken() {
+    return _secureStorage.read(key: _guestAccessTokenKey);
+  }
+
+  Future<void> clearGuestAccessToken() {
+    return _secureStorage.delete(key: _guestAccessTokenKey);
+  }
+
+  Future<void> writeGuestDisplayName(String name) {
+    return _secureStorage.write(key: _guestDisplayNameKey, value: name);
+  }
+
+  Future<String?> readGuestDisplayName() {
+    return _secureStorage.read(key: _guestDisplayNameKey);
+  }
+
+  Future<void> clearGuestDisplayName() {
+    return _secureStorage.delete(key: _guestDisplayNameKey);
   }
 
   Future<String?> readUserId() async {

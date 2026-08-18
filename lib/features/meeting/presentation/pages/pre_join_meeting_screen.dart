@@ -161,8 +161,10 @@ class _PreJoinMeetingScreenState extends State<PreJoinMeetingScreen> {
     setState(() => _isJoining = true);
 
     try {
-      // Read user profile from JWT token
-      final displayName = await _tokenStorage.readDisplayName() ?? 'User';
+      // Read user profile from JWT token or guest storage
+      final jwtDisplayName = await _tokenStorage.readDisplayName();
+      final guestDisplayName = await _tokenStorage.readGuestDisplayName();
+      final displayName = jwtDisplayName ?? guestDisplayName ?? 'User';
       final email = await _tokenStorage.readEmail() ?? '';
 
       final response = await _meetingService.joinMeeting(

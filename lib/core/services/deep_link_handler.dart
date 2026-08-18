@@ -19,40 +19,52 @@ class DeepLinkHandler {
 
   /// Handles a meeting deep link.
   /// Returns true if navigation was handled, false if auth is needed.
-  static Future<bool> handleMeetingLink(String meetingId) async {
-    // 1. Check auth
-    final token = await _tokenStorage.readAccessToken();
-    if (token == null || token.isEmpty) {
-      DeepLinkService.instance.savePending(meetingId);
-      return false; // caller should redirect to login
-    }
-
-    // 2. Fetch meeting details
-    final response = await _meetingService.getMeeting(meetingId);
-
-    // 3. Handle errors
+  static Future<bool> handleMeetingLink(MeetingDeepLink link) async {
     final context = navigatorKey.currentContext;
     if (context == null) return true; // App not fully loaded yet
 
-    if (!response.isSuccess) {
-      AppSnackbar.showError(context, "You are not allowed to join this meeting");
+    if (link.token != null) {
+      // Guest or member invitation link
+      final response = await _meetingService.previewInvitation(link.token!);
+      if (!response.isSuccess) {
+        AppSnackbar.showError(context, "Invalid or expired invitation");
+        return true;
+      }
+      final data = response.data as Map<String, dynamic>;
+      await _showGuestInvitationDialog(context, link, data);
       return true;
-    }
+    } else {
+      // Normal member meeting link
+      // 1. Check auth
+      final token = await _tokenStorage.readAccessToken();
+      if (token == null || token.isEmpty) {
+        DeepLinkService.instance.savePending(link);
+        return false; // caller should redirect to login
+      }
 
-    // 4. Build Meeting entity & check status
-    try {
-      final meeting = MeetingModel.fromJson(response.data);
-      if (meeting.status.toLowerCase() == 'ended' || meeting.status.toLowerCase() == 'cancelled') {
-        AppSnackbar.showError(context, 'This meeting has ${meeting.status.toLowerCase()}');
+      // 2. Fetch meeting details
+      final response = await _meetingService.getMeeting(link.meetingId);
+
+      if (!response.isSuccess) {
+        AppSnackbar.showError(context, "You are not allowed to join this meeting");
         return true;
       }
 
-      // 5. Show Invitation Dialog
-      await _showInvitationDialog(context, meeting);
-    } catch (e) {
-      AppSnackbar.showError(context, "Failed to load meeting details");
+      // 4. Build Meeting entity & check status
+      try {
+        final meeting = MeetingModel.fromJson(response.data);
+        if (meeting.status.toLowerCase() == 'ended' || meeting.status.toLowerCase() == 'cancelled') {
+          AppSnackbar.showError(context, 'This meeting has ${meeting.status.toLowerCase()}');
+          return true;
+        }
+
+        // 5. Show Invitation Dialog
+        await _showInvitationDialog(context, meeting);
+      } catch (e) {
+        AppSnackbar.showError(context, "Failed to load meeting details");
+      }
+      return true;
     }
-    return true;
   }
 
   static Future<void> _showInvitationDialog(BuildContext context, MeetingModel meeting) async {
@@ -199,6 +211,172 @@ class DeepLinkHandler {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  static Future<void> _showGuestInvitationDialog(BuildContext context, MeetingDeepLink link, Map<String, dynamic> previewData) async {
+    final title = previewData['meetingTitle'] ?? 'Meeting';
+    final scheduledAtStr = previewData['scheduledAt'];
+    final scheduledAt = scheduledAtStr != null ? DateTime.parse(scheduledAtStr) : null;
+    
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        bool isAccepting = false;
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+              backgroundColor: AppColors.white,
+              elevation: 5,
+              insetPadding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Padding(
+                padding: EdgeInsets.all(24.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.videocam_outlined,
+                            color: AppColors.primary,
+                            size: 24.sp,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            'Meeting Invitation',
+                            style: boldStyle(fontSize: FontSize.font18, color: AppColors.black),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      'Meeting Name',
+                      style: regularStyle(fontSize: FontSize.font12, color: AppColors.lightgrey),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      title,
+                      style: semiBoldStyle(fontSize: FontSize.font16, color: AppColors.black),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Time',
+                      style: regularStyle(fontSize: FontSize.font12, color: AppColors.lightgrey),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      scheduledAt != null ? formatDate(scheduledAt) : 'Now',
+                      style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.black),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Invited As',
+                      style: regularStyle(fontSize: FontSize.font12, color: AppColors.lightgrey),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      '${previewData['inviteeDisplayName'] ?? 'Guest'} (${previewData['inviteeType'] ?? 'GUEST'})',
+                      style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.black),
+                    ),
+                    SizedBox(height: 32.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(dialogContext); // Close dialog
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
+                              side: const BorderSide(color: AppColors.primary),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.primary),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                              elevation: 0,
+                            ),
+                            onPressed: isAccepting ? null : () async {
+                              setState(() => isAccepting = true);
+                              final acceptResponse = await _meetingService.acceptInvitation(link.token!);
+                              if (acceptResponse.isSuccess) {
+                                final acceptData = acceptResponse.data as Map<String, dynamic>;
+                                if (acceptData['guestAccessToken'] != null) {
+                                  await _tokenStorage.writeGuestAccessToken(acceptData['guestAccessToken']);
+                                  await _tokenStorage.writeGuestDisplayName(previewData['inviteeDisplayName'] ?? 'Guest');
+                                }
+                                
+                                final meeting = MeetingModel(
+                                  id: link.meetingId,
+                                  projectId: '',
+                                  title: title,
+                                  description: '',
+                                  status: 'Live',
+                                  joinUrl: '',
+                                  scheduledAt: scheduledAt,
+                                  startedAt: null,
+                                  endedAt: null,
+                                  createdAt: DateTime.now(),
+                                  participantsCount: 1,
+                                );
+                                
+                                if (context.mounted) {
+                                  Navigator.pop(dialogContext); // Close dialog
+                                  Navigator.pushNamed(context, '/preJoinMeeting', arguments: meeting);
+                                }
+                              } else {
+                                setState(() => isAccepting = false);
+                                if (context.mounted) {
+                                  AppSnackbar.showError(context, "Failed to accept invitation");
+                                }
+                              }
+                            },
+                            child: isAccepting
+                              ? SizedBox(
+                                  width: 20.r,
+                                  height: 20.r,
+                                  child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : Text(
+                                  'Join Meeting',
+                                  style: semiBoldStyle(fontSize: FontSize.font14, color: AppColors.white),
+                                  textAlign: TextAlign.center,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
         );
       },
     );

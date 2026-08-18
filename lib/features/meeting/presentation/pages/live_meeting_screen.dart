@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:camera/camera.dart';
+import 'package:requra/core/storage/secure_token_storage.dart';
 
 import 'package:requra/features/meeting/data/models/meeting_models.dart';
 import 'package:requra/features/meeting/data/services/meeting_service.dart';
@@ -649,7 +650,15 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         if (!mounted) return;
         setState(() => _leavingOrEnding = false);
         if (response.isSuccess) {
-          Navigator.of(context).pop();
+          final isGuest = (await const SecureTokenStorage().readAccessToken()) == null && 
+                          (await const SecureTokenStorage().readGuestAccessToken()) != null;
+          if (isGuest) {
+            await const SecureTokenStorage().clearGuestAccessToken();
+            await const SecureTokenStorage().clearGuestDisplayName();
+            if (mounted) Navigator.pushNamedAndRemoveUntil(context, AppRoutes.guestThankYou, (route) => false);
+          } else {
+            Navigator.of(context).pop();
+          }
         } else {
           _showToast(response.message);
         }
@@ -668,7 +677,15 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
         if (!mounted) return;
         setState(() => _leavingOrEnding = false);
         if (response.isSuccess) {
-          _navigateAway();
+          final isGuest = (await const SecureTokenStorage().readAccessToken()) == null && 
+                          (await const SecureTokenStorage().readGuestAccessToken()) != null;
+          if (isGuest) {
+            await const SecureTokenStorage().clearGuestAccessToken();
+            await const SecureTokenStorage().clearGuestDisplayName();
+            if (mounted) Navigator.pushNamedAndRemoveUntil(context, AppRoutes.guestThankYou, (route) => false);
+          } else {
+            _navigateAway();
+          }
         } else {
           _showToast(response.message);
         }
@@ -730,7 +747,7 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
     AppSnackbar.showSuccess(context, message);
   }
 
-  void _navigateAway() {
+  Future<void> _navigateAway() async {
     if (!mounted) return;
 
     final summary = MeetingSummary(
@@ -740,6 +757,20 @@ class _LiveMeetingScreenState extends State<LiveMeetingScreen>
       projectName: _meeting?.projectName ?? '',
     );
 
+    final isGuest = (await const SecureTokenStorage().readAccessToken()) == null && 
+                    (await const SecureTokenStorage().readGuestAccessToken()) != null;
+                    
+    if (isGuest) {
+      await const SecureTokenStorage().clearGuestAccessToken();
+      await const SecureTokenStorage().clearGuestDisplayName();
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.guestThankYou, (route) => false);
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    
     Navigator.of(
       context,
     ).pushReplacementNamed(AppRoutes.meetingFinished, arguments: summary);

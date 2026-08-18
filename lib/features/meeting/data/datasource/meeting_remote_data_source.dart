@@ -217,7 +217,7 @@ class MeetingRemoteDataSourceImpl implements MeetingRemoteDataSource {
     try {
       await apiClient.dio.post(
         '${ApiConstants.meetings}/$meetingId/invitations/participants',
-        data: {'members': members},
+        data: {'members': members, 'platform': 'Mobile'},
       );
     } catch (e) {
       rethrow;
@@ -229,7 +229,7 @@ class MeetingRemoteDataSourceImpl implements MeetingRemoteDataSource {
     try {
       await apiClient.dio.post(
         '${ApiConstants.meetings}/$meetingId/invitations/guests',
-        data: {'guests': guests},
+        data: {'guests': guests, 'platform': 'Mobile'},
       );
     } catch (e) {
       rethrow;

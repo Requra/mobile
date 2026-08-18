@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:requra/core/services/deep_link_handler.dart';
+import 'package:requra/core/services/deep_link_service.dart';
 import 'package:requra/core/utils/validators.dart';
 import 'package:requra/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:requra/core/theme/color_manager.dart';
@@ -86,11 +88,24 @@ class _LoginScreenState extends State<LoginScreen> {
           current is AuthUnauthenticated,
       listener: (BuildContext context, AuthState state) {
         if (state is AuthAuthenticated) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/main',
-            (Route<dynamic> route) => false,
-          );
+          final pendingLink = DeepLinkService.instance.pendingMeetingLink;
+          if (pendingLink != null) {
+            DeepLinkService.instance.clearPending();
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/main',
+              (Route<dynamic> route) => false,
+            );
+            Future.delayed(const Duration(milliseconds: 300), () {
+              DeepLinkHandler.handleMeetingLink(pendingLink);
+            });
+          } else {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/main',
+              (Route<dynamic> route) => false,
+            );
+          }
         } else if (state is AuthVerificationRequired) {
           // Account not confirmed — navigate to OTP verification.
           Navigator.push<void>(

@@ -124,7 +124,7 @@ class MeetingService {
     return _post(
       endpoint:
           '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/project-members',
-      body: <String, dynamic>{'memberIds': memberIds, 'role': role},
+      body: <String, dynamic>{'memberIds': memberIds, 'role': role, 'platform': 'Mobile'},
     );
   }
 
@@ -135,7 +135,10 @@ class MeetingService {
     List<Map<String, String>>? newStakeholders,
     String role = 'PARTICIPANT',
   }) {
-    final Map<String, dynamic> body = <String, dynamic>{'role': role};
+    final Map<String, dynamic> body = <String, dynamic>{
+      'role': role,
+      'platform': 'Mobile',
+    };
     if (stakeholderIds != null && stakeholderIds.isNotEmpty) {
       body['stakeholderIds'] = stakeholderIds;
     }
@@ -164,6 +167,7 @@ class MeetingService {
         'guests': guests,
         'role': role,
         'expiresAt': expiresAt,
+        'platform': 'Mobile',
       },
     );
   }
@@ -182,6 +186,23 @@ class MeetingService {
     return _delete(
       endpoint:
           '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId',
+    );
+  }
+
+  // ── Meeting Invitations ───────────────────────────────────────────────────
+
+  /// GET /api/meeting-invitations/{token}
+  Future<AuthResponse> previewInvitation(String token) {
+    return _get(
+      endpoint: ApiConstants.previewInvitation(token),
+    );
+  }
+
+  /// POST /api/meeting-invitations/{token}/accept
+  Future<AuthResponse> acceptInvitation(String token, {String? displayName}) {
+    return _post(
+      endpoint: ApiConstants.acceptInvitation(token),
+      body: displayName != null ? <String, dynamic>{'displayName': displayName} : <String, dynamic>{},
     );
   }
 

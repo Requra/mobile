@@ -27,6 +27,7 @@ import 'package:requra/screens/splash_screen.dart';
 import 'package:requra/screens/onboarding/onboarding_screen.dart';
 import 'package:requra/features/meeting/presentation/pages/pre_join_meeting_screen.dart';
 import 'package:requra/features/meeting/domain/entities/meeting.dart';
+import 'package:requra/features/meeting/presentation/pages/guest_thank_you_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -49,6 +50,7 @@ class AppRoutes {
   static const String addProject = '/addProject';
   static const String editProject = '/editProject';
   static const String preJoinMeeting = '/preJoinMeeting';
+  static const String guestThankYou = '/guestThankYou';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -103,6 +105,7 @@ class AppRoutes {
         final meeting = ModalRoute.of(context)!.settings.arguments as Meeting;
         return PreJoinMeetingScreen(meeting: meeting);
       },
+      guestThankYou: (_) => const GuestThankYouScreen(),
     };
   }
 }

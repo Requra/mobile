@@ -6,28 +6,34 @@ import 'package:flutter/foundation.dart';
 ///
 /// Usage:
 ///   await DeepLinkService.instance.init();
-///   DeepLinkService.instance.onDeepLink.listen((meetingId) { ... });
+///   DeepLinkService.instance.onDeepLink.listen((link) { ... });
+class MeetingDeepLink {
+  final String meetingId;
+  final String? token;
+  MeetingDeepLink({required this.meetingId, this.token});
+}
+
 class DeepLinkService {
   static final DeepLinkService instance = DeepLinkService._();
   DeepLinkService._();
 
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
-  final _deepLinkController = StreamController<String>.broadcast();
+  final _deepLinkController = StreamController<MeetingDeepLink>.broadcast();
 
-  // Expose stream of valid meeting IDs extracted from deep links
-  Stream<String> get onDeepLink => _deepLinkController.stream;
+  // Expose stream of valid meeting deep links
+  Stream<MeetingDeepLink> get onDeepLink => _deepLinkController.stream;
 
   // Expose stream of ClickUp callbacks
   final _clickUpCallbackController = StreamController<Map<String, String>>.broadcast();
   Stream<Map<String, String>> get onClickUpCallback => _clickUpCallbackController.stream;
 
-  // Pending meeting ID saved when user is not logged in
-  String? _pendingMeetingId;
-  String? get pendingMeetingId => _pendingMeetingId;
+  // Pending meeting link saved when user is not logged in or during cold start
+  MeetingDeepLink? _pendingMeetingLink;
+  MeetingDeepLink? get pendingMeetingLink => _pendingMeetingLink;
   
-  void clearPending() => _pendingMeetingId = null;
-  void savePending(String meetingId) => _pendingMeetingId = meetingId;
+  void clearPending() => _pendingMeetingLink = null;
+  void savePending(MeetingDeepLink link) => _pendingMeetingLink = link;
 
   Future<void> init() async {
     _appLinks = AppLinks();
@@ -36,7 +42,7 @@ class DeepLinkService {
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
-        _handleUri(initialUri);
+        _handleUri(initialUri, isInitial: true);
       }
     } catch (e) {
       debugPrint("Failed to get initial link: $e");
@@ -44,13 +50,13 @@ class DeepLinkService {
 
     // Listen for incoming links when app is in foreground/background
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      _handleUri(uri);
+      _handleUri(uri, isInitial: false);
     }, onError: (err) {
       debugPrint("Failed to get latest link: $err");
     });
   }
 
-  void _handleUri(Uri uri) {
+  void _handleUri(Uri uri, {bool isInitial = false}) {
     debugPrint("Received deep link: $uri");
     
     // ClickUp OAuth callback: requra://clickup/callback?code=XXX&state=YYY
@@ -64,22 +70,39 @@ class DeepLinkService {
     }
     
     // Existing meeting deep link logic
-    final meetingId = parseMeetingId(uri);
-    if (meetingId != null) {
-      _deepLinkController.add(meetingId);
+    final link = parseMeetingLink(uri);
+    if (link != null) {
+      if (isInitial) {
+        _pendingMeetingLink = link;
+      } else {
+        _deepLinkController.add(link);
+      }
     }
   }
 
-  /// Parses a URI and returns the meetingId if valid.
+  /// Parses a URI and returns the MeetingDeepLink if valid.
   /// Returns null for invalid/unrecognized links.
-  static String? parseMeetingId(Uri uri) {
-    // Matches: /meetings/{uuid}/join
+  static MeetingDeepLink? parseMeetingLink(Uri uri) {
     final segments = uri.pathSegments;
+    
+    // New format: /meeting/join?meetingId=...&Token=... or &guestToken=...
+    if (segments.length >= 2 &&
+        segments[0] == 'meeting' &&
+        segments[1] == 'join') {
+      final meetingId = uri.queryParameters['meetingId'];
+      final token = uri.queryParameters['guestToken'] ?? uri.queryParameters['Token'];
+      if (meetingId != null) {
+        return MeetingDeepLink(meetingId: meetingId, token: token);
+      }
+    }
+    
+    // Old format: /meetings/{uuid}/join
     if (segments.length >= 3 &&
         segments[0] == 'meetings' &&
         segments[2] == 'join') {
-      return segments[1]; // the meetingId
+      return MeetingDeepLink(meetingId: segments[1]);
     }
+    
     return null;
   }
 

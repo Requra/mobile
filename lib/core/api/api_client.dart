@@ -23,8 +23,11 @@ class ApiClient {
         onRequest: (options, handler) async {
           final tokenStorage = const SecureTokenStorage();
           final token = await tokenStorage.readAccessToken();
+          final guestToken = await tokenStorage.readGuestAccessToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+          } else if (guestToken != null && guestToken.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $guestToken';
           }
           return handler.next(options);
         },

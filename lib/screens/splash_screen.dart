@@ -54,13 +54,13 @@ class _SplashScreenState extends State<SplashScreen>
       listener: (BuildContext context, AuthState state) {
         if (state is AuthAuthenticated) {
           // Check if there's a pending deep link to handle
-          final pendingId = DeepLinkService.instance.pendingMeetingId;
-          if (pendingId != null) {
+          final pendingLink = DeepLinkService.instance.pendingMeetingLink;
+          if (pendingLink != null) {
             DeepLinkService.instance.clearPending();
             Navigator.pushReplacementNamed(context, '/main');
             // Handle after main screen is loaded
             Future.delayed(const Duration(milliseconds: 300), () {
-              DeepLinkHandler.handleMeetingLink(pendingId);
+              DeepLinkHandler.handleMeetingLink(pendingLink);
             });
           } else {
             Navigator.pushReplacementNamed(context, '/main');

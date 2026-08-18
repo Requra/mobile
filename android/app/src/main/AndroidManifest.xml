@@ -39,10 +39,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Legacy domain support -->
-                <data
-                    android:scheme="https"
-                    android:host="app.requra.ai"
-                    android:pathPrefix="/meetings" />
+<!--                <data-->
+<!--                    android:scheme="https"-->
+<!--                    android:host="app.requra.ai"-->
+<!--                    android:pathPrefix="/meetings" />-->
                 <!-- New domain support -->
                 <data
                     android:scheme="https"

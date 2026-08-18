@@ -176,7 +176,7 @@ class MeetingService {
   Future<AuthResponse> resendInvitation(String meetingId, String invitationId) {
     return _post(
       endpoint:
-          '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId/resend',
+          '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId/resend?platform=Mobile',
       body: <String, dynamic>{},
     );
   }

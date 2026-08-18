@@ -120,11 +120,12 @@ class MeetingService {
     String meetingId,
     List<String> memberIds,
     String role,
+    {String platform = 'Mobile'}
   ) {
     return _post(
       endpoint:
           '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/project-members',
-      body: <String, dynamic>{'memberIds': memberIds, 'role': role, 'platform': 'Mobile'},
+      body: <String, dynamic>{'memberIds': memberIds, 'role': role, 'platform': platform},
     );
   }
 
@@ -134,10 +135,11 @@ class MeetingService {
     List<String>? stakeholderIds,
     List<Map<String, String>>? newStakeholders,
     String role = 'PARTICIPANT',
+    String platform = 'Mobile',
   }) {
     final Map<String, dynamic> body = <String, dynamic>{
       'role': role,
-      'platform': 'Mobile',
+      'platform': platform,
     };
     if (stakeholderIds != null && stakeholderIds.isNotEmpty) {
       body['stakeholderIds'] = stakeholderIds;
@@ -159,6 +161,7 @@ class MeetingService {
     List<Map<String, String>> guests,
     String role,
     String expiresAt,
+    {String platform = 'Mobile'}
   ) {
     return _post(
       endpoint:
@@ -167,16 +170,16 @@ class MeetingService {
         'guests': guests,
         'role': role,
         'expiresAt': expiresAt,
-        'platform': 'Mobile',
+        'platform': platform,
       },
     );
   }
 
   /// POST /api/v1/meetings/:meetingId/invitations/:invitationId/resend
-  Future<AuthResponse> resendInvitation(String meetingId, String invitationId) {
+  Future<AuthResponse> resendInvitation(String meetingId, String invitationId, {String platform = 'Mobile'}) {
     return _post(
       endpoint:
-          '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId/resend?platform=Mobile',
+          '${ApiConstants.meetingsBase}/meetings/$meetingId/invitations/$invitationId/resend?platform=$platform',
       body: <String, dynamic>{},
     );
   }

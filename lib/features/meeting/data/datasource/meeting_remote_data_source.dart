@@ -14,9 +14,9 @@ abstract class MeetingRemoteDataSource {
   // Invite API
   Future<List<dynamic>> getProjectMembers(String projectId);
   Future<List<dynamic>> getMeetingInvitations(String meetingId);
-  Future<void> inviteParticipants(String meetingId, List<Map<String, String>> members);
-  Future<void> inviteGuests(String meetingId, List<Map<String, String>> guests);
-  Future<void> resendInvitation(String meetingId, String invitationId);
+  Future<void> inviteParticipants(String meetingId, List<Map<String, String>> members, {String platform = 'Mobile'});
+  Future<void> inviteGuests(String meetingId, List<Map<String, String>> guests, {String platform = 'Mobile'});
+  Future<void> resendInvitation(String meetingId, String invitationId, {String platform = 'Mobile'});
 }
 
 class MeetingRemoteDataSourceImpl implements MeetingRemoteDataSource {
@@ -213,11 +213,11 @@ class MeetingRemoteDataSourceImpl implements MeetingRemoteDataSource {
   }
 
   @override
-  Future<void> inviteParticipants(String meetingId, List<Map<String, String>> members) async {
+  Future<void> inviteParticipants(String meetingId, List<Map<String, String>> members, {String platform = 'Mobile'}) async {
     try {
       await apiClient.dio.post(
         '${ApiConstants.meetings}/$meetingId/invitations/participants',
-        data: {'members': members, 'platform': 'Mobile'},
+        data: {'members': members, 'platform': platform},
       );
     } catch (e) {
       rethrow;
@@ -225,11 +225,11 @@ class MeetingRemoteDataSourceImpl implements MeetingRemoteDataSource {
   }
 
   @override
-  Future<void> inviteGuests(String meetingId, List<Map<String, String>> guests) async {
+  Future<void> inviteGuests(String meetingId, List<Map<String, String>> guests, {String platform = 'Mobile'}) async {
     try {
       await apiClient.dio.post(
         '${ApiConstants.meetings}/$meetingId/invitations/guests',
-        data: {'guests': guests, 'platform': 'Mobile'},
+        data: {'guests': guests, 'platform': platform},
       );
     } catch (e) {
       rethrow;
@@ -237,10 +237,10 @@ class MeetingRemoteDataSourceImpl implements MeetingRemoteDataSource {
   }
 
   @override
-  Future<void> resendInvitation(String meetingId, String invitationId) async {
+  Future<void> resendInvitation(String meetingId, String invitationId, {String platform = 'Mobile'}) async {
     try {
       await apiClient.dio.post(
-        '${ApiConstants.meetings}/$meetingId/invitations/$invitationId/resend',
+        '${ApiConstants.meetings}/$meetingId/invitations/$invitationId/resend?platform=$platform',
         data: {},
       );
     } catch (e) {

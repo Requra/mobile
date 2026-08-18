@@ -126,9 +126,9 @@ class MeetingRepositoryImpl implements MeetingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> inviteParticipants(String meetingId, List<Map<String, String>> members) async {
+  Future<Either<Failure, void>> inviteParticipants(String meetingId, List<Map<String, String>> members, {String platform = 'Mobile'}) async {
     try {
-      await remoteDataSource.inviteParticipants(meetingId, members);
+      await remoteDataSource.inviteParticipants(meetingId, members, platform: platform);
       return const Right(null);
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'A network error occurred.'));
@@ -138,9 +138,9 @@ class MeetingRepositoryImpl implements MeetingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> inviteGuests(String meetingId, List<Map<String, String>> guests) async {
+  Future<Either<Failure, void>> inviteGuests(String meetingId, List<Map<String, String>> guests, {String platform = 'Mobile'}) async {
     try {
-      await remoteDataSource.inviteGuests(meetingId, guests);
+      await remoteDataSource.inviteGuests(meetingId, guests, platform: platform);
       return const Right(null);
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'A network error occurred.'));
@@ -150,9 +150,9 @@ class MeetingRepositoryImpl implements MeetingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> resendInvitation(String meetingId, String invitationId) async {
+  Future<Either<Failure, void>> resendInvitation(String meetingId, String invitationId, {String platform = 'Mobile'}) async {
     try {
-      await remoteDataSource.resendInvitation(meetingId, invitationId);
+      await remoteDataSource.resendInvitation(meetingId, invitationId, platform: platform);
       return const Right(null);
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'A network error occurred.'));

@@ -7,7 +7,7 @@ class ResendInvitationUseCase {
 
   ResendInvitationUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String meetingId, String invitationId) {
-    return repository.resendInvitation(meetingId, invitationId);
+  Future<Either<Failure, void>> call(String meetingId, String invitationId, {String platform = 'Mobile'}) {
+    return repository.resendInvitation(meetingId, invitationId, platform: platform);
   }
 }

@@ -79,6 +79,9 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
   String _selectedRole = 'Contributor';
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  
+  // ── Platform Selection ──
+  String _selectedPlatform = 'Mobile';
 
   // ── Tab 3 (Guest) ──
   final TextEditingController _guestNameCtrl = TextEditingController();
@@ -180,6 +183,7 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
           widget.meetingId,
           memberId,
           _selectedRole,
+          platform: _selectedPlatform,
         );
   }
 
@@ -198,7 +202,7 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
     }
 
     setState(() => _submittingGuest = true);
-    context.read<MeetingInviteCubit>().inviteGuest(widget.meetingId, name, email);
+    context.read<MeetingInviteCubit>().inviteGuest(widget.meetingId, name, email, platform: _selectedPlatform);
   }
 
   void _resendInvitation(String invitationId, String displayName) {
@@ -206,6 +210,7 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
           widget.meetingId,
           invitationId,
           displayName,
+          platform: _selectedPlatform,
         );
   }
 
@@ -286,6 +291,38 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
                 ),
               ),
               SizedBox(height: 16.h),
+              
+              // Platform Selector
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Row(
+                  children: [
+                    Text(
+                      'Send To',
+                      style: semiBoldStyle(
+                          fontSize: FontSize.font14, color: MeetingDetailsColors.ink),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Container(
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: MeetingDetailsColors.fieldBg,
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Row(
+                          children: [
+                            _buildPlatformOption('Mobile', Icons.phone_iphone_rounded),
+                            _buildPlatformOption('Web', Icons.language_rounded),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+              
               // Tabs
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 24.w),
@@ -764,5 +801,41 @@ class _MeetingInviteSheetContentState extends State<_MeetingInviteSheetContent>
     if (parts.isEmpty || parts.first.isEmpty) return '?';
     if (parts.length == 1) return parts.first[0].toUpperCase();
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+  Widget _buildPlatformOption(String value, IconData icon) {
+    final isSelected = _selectedPlatform == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (_selectedPlatform != value) {
+            setState(() => _selectedPlatform = value);
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected ? MeetingDetailsColors.purple : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : MeetingDetailsColors.inkSoft,
+                size: 16.sp,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                value,
+                style: semiBoldStyle(
+                  fontSize: FontSize.font14,
+                  color: isSelected ? Colors.white : MeetingDetailsColors.inkSoft,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

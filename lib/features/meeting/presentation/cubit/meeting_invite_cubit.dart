@@ -60,14 +60,14 @@ class MeetingInviteCubit extends Cubit<MeetingInviteState> {
     );
   }
 
-  Future<void> inviteParticipant(String meetingId, String memberId, String role) async {
+  Future<void> inviteParticipant(String meetingId, String memberId, String role, {String platform = 'Mobile'}) async {
     emit(state.copyWith(isSubmitting: true, clearError: true, clearSuccess: true));
     
     final membersList = [
       {'memberId': memberId, 'role': role}
     ];
     
-    final result = await _inviteParticipants(meetingId, membersList);
+    final result = await _inviteParticipants(meetingId, membersList, platform: platform);
 
     result.fold(
       (failure) => emit(state.copyWith(isSubmitting: false, errorMessage: failure.message)),
@@ -79,14 +79,14 @@ class MeetingInviteCubit extends Cubit<MeetingInviteState> {
     );
   }
 
-  Future<void> inviteGuest(String meetingId, String name, String email) async {
+  Future<void> inviteGuest(String meetingId, String name, String email, {String platform = 'Mobile'}) async {
     emit(state.copyWith(isSubmitting: true, clearError: true, clearSuccess: true));
     
     final guestsList = [
       {'displayName': name, 'email': email}
     ];
 
-    final result = await _inviteGuests(meetingId, guestsList);
+    final result = await _inviteGuests(meetingId, guestsList, platform: platform);
 
     result.fold(
       (failure) => emit(state.copyWith(isSubmitting: false, errorMessage: failure.message)),
@@ -98,11 +98,11 @@ class MeetingInviteCubit extends Cubit<MeetingInviteState> {
     );
   }
 
-  Future<void> resendInvitation(String meetingId, String invitationId, String displayName) async {
+  Future<void> resendInvitation(String meetingId, String invitationId, String displayName, {String platform = 'Mobile'}) async {
     final newResendingIds = Set<String>.from(state.resendingIds)..add(invitationId);
     emit(state.copyWith(resendingIds: newResendingIds, clearError: true, clearSuccess: true));
     
-    final result = await _resendInvitation(meetingId, invitationId);
+    final result = await _resendInvitation(meetingId, invitationId, platform: platform);
 
     final updatedResendingIds = Set<String>.from(state.resendingIds)..remove(invitationId);
     

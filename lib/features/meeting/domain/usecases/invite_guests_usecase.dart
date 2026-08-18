@@ -7,7 +7,7 @@ class InviteGuestsUseCase {
 
   InviteGuestsUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String meetingId, List<Map<String, String>> guests) {
-    return repository.inviteGuests(meetingId, guests);
+  Future<Either<Failure, void>> call(String meetingId, List<Map<String, String>> guests, {String platform = 'Mobile'}) {
+    return repository.inviteGuests(meetingId, guests, platform: platform);
   }
 }

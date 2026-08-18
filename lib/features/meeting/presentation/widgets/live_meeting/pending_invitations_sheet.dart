@@ -48,6 +48,7 @@ class PendingInvitationsSheet extends StatefulWidget {
 class _PendingInvitationsSheetState extends State<PendingInvitationsSheet> {
   final MeetingService _service = const MeetingService();
   final Set<String> _loadingIds = {};
+  String _selectedPlatform = 'Mobile';
 
   List<Invitation> get _pending =>
       widget.invitations
@@ -59,6 +60,7 @@ class _PendingInvitationsSheetState extends State<PendingInvitationsSheet> {
     final response = await _service.resendInvitation(
       widget.meetingId,
       inv.id,
+      platform: _selectedPlatform,
     );
     if (!mounted) return;
     setState(() => _loadingIds.remove('resend_${inv.id}'));
@@ -166,6 +168,33 @@ class _PendingInvitationsSheetState extends State<PendingInvitationsSheet> {
                   ],
                 ),
                 SizedBox(height: 16.h),
+                // Platform Selector
+                Row(
+                  children: [
+                    Text(
+                      'Resend To',
+                      style: semiBoldStyle(
+                          fontSize: FontSize.font14, color: AppColors.white),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Container(
+                        height: 36.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Row(
+                          children: [
+                            _buildPlatformOption('Mobile', Icons.phone_iphone_rounded),
+                            _buildPlatformOption('Web', Icons.language_rounded),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
                 Divider(color: AppColors.meetingCardBorder, height: 1),
               ],
             ),
@@ -203,6 +232,43 @@ class _PendingInvitationsSheetState extends State<PendingInvitationsSheet> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlatformOption(String value, IconData icon) {
+    final isSelected = _selectedPlatform == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (_selectedPlatform != value) {
+            setState(() => _selectedPlatform = value);
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.consentAmber.withValues(alpha: 0.15) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.consentAmber : Colors.white38,
+                size: 16.sp,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                value,
+                style: semiBoldStyle(
+                  fontSize: FontSize.font12,
+                  color: isSelected ? AppColors.consentAmber : Colors.white38,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

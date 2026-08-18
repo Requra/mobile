@@ -15,7 +15,7 @@ abstract class MeetingRepository {
   // Invite API
   Future<Either<Failure, List<ProjectMember>>> getProjectMembers(String projectId);
   Future<Either<Failure, List<MeetingInvitation>>> getMeetingInvitations(String meetingId);
-  Future<Either<Failure, void>> inviteParticipants(String meetingId, List<Map<String, String>> members);
-  Future<Either<Failure, void>> inviteGuests(String meetingId, List<Map<String, String>> guests);
-  Future<Either<Failure, void>> resendInvitation(String meetingId, String invitationId);
+  Future<Either<Failure, void>> inviteParticipants(String meetingId, List<Map<String, String>> members, {String platform = 'Mobile'});
+  Future<Either<Failure, void>> inviteGuests(String meetingId, List<Map<String, String>> guests, {String platform = 'Mobile'});
+  Future<Either<Failure, void>> resendInvitation(String meetingId, String invitationId, {String platform = 'Mobile'});
 }

@@ -144,9 +144,9 @@ class ApiConstants {
   // ── ClickUp Integration ──
   static const String _clickUpBase = 'https://requra-ai.runasp.net/api/ClickUp';
 
-  /// GET /api/ClickUp/auth/authorize?projectId={projectId}
+  /// GET /api/ClickUp/auth/authorize?projectId={projectId}&platform=Mobile
   static String clickUpAuthorize(String projectId) =>
-      '$_clickUpBase/auth/authorize?projectId=$projectId';
+      '$_clickUpBase/auth/authorize?projectId=$projectId&platform=Mobile';
 
   /// POST /api/ClickUp/auth/callback
   static const String clickUpCallback = '$_clickUpBase/auth/callback';

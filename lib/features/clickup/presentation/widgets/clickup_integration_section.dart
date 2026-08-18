@@ -190,7 +190,9 @@ class ClickUpIntegrationSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: 16.h),
-        Row(
+        Wrap(
+          spacing: 12.w,
+          runSpacing: 12.h,
           children: [
             ElevatedButton.icon(
               onPressed: () {
@@ -212,7 +214,6 @@ class ClickUpIntegrationSection extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               ),
             ),
-            SizedBox(width: 12.w),
             OutlinedButton(
               onPressed: () {
                 _showDisconnectDialog(context);

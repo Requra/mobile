@@ -50,6 +50,9 @@ class _ClickUpOAuthWebViewState extends State<ClickUpOAuthWebView> {
                 context
                     .read<ClickUpCubit>()
                     .completeOAuth(code, state ?? widget.projectId);
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
               }
               return NavigationDecision.prevent;
             }
@@ -70,6 +73,9 @@ class _ClickUpOAuthWebViewState extends State<ClickUpOAuthWebView> {
           onPressed: () {
             // Cancel and fetch status again
             context.read<ClickUpCubit>().fetchStatus(widget.projectId);
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
           },
         ),
       ),

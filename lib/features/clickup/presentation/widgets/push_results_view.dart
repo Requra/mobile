@@ -115,13 +115,18 @@ class PushResultsView extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      detail.userStoryId,
-                      style: semiBoldStyle(
-                        fontSize: FontSize.font14,
-                        color: AppColors.black,
+                    Expanded(
+                      child: Text(
+                        detail.userStoryId,
+                        style: semiBoldStyle(
+                          fontSize: FontSize.font14,
+                          color: AppColors.black,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    SizedBox(width: 8.w),
                     _buildBadge(detail.action, detail.success),
                   ],
                 ),

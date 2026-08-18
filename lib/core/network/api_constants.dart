@@ -61,6 +61,14 @@ class ApiConstants {
   static String endMeeting(String meetingId) =>
       '$realMeetingsBase/meetings/$meetingId/end';
 
+  /// GET /api/meeting-invitations/{token}
+  static String previewInvitation(String token) =>
+      '$realMeetingsBase/meeting-invitations/$token';
+
+  /// POST /api/meeting-invitations/{token}/accept
+  static String acceptInvitation(String token) =>
+      '$realMeetingsBase/meeting-invitations/$token/accept';
+
   /// GET /api/meetings/{meetingId}/participants
   static String meetingParticipants(String meetingId) =>
       '$realMeetingsBase/meetings/$meetingId/participants';
@@ -98,6 +106,7 @@ class ApiConstants {
 
   static String aiResultsDashboard(String projectId) =>
       'https://requra-ai.runasp.net/api/projects/$projectId/ai/results-dashboard';
+      // 'https://mock.apidog.com/m1/1212435-1208182-default/api/projects/{projectId}/ai/results-dashboard';
 
   static String startAiRun(String projectId) =>
       'http://192.168.100.12:5099/api/projects/$projectId/ai/runs';

@@ -51,6 +51,8 @@ class _MyAppState extends State<MyApp> {
                 authService: const AuthService(),
                 googleSignIn: GoogleSignIn(
                   scopes: <String>['email', 'profile'],
+                  serverClientId:
+                      "1037785688371-jai9phnjab1p5csft60fib63l74c6k60.apps.googleusercontent.com",
                 ),
               ),
             ),

@@ -214,10 +214,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       final response = await _authService.googleLogin(idToken: idToken);
 
-      debugPrint(
-        'Google login response: isSuccess=${response.isSuccess}, '
-        'statusCode=${response.statusCode}, message=${response.message}',
-      );
+      debugPrint('Google login response: ${response.data}');
 
       if (response.isSuccess) {
         emit(const AuthAuthenticated());
@@ -229,7 +226,11 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } on PlatformException catch (e) {
       debugPrint('Google sign-in PlatformException: ${e.code} ${e.message}');
-      emit(AuthError('Google sign-in PlatformException: ${e.code}. Check SHA-1/Google-Services.'));
+      emit(
+        AuthError(
+          'Google sign-in PlatformException: ${e.code}. Check SHA-1/Google-Services.',
+        ),
+      );
     } catch (e) {
       debugPrint('Google sign-in error: $e');
       emit(AuthError('Google sign-in Error: $e'));

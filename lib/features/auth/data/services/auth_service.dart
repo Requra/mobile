@@ -665,7 +665,7 @@ class AuthService {
 
     final String accessToken = (data['token'] ?? '').toString().trim();
     final String refreshToken = (data['refreshToken'] ?? '').toString().trim();
-    return accessToken.isNotEmpty && refreshToken.isNotEmpty;
+    return accessToken.isNotEmpty;
   }
 
   Future<bool> _saveTokensFromData(dynamic data) async {
@@ -676,7 +676,7 @@ class AuthService {
     final String accessToken = (data['token'] ?? '').toString().trim();
     final String refreshToken = (data['refreshToken'] ?? '').toString().trim();
 
-    if (accessToken.isEmpty || refreshToken.isEmpty) {
+    if (accessToken.isEmpty) {
       return false;
     }
 

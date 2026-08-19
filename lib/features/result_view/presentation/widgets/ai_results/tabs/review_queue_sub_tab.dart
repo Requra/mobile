@@ -64,9 +64,16 @@ class ReviewQueueSubTab extends StatelessWidget {
     required Color iconColor,
     required Color iconBgColor,
     required String title,
-    required int count,
     required List<Widget> children,
   }) {
+    // Only count children that are not SizedBox.shrink() or empty SizedBox
+    final actualCount = children.where((child) {
+      if (child is SizedBox && child.width == null && child.height == null && child.child == null) {
+        return false;
+      }
+      return true;
+    }).length;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
@@ -101,7 +108,7 @@ class ReviewQueueSubTab extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
-                  '$count',
+                  '$actualCount',
                   style: semiBoldStyle(fontSize: FontSize.font12, color: AppColors.grey),
                 ),
               ),
@@ -120,7 +127,6 @@ class ReviewQueueSubTab extends StatelessWidget {
       iconColor: AppColors.error,
       iconBgColor: const Color(0xFFFEE2E2),
       title: 'Risks',
-      count: dashboard.summary.risks.length,
       children: dashboard.summary.risks.map((risk) {
         Color severityColor;
         Color severityBg;
@@ -177,7 +183,6 @@ class ReviewQueueSubTab extends StatelessWidget {
       iconColor: AppColors.primary,
       iconBgColor: AppColors.lightButton,
       title: 'Open Questions',
-      count: dashboard.summary.openQuestions.length,
       children: dashboard.summary.openQuestions.map((q) {
         return Container(
           width: double.infinity,
@@ -207,7 +212,6 @@ class ReviewQueueSubTab extends StatelessWidget {
       iconColor: AppColors.primary,
       iconBgColor: AppColors.lightButton,
       title: 'Action Items',
-      count: dashboard.summary.actionItems.length,
       children: dashboard.summary.actionItems.map((item) {
         Color priorityColor;
         Color priorityBg;
@@ -283,7 +287,6 @@ class ReviewQueueSubTab extends StatelessWidget {
       iconColor: const Color(0xFFD97706),
       iconBgColor: const Color(0xFFFEF3C7),
       title: 'Quality Report',
-      count: report.highSeverityIssueCount ?? 0,
       children: [
         _buildQualityMetric(
             'Overall Score', report.overallScore, Icons.score),

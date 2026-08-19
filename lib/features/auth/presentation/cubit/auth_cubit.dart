@@ -14,9 +14,9 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit({
     required AuthService authService,
     required GoogleSignIn googleSignIn,
-  })  : _authService = authService,
-        _googleSignIn = googleSignIn,
-        super(const AuthInitial());
+  }) : _authService = authService,
+       _googleSignIn = googleSignIn,
+       super(const AuthInitial());
 
   final AuthService _authService;
   final GoogleSignIn _googleSignIn;
@@ -55,10 +55,7 @@ class AuthCubit extends Cubit<AuthState> {
   // Email / password login
   // ---------------------------------------------------------------------------
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     if (state is AuthLoading) return;
     emit(const AuthLoading());
 
@@ -208,7 +205,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (idToken == null || idToken.trim().isEmpty) {
         debugPrint('Google sign-in failed: idToken is null or empty.');
-        emit(const AuthError('Google sign-in failed. Please try again.'));
+        emit(const AuthError('Google sign-in failed: idToken is missing.'));
         return;
       }
 
@@ -225,17 +222,17 @@ class AuthCubit extends Cubit<AuthState> {
       if (response.isSuccess) {
         emit(const AuthAuthenticated());
       } else {
-        final String errorMsg = kDebugMode && response.message.trim().isNotEmpty
-            ? response.message
-            : 'Google sign-in failed. Please try again.';
+        final String errorMsg = response.message.trim().isNotEmpty
+            ? 'Backend error: ${response.message}'
+            : 'Google sign-in failed: Backend returned false without message.';
         emit(AuthError(errorMsg));
       }
     } on PlatformException catch (e) {
       debugPrint('Google sign-in PlatformException: ${e.code} ${e.message}');
-      emit(const AuthError('Google sign-in failed. Please try again.'));
+      emit(AuthError('Google sign-in PlatformException: ${e.code}. Check SHA-1/Google-Services.'));
     } catch (e) {
       debugPrint('Google sign-in error: $e');
-      emit(const AuthError('Google sign-in failed. Please try again.'));
+      emit(AuthError('Google sign-in Error: $e'));
     }
   }
 

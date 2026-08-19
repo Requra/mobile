@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:616587901782:android:7b1c6a36ee06bf48d434f7",
         "android_client_info": {
-          "package_name": "com.example.requra"
+          "package_name": "com.example.requraa"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "616587901782-1ol7v81ch330e94jau55l82okpeteovq.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.requra",
+            "package_name": "com.example.requraa",
             "certificate_hash": "9a7c9db21daf2b65e766e0ab097456e395b8e2cc"
           }
         },

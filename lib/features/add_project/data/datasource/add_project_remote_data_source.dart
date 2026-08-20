@@ -87,7 +87,7 @@ class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
     };
 
     final response = await apiClient.dio.post(
-      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs',
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs',
       data: payload,
     );
 
@@ -104,7 +104,7 @@ class AddProjectRemoteDataSourceImpl implements AddProjectRemoteDataSource {
   @override
   Future<AiRunStatus> getAiRunProgress(String projectId, String runId) async {
     final response = await apiClient.dio.get(
-      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs/$runId',
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs/$runId',
     );
 
     final responseData = response.data;

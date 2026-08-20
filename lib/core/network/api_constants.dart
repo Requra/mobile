@@ -111,10 +111,10 @@ class ApiConstants {
   // 'https://mock.apidog.com/m1/1212435-1208182-default/api/projects/{projectId}/ai/results-dashboard';
 
   static String startAiRun(String projectId) =>
-      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs';
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs';
 
   static String getAiRunProgress(String projectId, String runId) =>
-      'http://192.168.100.12:5099/api/projects/$projectId/ai/runs/$runId';
+      'https://requra-ai.runasp.net/api/projects/$projectId/ai/runs/$runId';
 
   static String feedback(String projectId) =>
       'https://requra-ai.runasp.net/api/project-review/$projectId/feedback';
@@ -124,10 +124,10 @@ class ApiConstants {
 
   // ── Review Invitations ──
   static String reviewInvitations(String projectId) =>
-      '/api/projects/$projectId/review-invitations';
+      'https://requra-ai.runasp.net/api/projects/$projectId/review-invitations';
 
   static String resendInvitation(String projectId, String invitationId) =>
-      '/api/projects/$projectId/review-invitations/$invitationId/resend';
+      'https://requra-ai.runasp.net/api/projects/$projectId/review-invitations/$invitationId/resend';
 
   // ── Requirements ──
   static String requirementsList(String projectId) =>

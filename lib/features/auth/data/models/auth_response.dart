@@ -1,3 +1,5 @@
+import 'user_auth_data.dart';
+
 class AuthResponse {
   const AuthResponse({
     required this.isSuccess,
@@ -12,6 +14,13 @@ class AuthResponse {
   final String message;
   final int statusCode;
   final List<dynamic> errors;
+
+  UserAuthData? get userData {
+    if (data is Map<String, dynamic>) {
+      return UserAuthData.fromJson(data as Map<String, dynamic>);
+    }
+    return null;
+  }
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     final dynamic rawIsSuccess = json['isSuccess'];

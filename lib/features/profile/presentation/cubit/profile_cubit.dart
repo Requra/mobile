@@ -35,11 +35,16 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> loadProfile() async {
+    if (isClosed) return;
     emit(const ProfileLoading());
     final result = await _getProfileUseCase();
     result.fold(
-      (failure) => emit(ProfileError(failure.message)),
-      (profile) => emit(ProfileLoaded(profile: profile)),
+      (failure) {
+        if (!isClosed) emit(ProfileError(failure.message));
+      },
+      (profile) {
+        if (!isClosed) emit(ProfileLoaded(profile: profile));
+      },
     );
   }
 

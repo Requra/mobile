@@ -38,6 +38,11 @@ class AuthVerificationRequired extends AuthState {
   List<Object?> get props => [email];
 }
 
+/// A new user logged in via Google and must select their role.
+class AuthNewUserRoleSelectionRequired extends AuthState {
+  const AuthNewUserRoleSelectionRequired();
+}
+
 /// An auth operation failed; [message] is shown to the user.
 class AuthError extends AuthState {
   const AuthError(this.message);

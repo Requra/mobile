@@ -25,6 +25,8 @@ class ApiConstants {
       'https://requra-ai.runasp.net/api/Auth/refresh-token';
   static const String googleLogin =
       'https://requra-ai.runasp.net/api/Auth/google-login';
+  static const String changeRole =
+      'https://requra-ai.runasp.net/api/Auth/change-role';
   static const String confirmAccount =
       'https://requra-ai.runasp.net/api/Auth/confirm-account';
   static const String resendOtp =

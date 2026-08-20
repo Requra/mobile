@@ -11,6 +11,7 @@ import 'package:requra/core/theme/font_manager.dart';
 import 'package:requra/core/theme/style_manager.dart';
 
 import 'verification_screen.dart';
+import 'role_selection_screen.dart';
 import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
@@ -130,6 +131,7 @@ class _SignupScreenState extends State<SignupScreen> {
       listenWhen: (AuthState previous, AuthState current) =>
           current is AuthAuthenticated ||
           current is AuthVerificationRequired ||
+          current is AuthNewUserRoleSelectionRequired ||
           current is AuthError ||
           current is AuthUnauthenticated,
       listener: (BuildContext context, AuthState state) {
@@ -141,6 +143,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 mode: VerificationSource.signup,
                 email: state.email,
               ),
+            ),
+          );
+        } else if (state is AuthNewUserRoleSelectionRequired) {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const RoleSelectionScreen(),
             ),
           );
         } else if (state is AuthAuthenticated) {

@@ -11,6 +11,7 @@ import 'package:requra/core/theme/style_manager.dart';
 
 import 'forgot_password_screen.dart';
 import 'verification_screen.dart';
+import 'role_selection_screen.dart';
 import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
@@ -66,9 +67,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleLogin(BuildContext context) {
     if (!_validateForm()) return;
     context.read<AuthCubit>().login(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
   }
 
   void _handleGoogleLogin(BuildContext context) {
@@ -84,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
       listenWhen: (AuthState previous, AuthState current) =>
           current is AuthAuthenticated ||
           current is AuthVerificationRequired ||
+          current is AuthNewUserRoleSelectionRequired ||
           current is AuthError ||
           current is AuthUnauthenticated,
       listener: (BuildContext context, AuthState state) {
@@ -106,6 +108,14 @@ class _LoginScreenState extends State<LoginScreen> {
               (Route<dynamic> route) => false,
             );
           }
+        } else if (state is AuthNewUserRoleSelectionRequired) {
+          // New Google user needs to select a role before entering the app
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const RoleSelectionScreen(),
+            ),
+          );
         } else if (state is AuthVerificationRequired) {
           // Account not confirmed — navigate to OTP verification.
           Navigator.push<void>(
@@ -132,130 +142,112 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const AuthHeader(
-                  title: 'Welcome Back to Requra.ai',
-                  subtitle:
-                      'Sign in to access your AI-powered requirements workspace.',
-                ),
-                Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      CustomTextField(
-                        hintText: 'Email Address',
-                        icon: Icons.mail_outline,
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        onChanged: _onEmailChanged,
-                        errorText: _emailError,
-                      ),
-                      SizedBox(height: 14.h),
-                      CustomTextField(
-                        hintText: 'Password',
-                        icon: Icons.lock_outline,
-                        isPassword: true,
-                        controller: _passwordController,
-                        onChanged: _onPasswordChanged,
-                        errorText: _passwordError,
-                      ),
-                      SizedBox(height: 8.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                visualDensity: VisualDensity.compact,
-                                activeColor: AppColors.primaryText,
-                                onChanged: (bool? value) {
-                                  setState(() => _rememberMe = value!);
-                                },
-                              ),
-                              Text(
-                                'Remember me',
-                                style: regularStyle(
-                                  fontSize: FontSize.font16,
-                                  color: AppColors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Flexible(
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.push<void>(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (_) =>
-                                        const ForgotPasswordScreen(),
-                                  ),
-                                );
-                              },
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Forgot your password?',
-                                  style: regularStyle(
-                                    fontSize: FontSize.font16,
-                                    color: AppColors.primaryText,
-                                  ).copyWith(
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      CustomButton(
-                        text: isLoading ? 'Loading...' : 'Login',
-                        onTap: isLoading
-                            ? null
-                            : () => _handleLogin(context),
-                      ),
-                      SizedBox(height: 16.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            'New here? ',
-                            style: regularStyle(
-                              fontSize: FontSize.font14,
-                              color: AppColors.black,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () =>
-                                Navigator.pushNamed(context, '/signup'),
-                            child: Text(
-                              'Create an account',
-                              style: semiBoldStyle(
-                                fontSize: FontSize.font14,
-                                color: AppColors.primaryText,
-                              ).copyWith(
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16.h),
-                      SocialAuthButtonsRow(
-                        onGoogleTap: () => _handleGoogleLogin(context),
-                        isGoogleLoading: isLoading,
-                      ),
-                    ],
+                children: <Widget>[
+                  const AuthHeader(
+                    title: 'Welcome Back to Requra.ai',
+                    subtitle:
+                        'Sign in to access your AI-powered requirements workspace.',
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.h,
+                      horizontal: 20.w,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        CustomTextField(
+                          hintText: 'Email Address',
+                          icon: Icons.mail_outline,
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          onChanged: _onEmailChanged,
+                          errorText: _emailError,
+                        ),
+                        SizedBox(height: 14.h),
+                        CustomTextField(
+                          hintText: 'Password',
+                          icon: Icons.lock_outline,
+                          isPassword: true,
+                          controller: _passwordController,
+                          onChanged: _onPasswordChanged,
+                          errorText: _passwordError,
+                        ),
+                        SizedBox(height: 8.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push<void>(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Forgot your password?',
+                                    style:
+                                        regularStyle(
+                                          fontSize: FontSize.font16,
+                                          color: AppColors.primaryText,
+                                        ).copyWith(
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        CustomButton(
+                          text: isLoading ? 'Loading...' : 'Login',
+                          onTap: isLoading ? null : () => _handleLogin(context),
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              'New here? ',
+                              style: regularStyle(
+                                fontSize: FontSize.font14,
+                                color: AppColors.black,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, '/signup'),
+                              child: Text(
+                                'Create an account',
+                                style:
+                                    semiBoldStyle(
+                                      fontSize: FontSize.font14,
+                                      color: AppColors.primaryText,
+                                    ).copyWith(
+                                      decoration: TextDecoration.underline,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        SocialAuthButtonsRow(
+                          onGoogleTap: () => _handleGoogleLogin(context),
+                          isGoogleLoading: isLoading,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           ),
         );
       },

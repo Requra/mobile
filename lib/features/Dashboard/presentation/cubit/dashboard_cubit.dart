@@ -18,6 +18,7 @@ class DashboardCubit extends Cubit<DashboardState> {
         super(DashboardInitial());
 
   Future<void> loadDashboard() async {
+    if (isClosed) return;
     emit(DashboardLoading());
 
     try {
@@ -39,7 +40,9 @@ class DashboardCubit extends Cubit<DashboardState> {
       final result = await _getDashboardData();
 
       result.fold(
-        (failure) => emit(DashboardError(failure.message)),
+        (failure) {
+          if (!isClosed) emit(DashboardError(failure.message));
+        },
         (projects) {
           int totalProjects = projects.length;
           int inProgressCount = 0;
@@ -80,6 +83,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
           final recentProjects = allProjectsSorted.take(5).toList();
 
+          if (isClosed) return;
           emit(DashboardLoaded(
             totalProjects: totalProjects,
             inProgressCount: inProgressCount,
@@ -87,12 +91,14 @@ class DashboardCubit extends Cubit<DashboardState> {
             completedCount: completedCount,
             focusProjects: focusProjects,
             recentProjects: recentProjects,
-            userName: userName ?? '',
+            userName: userName,
           ));
         },
       );
     } catch (e) {
-      emit(DashboardError('An unexpected error occurred: ${e.toString()}'));
+      if (!isClosed) {
+        emit(DashboardError('An unexpected error occurred: ${e.toString()}'));
+      }
     }
   }
 }

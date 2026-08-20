@@ -40,14 +40,34 @@ class AuthCubit extends Cubit<AuthState> {
       return;
     }
 
+    final String? refreshToken = await _tokenStorage.readRefreshToken();
+
+    // If there is no refresh token (e.g., from Google Login), try validating
+    // the session with a profile request instead.
+    if (refreshToken == null || refreshToken.trim().isEmpty) {
+      final profileResponse = await _authService.getProfile();
+      // If unauthorized, the token is dead. Otherwise (success or offline), keep them logged in.
+      if (profileResponse.statusCode == 401) {
+        await _tokenStorage.clearTokens();
+        emit(const AuthUnauthenticated());
+      } else {
+        emit(const AuthAuthenticated());
+      }
+      return;
+    }
+
     // Validate the session by refreshing the token.
     final refreshResponse = await _authService.refreshAuthToken();
+    
     if (refreshResponse.isSuccess) {
       emit(const AuthAuthenticated());
-    } else {
-      // Token is stale or account no longer exists — clear and go to login.
+    } else if (refreshResponse.statusCode == 401 || refreshResponse.statusCode == 400) {
+      // Token is stale or invalid — clear and go to login.
       await _tokenStorage.clearTokens();
       emit(const AuthUnauthenticated());
+    } else {
+      // Network error or 500 server error — assume valid to allow offline access/retry.
+      emit(const AuthAuthenticated());
     }
   }
 
@@ -214,10 +234,23 @@ class AuthCubit extends Cubit<AuthState> {
 
       final response = await _authService.googleLogin(idToken: idToken);
 
-      debugPrint('Google login response: ${response.data}');
+      final userData = response.userData;
+      if (userData != null) {
+        debugPrint('Google login isNewUser: ${userData.isNewUser}');
+        debugPrint(
+          'Google login refreshToken length: ${userData.refreshToken}',
+        );
+        debugPrint('Google login tokenExpiry: ${userData.tokenExpiry}');
+      } else {
+        debugPrint('Google login raw data: ${response.data}');
+      }
 
       if (response.isSuccess) {
-        emit(const AuthAuthenticated());
+        if (userData != null && userData.isNewUser) {
+          emit(const AuthNewUserRoleSelectionRequired());
+        } else {
+          emit(const AuthAuthenticated());
+        }
       } else {
         final String errorMsg = response.message.trim().isNotEmpty
             ? 'Backend error: ${response.message}'
@@ -234,6 +267,25 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       debugPrint('Google sign-in error: $e');
       emit(AuthError('Google sign-in Error: $e'));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Change Role (For new Google users)
+  // ---------------------------------------------------------------------------
+
+  Future<void> changeRole(String role) async {
+    if (state is AuthLoading) return;
+    // We don't emit AuthLoading to keep the UI simple if needed, 
+    // but usually it's good to emit it.
+    emit(const AuthLoading());
+
+    final response = await _authService.changeRole(role: role);
+    if (response.isSuccess) {
+      // Role successfully updated, user can now enter the app
+      emit(const AuthAuthenticated());
+    } else {
+      emit(AuthError(response.message));
     }
   }
 

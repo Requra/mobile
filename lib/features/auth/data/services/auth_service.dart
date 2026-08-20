@@ -145,6 +145,14 @@ class AuthService {
     );
   }
 
+  Future<AuthResponse> changeRole({required String role}) {
+    return _post(
+      endpoint: ApiConstants.changeRole,
+      body: <String, dynamic>{'role': role},
+      includeAuthHeader: true,
+    );
+  }
+
   Future<AuthResponse> getProfile() {
     return _get(endpoint: ApiConstants.updateProfile);
   }

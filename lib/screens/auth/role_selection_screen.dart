@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
 
 import '../../core/global_widgets/custom_button.dart';
+import '../../core/global_widgets/customAppBar.dart';
 import '../../core/services/deep_link_handler.dart';
 import '../../core/services/deep_link_service.dart';
 import '../../core/theme/color_manager.dart';
@@ -45,6 +46,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
+          appBar: const CustomAppBar(),
           body: SafeArea(
             child: SingleChildScrollView(
               child: Column(

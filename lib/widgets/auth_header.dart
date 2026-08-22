@@ -17,41 +17,7 @@ class AuthHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SafeArea(
-          bottom: false,
-          child: Container(
-            height: 50.h,
-            padding: EdgeInsets.symmetric(horizontal: 18.w),
-            color: Colors.white,
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6.r),
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    height: 26.h,
-                    width: 26.w,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.smart_toy,
-                        color: AppColors.primary,
-                        size: 22.sp,
-                      );
-                    },
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  splashRadius: 20.r,
-                  onPressed: () {},
-                  icon: const Icon(Icons.menu, color: AppColors.black),
-                ),
-              ],
-            ),
-          ),
-        ),
+
         ClipPath(
           clipper: _HeaderCurveClipper(),
           child: Container(

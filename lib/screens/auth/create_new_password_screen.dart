@@ -11,6 +11,7 @@ import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/password_rules_checklist.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import '../../core/global_widgets/customAppBar.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   const CreateNewPasswordScreen({super.key});
@@ -108,6 +109,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
+          appBar: const CustomAppBar(),
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

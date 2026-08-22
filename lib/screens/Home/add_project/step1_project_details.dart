@@ -181,6 +181,7 @@ class _Step1ProjectDetailsState extends State<Step1ProjectDetails> {
             SizedBox(height: 8.h),
             DropdownButtonFormField<ProjectType>(
               initialValue: _selectedType,
+              dropdownColor: AppColors.white,
               decoration: _inputDecoration(hint: 'Select Type'),
               icon: Icon(Icons.keyboard_arrow_down, color: AppColors.grey),
               borderRadius: BorderRadius.circular(12.r),

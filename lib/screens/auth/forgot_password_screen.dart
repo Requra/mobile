@@ -10,6 +10,7 @@ import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import '../../core/global_widgets/customAppBar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -79,6 +80,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
+          appBar: const CustomAppBar(),
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

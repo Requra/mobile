@@ -17,6 +17,7 @@ import '../../core/global_widgets/custom_button.dart';
 import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/social_auth_buttons_row.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import '../../core/global_widgets/customAppBar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -138,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
+          appBar: const CustomAppBar(),
           body: SafeArea(
             child: SingleChildScrollView(
               child: Column(

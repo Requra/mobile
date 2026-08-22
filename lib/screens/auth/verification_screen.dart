@@ -13,6 +13,7 @@ import 'package:requra/core/theme/style_manager.dart';
 import '../../widgets/auth_header.dart';
 import '../../core/global_widgets/custom_button.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import '../../core/global_widgets/customAppBar.dart';
 
 // ---------------------------------------------------------------------------
 // Mode enum — replaces the old VerificationSource so naming is consistent
@@ -230,6 +231,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
               return Scaffold(
                 backgroundColor: AppColors.white,
+                appBar: const CustomAppBar(),
                 body: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

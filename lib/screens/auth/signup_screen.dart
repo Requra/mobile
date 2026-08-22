@@ -18,6 +18,7 @@ import '../../core/global_widgets/custom_text_field.dart';
 import '../../widgets/password_rules_checklist.dart';
 import '../../widgets/social_auth_buttons_row.dart';
 import 'package:requra/core/global_widgets/app_snackbar.dart';
+import '../../core/global_widgets/customAppBar.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -182,6 +183,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.white,
+          appBar: const CustomAppBar(),
           body: SafeArea(
             child: SingleChildScrollView(
               child: Column(
